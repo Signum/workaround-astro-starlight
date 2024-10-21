@@ -1,0 +1,92 @@
+---
+title: Types of email domains
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+This is the pretty boring but at the same time very important part of the tutorial. Do not skip it. Most problems that
+readers have with their mail servers are caused by a misunderstanding of the different types of email domains. There is
+nothing you need to do on your server right now. Just lean back and relax and make sure that you read and fully
+understand this page. It will spare you frustration.
+
+As explained on the previous page Postfix is the software component that speaks SMTP. It receives emails from other
+server and sends email out. Of course you will only want to receive emails for your domains only.
+
+Postfix will accept emails for any of these [classes of domains](http://www.postfix.org/ADDRESS_CLASS_README.html):
+
+1. Canonical domains (also called _local domains_)
+2. Hosted domains
+   - Virtual mailbox domains
+   - Virtual alias domains
+3. Relay domains
+
+Let us look at the first two in detail. The third one – relay domains – is not needed in this context.
+
+## Canonical domains
+
+Once upon a time users logged into servers using [Telnet](https://en.wikipedia.org/wiki/Telnet) or
+[SSH](https://en.wikipedia.org/wiki/Secure_Shell) to read their email in basic text-based mail clients. Their email
+addresses were often just a combination of their login name and the server name. Something like
+_mpauls@server17.biology.example.net_.
+
+At least that made things pretty simple for the server administrator. He just accepted emails for any valid login user
+on that server. The mail server knew what to do. It checked if “mpauls” is found in /etc/passwd and then stored emails
+in “/var/mail/mpauls”.
+
+If you wanted to do it that way…
+
+1. You would need to create system accounts for all users who want to receive email. Every system user is a potential
+   security risk because they can login to the server using a shell. If the user chooses a weak password you are
+   essentially inviting attackers to harm your server.
+2. If you want to host many email accounts this becomes impractical.
+3. Postfix cannot distinguish the local domains. If you have three local domains “example.org”, “example.com” and
+   “example.net” then all these email addresses would lead to the same mailbox: john@example.org, john@example.com and
+   john@example.net. So you cannot use different domains for different purposes.
+
+To tell Postfix which domain you consider local you list them in the “mydestination” configuration setting in your
+main.cf configuration file. Example:
+
+```
+mydestination = example.org, example.com, example.net
+```
+
+<Aside type="caution">
+  A domain never belongs to more than one class. You would get a warning in your log file and Postfix will start
+  behaving strangely. One domain can only have one purpose. This is a frequent mistake.
+</Aside>
+
+It is common however to use the server’s hostname as a local domain. If your server is called “scully.example.com” you
+could set “mydestination = scully.example.com”. Or you just set it to “mydestination = localhost” if you rather want to
+use “scully.example.com” as a virtual domain. Some parts of your system may send emails to root@localhost so this is a
+sane setting.
+
+## Virtual domains
+
+This is the class of domains that will be our workhorse. Postfix allows us to add an unlimited number of domains that
+can receive emails. That’s what an ISP does and so will we.
+
+Where do we put the list of domains? Postfix is pretty flexible. We could put it in a huge text file. We might use LDAP
+if we have some kind of user directory in our organization. But in this guide we will store that information in a simple
+MariaDB database.
+
+Postfix handles hosted email addresses by checking two _mappings_:
+
+- Virtual Aliases (“redirect this email address to another address”)
+- Virtual Mailboxes (“accept email for this email address”)
+
+So much terminology. Time for an example, isn’t it? Let’s tell Postfix we want to have three email addresses:
+
+- john@example.org
+- jack@example.org
+- jack@example.com (_note that this is another domain than example.org_)
+
+Postfix only understands _mappings_. They are much easier than they sound. A mapping is just a table that has a left and
+a right column. Postfix always looks for stuff in the left column (_key_) to find more information in the right column
+(_value_). Like this:
+
+| Virtual mailbox (key) | Virtual mailbox location on disk (value) |
+| --------------------- | ---------------------------------------- |
+| john@example.org      | /var/vmail/example.org/john/Maildir      |
+| jack@example.org      | /var/vmail/example.org/jack/Maildir      |
+| jack@example.com      | /var/vmail/example.com/jack/Maildir      |
+
