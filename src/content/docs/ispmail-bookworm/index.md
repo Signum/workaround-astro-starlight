@@ -3,11 +3,13 @@ title: ISPmail guide for Debian 12 “Bookworm”
 lastUpdated: 2023-09-24
 ---
 
-Once upon a time there were many mail servers on the internet. If your organisation wanted to receive and send emails then you would have your system administrator set up a mail server. He would add a DNS record and create a cryptic Sendmail configuration file. Fast forward a few decades and suddenly we have arrived in the cloud ages. The world of internet services is dominated by a few monopolistic companies. Having worked in IT for 25 years I feel frustrated about the ignorance and laziness of decision makers. Cloud providers rip obscene profits while IT staff is evolving into dumb customers instead of doing their actual job.
+Once upon a time there were many mail servers on the internet. If your organisation wanted to receive and send emails then you would have your system administrator set up a mail server. He would add a DNS record and create a cryptic Sendmail configuration file.
+
+Fast forward a few decades and suddenly we have arrived in a monopolistic dystopy. The world of internet services is dominated by a few companies. Having worked in IT for 25 years I feel frustrated about the ignorance and laziness of decision makers. Cloud providers rip obscene profits and lock clueless customers in, while their IT staff is evolving into dumb victims instead of doing their actual job.
 
 If you are like me then you want to stay as independent as possible. And that includes being in charge of your own email service. Maybe not for your employer but at least for yourself, your friends and family. Become your own internet service provider (ISP) for email. Hence the name: ISPmail.
 
-This is a complete and free guide that teaches you how to set up and run your own mail server. At the end of the guide you will have your own fully featured mail server based on open-source software using a cheap virtual 5€ server. And you will have learned all about the various components, protocols and technologies. This guide has been battle-tested by thousands of other sysadmins and constantly evolved over the last 20 years. I am publishing this guide without any commercial motives, so all you would have to invest is your time.
+This is a complete and free guide that teaches you how to set up and run your own mail server. At the end of the guide you will have your own fully featured mail server based on open-source software using a cheap virtual server for a few bucks per month. And you will have learned all about the various components, protocols and technologies. This guide has been battle-tested by thousands of other sysadmins and constantly evolved over the last 20 years. I am publishing this guide without any commercial motives, so all you would have to invest is your time.
 
 ## What your mail server can do
 
