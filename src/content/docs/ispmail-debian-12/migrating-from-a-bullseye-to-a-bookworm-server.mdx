@@ -2,6 +2,12 @@
 title: Migrating from your old (Bullseye) server
 ---
 
+import MultipleChoice from '../../../components/MultipleChoice.astro';
+import Option from '../../../components/Option.astro';
+import Checklist from '../../../components/Checklist.astro';
+import Box from '../../../components/Box.astro';
+
+
 ## Upgrade or fresh installation?
 
 I recommend that you set up a new server and make sure that the new mail server is working correctly before you start migrating existing email users to it. You may argue that Debian can be upgraded easily using “apt-get dist-upgrade” but that is very dangerous on a live mail server. Automatic configuration changes may have evil side effects and you risk losing emails. At least you are causing a downtime for your users.
@@ -24,12 +30,12 @@ The DNS “MX” record for your domain contains the hostname of your mail serve
 
 You need to copy the database that contains the control data about your email domains and accounts. Log into the old (Bullseye) server as root and back up the _mailserver_ database. That is as easy as running…
 
-```sh
+```
 mysqldump mailserver > mailserver.sql
 ```
 Copy that file to the new server (using _scp_) and import it there:
 
-```sh
+```
 mysql mailserver < mailserver.sql
 ```
 
@@ -39,13 +45,13 @@ Obviously any database changes on the old server from now on will have to be don
 
 If your users are using Roundcube as a webmail interface then you should migrate their data like their contact lists. Dump the SQL from the old server:
 
-```sh
+```
 mysqldump roundcube > roundcube.sql
 ```
 
 Copy that file to the new server and import it:
 
-```sh
+```
 mysql roundcube < roundcube.sql
 ```
 
@@ -63,7 +69,7 @@ If you have been using rspamd with the Redis backend then copy over the Redis da
 
 Fortunately Dovecot uses the maildir format that stores emails as plain files on disk. Login to the new (Bookworm) server and use _rsync_ to copy over the mails from the old (Bullseye) mail server:
 
-```sh
+```
 rsync -va oldserver:/var/vmail/ /var/vmail/
 ```
 
@@ -75,7 +81,7 @@ There is no need to shut down Dovecot on your production Bullseye server. Copyin
 
 Copy over everything in /etc/letsencrypt and /var/lib/rspamd/dkim from your old to the new server.
 
-```sh
+```
 rsync -va oldserver:/etc/letsencrypt/ /etc/letsencrypt/
 rsync -va oldserver:/var/lib/rspamd/dkim/ /var/lib/rspamd/dkim/
 ```
@@ -88,7 +94,7 @@ You told your users about the downtime, right? The time has come? Okay. Shut dow
 
 Let’s synchronize again. _rsync_ will only copy those files that have changed which makes it much faster than the first sync. On your new server run:
 
-```sh
+```
 rsync -va --delete oldserver:/var/vmail/ /var/vmail/
 ```
 
@@ -96,7 +102,7 @@ rsync -va --delete oldserver:/var/vmail/ /var/vmail/
 
 The new Dovecot version uses a slightly different indexing mechanism. So force rebuilding the users’ indices:
 
-```sh
+```
 doveadm force-resync -A '*'
 ```
 
@@ -108,7 +114,7 @@ For all your domains you will have to change the DNS “MX” or “A” record 
 
 Accidents happen. And you don’t want to lose emails. So run this command to enable your safety net on the new server:
 
-```sh
+```
 postconf soft_bounce=yes
 ```
 
@@ -116,7 +122,7 @@ This makes Postfix always keep emails in the queue that it would otherwise rejec
 
 Once you are certain that emails are properly received and sent you can switch off the _soft_bounce_ mode again:
 
-```sh
+```
 postconf soft_bounce=no
 ```
 

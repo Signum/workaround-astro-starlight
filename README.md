@@ -53,3 +53,54 @@ All commands are run from the root of the project, from a terminal:
 ## 👀 Want to learn more?
 
 Check out [Starlight’s docs](https://starlight.astro.build/), read [the Astro documentation](https://docs.astro.build), or jump into the [Astro Discord server](https://astro.build/chat).
+
+## Todo
+
+Offer a way to collate all pages into one for PDF/printing.
+
+- https://github.com/withastro/starlight/discussions/964
+
+Additional links in navbar:
+
+- https://starlight-utils.pages.dev/utilities/nav-links/
+
+Colors:
+
+- https://github.com/withastro/starlight/blob/a1926ce87b43aaa25b9063f9776e8e4ffabed88d/packages/starlight/style/props.css#L2
+
+Quiz:
+
+
+<Box icon="question-mark">
+
+## Test your knowledge
+
+Which of the following is a code editor, for making changes to your files and their content?
+
+    <MultipleChoice>
+      <Option>
+        web browser
+      </Option>
+      <Option>
+        Terminal
+      </Option>
+      <Option isCorrect>
+        VS Code
+      </Option>
+    </MultipleChoice>
+
+Which of the following is a code editor, for making changes to your files and their content?
+
+    <MultipleChoice>
+      <Option>
+        web browser
+      </Option>
+      <Option>
+        Terminal
+      </Option>
+      <Option isCorrect>
+        VS Code
+      </Option>
+    </MultipleChoice>
+
+</Box>

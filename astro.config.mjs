@@ -17,29 +17,8 @@ export default defineConfig({
       sidebar: [
         {
           label: "ISPmail for Debian 12",
-          items: [
-            // Each item here is one entry in the navigation menu.
-            {
-              label: "Start Here",
-              slug: "ispmail-bookworm",
-            },
-            {
-              label: "Whats' new",
-              slug: "ispmail-bookworm/whats-new",
-            },
-            {
-              label: "Migrating your old server",
-              slug: "ispmail-bookworm/migrating-from-a-bullseye-to-a-bookworm-server",
-            },
-            {
-              label: "The big picture",
-              slug: "ispmail-bookworm/big-picture",
-            },
-            {
-              label: "Types of email domains",
-              slug: "ispmail-bookworm/types-of-email-domains",
-            },
-          ],
+          // slug: "ispmail-bookworm",
+          autogenerate: { directory: "ispmail-debian-12" },
         },
         // {
         //   label: "Reference",
