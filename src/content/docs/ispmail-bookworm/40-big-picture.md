@@ -1,5 +1,9 @@
 ---
 title: The big picture
+lastUpdated: 2023-09-24
+slug: ispmail-bookworm/big-picture
+sidebar:
+    order: 40
 ---
 
 The mail server that you are about to set up uses several software components. Let me first explain briefly what the purpose of each software is:

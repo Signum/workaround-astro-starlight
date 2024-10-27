@@ -1,6 +1,9 @@
 ---
 title: What's new
 lastUpdated: 2023-09-24
+slug: ispmail-bookworm/whats-new
+sidebar:
+    order: 20
 ---
 
 

@@ -18,7 +18,7 @@ export default defineConfig({
         {
           label: "ISPmail for Debian 12",
           // slug: "ispmail-bookworm",
-          autogenerate: { directory: "ispmail-debian-12" },
+          autogenerate: { directory: "ispmail-bookworm" },
         },
         // {
         //   label: "Reference",

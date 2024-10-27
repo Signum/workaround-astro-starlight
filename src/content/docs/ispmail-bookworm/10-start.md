@@ -1,7 +1,9 @@
 ---
-title: ISPmail guide for Debian 12 “Bookworm”
+title: Start here
 lastUpdated: 2023-09-24
 slug: ispmail-bookworm
+sidebar:
+    order: 10
 ---
 
 Once upon a time there were many mail servers on the internet. If your organisation wanted to receive and send emails then you would have your system administrator set up a mail server. He would add a DNS record and create a cryptic Sendmail configuration file.
