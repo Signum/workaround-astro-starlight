@@ -3,3 +3,28 @@
   padding-top: 1em;
   font-size: 60%;
 }
+
+li > br {
+  margin-bottom: 0.2rem !important;
+}
+
+/* Allow PRE tags to scroll like .code blocks */
+.sl-markdown-content > pre {
+  overflow: scroll;
+}
+
+/* But make them wrap if requested */
+.sl-markdown-content > pre.wrap {
+  text-wrap: wrap;
+  overflow: visible;
+  padding-left: 3em !important;
+  text-indent: -2em !important;
+}
+
+:root {
+  --sl-text-code: 0.8rem;
+}
+
+.starlight-aside {
+  margin-top: 1em !important;
+}

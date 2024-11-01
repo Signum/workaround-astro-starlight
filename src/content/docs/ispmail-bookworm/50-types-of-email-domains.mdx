@@ -1,6 +1,6 @@
 ---
 title: Types of email domains
-lastUpdated: 2023-09-24
+lastUpdated: 2023-09-25
 slug: ispmail-bookworm/types-of-email-domains
 sidebar:
     order: 50
@@ -104,7 +104,7 @@ Before checking if a specific email address is valid Postfix first checks if it 
 | example.org         | Kittens         |
 | example.com         | Puppies         |
 
-So there are two domains in the left column. But what is that in the right column? Kittens? Really? Well, the truth is: it doesn’t matter. It can be anything. So why is that column there at all? The reason is that _mappings_ always have two columns. Postfix wants a list of domains but it has no concepts for _lists_. So it uses this format and ignores the right column.
+So there are two domains in the left column. But what is that in the right column? Kittens? Really? Well, the truth is: it doesn’t matter. It can be anything. So why is that column there at all? The reason is that _mappings_ always have two columns. Postfix wants a list of domains but it has no concepts for one-dimensional _lists_. So it uses this format and ignores the right column.
 
 Essentially these two mappings are all we need. Add a little configuration and you can already receive emails. However Postfix provides another useful feature: _aliases_. An alias is a redirection (or _forwarding_) of one email address to one or more other addresses. Possible uses:
 
@@ -113,7 +113,7 @@ Essentially these two mappings are all we need. Add a little configuration and y
 -   forward copies of all your emails to another address
 -   redirect emails meant for a coworker who has left the organisation
 
-As usual Postfix expects a mapping for aliases. Time for another example:
+As usual, Postfix expects a mapping for aliases. Time for another example:
 
 | Step | Virtual email address (left) | Redirect to (right)                       |
 | :--- | :--------------------------- | :---------------------------------------- |
@@ -142,12 +142,12 @@ So basically this is the way that Postfix handles aliases:
 4.  Still nothing found? Then reject the email.
 
 <Aside type="tip">
-Two email addresses are mandatory for every domain that you host. `postmaster@domain` and `abuse@domain.` These requirements are documented in RFC 521 and RFC 2142. Be sure to add aliases for them. If an email to those addresses will bounce your domain reputation will suffer.
+Two email addresses are mandatory for every domain that you host. `postmaster@domain` and `abuse@domain`. These requirements are documented in RFC 521 and RFC 2142. Be sure to add aliases for them. If an email to those addresses would bounce, your domain reputation will suffer.
 </Aside>
 
 ## Database
 
-Did you get the idea of mappings? Two columns? Keys and values? Good. Now how do those mappings work when we want to put the information into an SQL database?
+Did you get the idea of mappings? Two columns in a table? Keys and values? Good. Now how do those mappings work when we want to put the information into an SQL database?
 
 Basically a relational database works in rows and columns, too. So we can take the format of the tables shown above and put them into database tables. Let’s call these tables…
 
@@ -155,9 +155,9 @@ Basically a relational database works in rows and columns, too. So we can take t
 -   virtual_aliases (for the aliases mapping)
 -   virtual_users (for the email users and their mailboxes respectively)
 
-I won’t bore you with the SQL stuff right now. Let’s do that in a later chapter. Let’s just briefly cover how Postfix can get data from the database. We provide Postfix with configuration files for that purpose. These files often have a “.cf” suffix (**c**onfiguration **f**ile).
+I won’t bore you with the SQL stuff right now. We will deal with that in a later chapter. Let’s just briefly cover how Postfix can get data from the database. We provide Postfix with _configuration files_ for that purpose. These files often have a “.cf” suffix (**c**onfiguration **f**ile).
 
-Let’s take the virtual_domains table for example. This is the contents of a file that is located at `/etc/postfix/mysql-virtual-mailbox-maps.cf`:
+Let’s take the virtual_domains table for example. This is the content of a file that is located at `/etc/postfix/mysql-virtual-mailbox-maps.cf`:
 
 ```
 # Information on how to connect to your MySQL server
@@ -187,7 +187,7 @@ virtual_mailbox_maps = mysql:/etc/postfix/mysql-virtual_mailbox_maps.cf
 If you find that this mapping is not working as you expected then the “postmap -q” command is your friend. You can ask Postfix what the right-hand side value for a given left-side value is. Say that you are interested in the mailbox_path for the email_address “`john@example.org`”:
 
 ```
-postmap -q `john@example.org` mysql:/etc/postfix/mysql-virtual_mailbox_maps.cf
+postmap -q john@example.org mysql:/etc/postfix/mysql-virtual_mailbox_maps.cf
 ```
 
 Postfix will then run the above SQL query with your “`john@example.org`” argument:
