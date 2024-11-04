@@ -19,6 +19,7 @@ li > br {
   overflow: visible;
   padding-left: 3em !important;
   text-indent: -2em !important;
+  background-color: var(--sl-color-gray-7);
 }
 
 :root {
@@ -26,5 +27,5 @@ li > br {
 }
 
 .starlight-aside {
-  margin-top: 1em !important;
+  margin-top: 2em !important;
 }

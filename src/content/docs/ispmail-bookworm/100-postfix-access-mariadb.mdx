@@ -1,0 +1,47 @@
+---
+title: Let Postfix access MariaDB
+lastUpdated: 2023-10-04
+slug: ispmail-bookworm/making-postfix-get-its-information-from-the-mariadb-database
+sidebar:
+    order: 100
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+In the previous chapter you have created the SQL database schema and inserted some data to play with. Let’s start with the entry point for all email on your system: Postfix. So we need to tell Postfix how to get the information from the database. First let’s tell it how to find out if a certain domain is a valid email domain.
+
+## virtual\_mailbox\_domains
+
+As described earlier a mapping in Postfix is just a table that contains a left-hand side (LHS) and a right-hand side (RHS). To make Postfix get information about virtual domains from the database we need to create a ‘cf’ file (_configuration file_). Start by creating a file called `/etc/postfix/mysql-virtual-mailbox-domains.cf` for the virtual\_mailbox\_domains mapping. Make it contain:
+
+<pre>
+user = mailserver
+password = **x893dNj4stkHy1MKQq0USWBaX4ZZdq**
+hosts = 127.0.0.1
+dbname = mailserver
+query = SELECT 1 FROM virtual_domains WHERE name='%s'
+</pre>
+
+Please enter your own password for the _mailserver_ database user here. It is the first one you created before.
+
+Imagine that Postfix receives an email for `somebody@example.org` and wants to find out if example.org is a virtual mailbox domain. It will run the above SQL query and replace ‘%s’ by ‘example.org’. If it finds such a row in the virtual\_domains table it will return a ‘1’. Actually it does not matter what exactly is returns as long as there is a result. Remember the puppies and kittens?
+
+Now you need to make Postfix use this database mapping:
+
+<pre class="wrap">
+postconf virtual_mailbox_domains=mysql:/etc/postfix/mysql-virtual-mailbox-domains.cf
+</pre>
+
+The “postconf” command conveniently adds configuration lines to your `/etc/postfix/main.cf` file. It also activates the new setting instantly so you do not have to reload the Postfix process.
+
+The test data you created earlier added the domain “example.org” as one of your mailbox domains. Let’s ask Postfix if it recognizes that domain:
+
+<pre class="wrap">
+postmap -q example.org mysql:/etc/postfix/mysql-virtual-mailbox-domains.cf
+</pre>
+
+<Aside type="tip" title="Access denied?">
+If you get an error like “postmap: warning: connect to mysql server 127.0.0.1: Access denied for user ‘mailserver’@’localhost'” then please double check the password of the ‘mailserver’ database user. It is either wrong in the CF file or you did not create the database user correctly using the GRANT query on the previous page.
+</Aside>
+
+You should get ‘1’ as a result. That means your first mapping is working. Feel free to try that with other domains after the `-q` in that line. You should not get a response.

@@ -194,3 +194,64 @@ SSLCertificateKeyFile /etc/letsencrypt/live/**webmail.example.org**/privkey.pem
 </pre>
 
 This virtual host configuration looks suspiciously similar to the HTTP virtual host above. It just listens on port 443 (standard port for HTTPS) instead of port 80. And it uses the “SSLEngine” that handles encryption and gets information about the certificate for your web server (that is shown to your users) and the private key (that the web servers uses to decrypt the user’s communication).
+
+Enable the SSL module in Apache:
+
+<pre>
+a2enmod ssl
+</pre>
+Then enable the virtual host for HTTPS:
+<pre>
+a2ensite **webmail.example.org**-https
+</pre>
+And _restart_ the web server. A _reload_ is not sufficient this time because you added a module.
+
+systemctl restart apache2
+
+Now when you point your web browser to
+**webmail.example.org**, your browser should tell you that it trusts the web site’s certificate:
+
+![Browser bar showing successful encryption](https://workaround.org/wp-content/uploads/2018/01/Auswahl_063-1.png)
+
+(Yes, sorry, this is not **webmail.example.org**. But I do not own the example.org domain and thus cannot get a valid certificate for it. This is my own site.)
+
+So should you keep the HTTP virtual host? Yes. First for the HTTP-&gt;HTTPS redirection. And second to keep _certbot_ working.
+
+## Redirect HTTP to HTTPS
+Sometimes users forget to enter https://… when accessing your webmail service. So they access the HTTP web site. We obviously don’t want them to send their password over HTTP. So we should redirect all HTTP connections to HTTPS.
+
+One exception though. Let’s Encrypt will use HTTP to verify your challenge token. So we need to serve files at http://**webmail.example.org**/.well-known/acme-challenge/… directly while redirecting all other requests to HTTPS. You can accomplish that by putting these lines inside the &lt;VirtualHost&gt; section of your `/etc/apache2/sites-available/webmail.example.org-http.conf` file:
+
+```
+RewriteEngine On
+RewriteCond %{REQUEST_URI} !.well-known/acme-challenge
+RewriteRule ^(.*)$ https://%{SERVER_NAME}$1 \[R=301,L\]
+```
+This requires the _rewrite_ module to be enabled in Apache. That is simple though:
+```
+a2enmod rewrite
+systemctl restart apache2
+```
+So now entering http://**webmail.example.org** will redirect you to https://**webmail.example.org**.
+
+## Automatic certificate renewal
+
+The _certbot_ package automatically adds a timed job that runs twice a day at random times. The random part is important to avoid millions of server hammering the LetsEncrypt service at the same second.
+
+<Aside type="tip" title="Systemd timer instead of a Cron job">
+This job is not a classic Cron job but instead latches into systemd. You can find the _timer_ definition in the `/lib/systemd/system/certbot.timer` file. That timer triggers the renewal service defined in `/lib/systemd/system/certbot.service`.  
+  
+To find out if the service has run and when the next occurence will be, run “systemctl status certbot.timer”.  
+  
+There is also a Cron file at /etc/cron.d/certbot. Don’t be confused. This job will not do anything due to the “`-d /run/systemd/system`” condition that checks if systemd is installed. And Debian nowadays uses systemd.
+</Aside>
+
+So the renewal already happens automatically. Should it fail then LetsEncrypt start sending you reminder emails that your certificate should be renewed. That’s a clear sign that something went wrong with the automatic renewal.
+
+There is one puzzle piece missing though. Even if the renewal worked it will only update the certificate files. But the software components – Postfix, Dovecot and Apache – will not notice the change. So we need to add a so called _post-hook_ to certbot that triggers a restart of all processes thereafter.
+
+For that purpose edit the /etc/letsencrypt/cli.ini file and add:
+```
+post-hook = systemctl restart postfix dovecot apache2
+```
+Well done. You have implemented Let’s Encrypt for all your services now. Let’s go on.
