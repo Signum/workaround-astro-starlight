@@ -1,0 +1,80 @@
+---
+title: Catch-all aliases
+lastUpdated: 2023-10-04
+slug: ispmail-bookworm/catchall-aliases
+sidebar:
+    order: 110
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+<Aside type="tip" title="Optional feature">
+This page is entirely optional and will not affect your mail server if you skip it.
+</Aside>
+
+As explained earlier in the tutorial there is way to forward all email addresses in a domain to a certain destination email address. This is called a _catch-all_ alias. Those aliases catch all emails for a domain if there is no specific virtual user for that email address. Catchalls are considered a bad idea. It is tempting to generally forward all email addresses to one person if e.g. your marketing department requests a new email alias every week. But the drawback is that you will get more spam because spammers will send their stuff to any address of your domain. Or perhaps a sender mixed up the proper spelling of a recipient but the mail server will forward the email instead of rejecting it for a good reason. So think twice before using catchalls.
+
+You still want to use catch-all addresses? Well, okay. Let’s do it then. A catchall alias looks like “@example.org” and forwards email for the whole domain to other addresses. We have created the `john@example.org` user and would like to forward all other email on the domain to `kerstin@example.com`. So we would add a catchall alias like:
+
+| source         | destination           |
+| -------------- | --------------------- |
+| `@example.org` | `kerstin@example.com` |
+
+But there is a small catch. Postfix always checks the _virtual_alias_maps_ mapping before looking up a user in the _virtual_mailbox_maps_. Imagine what happens when Postfix receives an email for ‘john@example.org’. Postfix checks the aliases in the _virtual_alias_maps_ table. It finds the catchall entry as above and since there is no more specific alias the catchall account matches and the email is redirected to ‘kerstin@example.com’.
+
+In other words: the aliases are always processed first. So a catch-all alias will steal the email. John will never get any email. This is not what you want.
+
+But imagine that the aliases would contain a second entry like this:
+
+| email                  | destination            |
+| ---------------------- | ---------------------- |
+| `@example.org`         | `kerstin@example.com`  |
+| **`john@example.org`** | **`john@example.org`** |
+
+So any email address on the example.org domain will be forwarded to kerstin's address. But what is that second line? Why should we forward john's emails to himself? That doesn't make any sense.
+
+Actually it does. Postfix will consider more specific aliases first. And `john@example.org` is more specific than `@example.org`.
+Consider that someone is trying to reach `john@example.org`'s mailbox.
+If Postfix read this table just from top to bottom, then it would see `@example.org` first, which would be a match. It would then redirect that email to kerstin. John would never again get an email.
+
+So to make a mixture of catch-all addresses and specific addresses work, we need this little trickery.
+
+Postfix will lookup all these mappings for each of:
+
+- john@example.org (most specific)
+- @example.org (catchall – least specific)
+
+This is outlined in the [virtual(5) man page](http://www.postfix.org/virtual.5.html) in the _TABLE SEARCH ORDER_ section.
+
+We do not want to add that “more specific” entry for each email address manually. Fortunately we can easily automate that. For that “john-to-himself” mapping you need to create another “.cf” file `/etc/postfix/mysql-email2email.cf` for the latter mapping:
+
+<pre>
+user = mailserver
+password = **x893dNj4stkHy1MKQq0USWBaX4ZZdq**
+hosts = 127.0.0.1
+dbname = mailserver
+query = SELECT email FROM virtual_users WHERE email='%s'
+</pre>
+
+Check that you get John’s email address back when you ask Postfix if there are any aliases for him:
+```
+postmap -q john@example.org mysql:/etc/postfix/mysql-email2email.cf
+```
+The result should be the same address:
+```
+john@example.org
+```
+
+Now you need to tell Postfix that it should check both the aliases and the “john-to-himself”:
+
+<pre class="wrap">
+postconf virtual_alias_maps=mysql:/etc/postfix/mysql-virtual-alias-maps.cf,mysql:/etc/postfix/mysql-email2email.cf
+</pre>
+
+The order of the two mappings is not important here. Postfix will check all ‘cf’ files anyway and merges what it finds.
+
+You did it! All mappings are set up and the database is generally ready to be filled with domains and users. Make sure that only ‘root’ and the ‘postfix’ user can read the “.cf” files – after all your database password is stored there:
+```
+chgrp postfix /etc/postfix/mysql-*.cf
+chmod u=rw,g=r,o= /etc/postfix/mysql-*.cf
+```
