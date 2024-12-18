@@ -1,0 +1,74 @@
+---
+title: Let Postfix send emails to Dovecot
+lastUpdated: 2023-10-04
+slug: ispmail-bookworm/let-postfix-send-emails-to-dovecot/
+sidebar:
+    order: 130
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+I hope you haven’t lost your mind yet. If you are unsure how Postfix and Dovecot work together take a moment and go back to the _big picture_ page.
+
+In a previous chapter we made sure that Postfix knows which emails it is allowed to receive. Now what to do with the email? It has to be saved to disk into the mailbox of the mail user who is eagerly waiting for it. You could let Postfix handle that using its built-in mail delivery agent (MDA) called “_virtual_“. However compared to the capabilities that Dovecot provides like server-based sieve rules or quotas the Postfix delivery agent is pretty basic. We are using Dovecot anyway to provide the IMAP (and optionally POP3) service. So let’s use its _delivery agent_.
+
+How can we make Postfix hand over the email to Dovecot? There are generally two ways to establish that link.
+
+1. Using the _dovecot-lda_ (local delivery agent) process. It can process one email at a time. And it starts up a new process for every email. This was for long the default way. But as you can imagine that it does not scale well.
+2. The better option is to use [LMTP (local mail transport protocol)](https://en.wikipedia.org/wiki/Local_Mail_Transfer_Protocol) that was conceived for this purpose. It can handle multiple recipients at the same time and has a permanently running process which provides a better performance than using the LDA. In short, LMTP is a variant of SMTP with fewer features. It is meant for email communication between internal services that trust each other.
+
+You guessed it already – we will go for the second option. You installed the _dovecot-lmtpd_ package earlier. So let’s configure it.
+
+## Tell Dovecot where to listen for LMTP connections from Postfix
+
+Edit Dovecot’s configuration file that deals with the LMTP daemon – you can find it at `/etc/dovecot/conf.d/10-master.conf`. Look for the “service lmtp” section and edit it so that it looks like:
+
+```
+service lmtp {
+  unix\_listener /var/spool/postfix/private/dovecot-lmtp {
+    group = postfix
+    mode = 0600
+    user = postfix
+  }
+}
+```
+
+This makes Dovecot’s _lmtp daemon_ create a UNIX socket at /var/spool/postfix/private/dovecot-lmtp. Just like in the section dealing with setting up Dovecot we make it put a socket into the /var/spool/postfix chroot directory because Postfix is restricted to that directory and cannot access anything outside of it. So from Postfix’s point of view the socket is located at “/private/dovecot-lmtp”.
+
+Restart Dovecot…
+```
+systemctl restart dovecot
+```
+Check if dovecot accepted that change:
+```
+systemctl status dovecot
+```
+The output should contain “Active: active (running)”.
+
+
+## Tell Postfix to deliver emails to Dovecot using LMTP
+
+This is even easier. The “_virtual\_transport_” in Postfix defines the service to use for delivering emails to the local system. Dovecot has created a socket file and is ready to listen to incoming LMTP connections. We just need to tell Postfix to send emails there:
+
+```
+postconf virtual_transport=lmtp:unix:private/dovecot-lmtp
+```
+The syntax looks crazy, but it’s actually simple. You just told Postfix to use the LMTP protocol. And that we want to use a UNIX socket on the same system (instead of a TCP connection). And the socket file is located at `/var/spool/postfix/private/dovecot-lmtp`.
+
+(You will find further information on these steps in the [Dovecot configuration on Postfix integration](https://doc.dovecot.org/configuration_manual/howto/postfix_dovecot_lmtp/).)
+
+## Enable server-side mail rules
+
+One of my favorite features of Dovecot are automatic rules for incoming email that are processed on the server. You can sort away your mailing list emails into special folders. You can reject certain senders. Or you can set up vacation auto-responders. No need to have a mail client running – it all happens automatically on the server even when your mail users are not connected.
+
+The open standard (RFC 5228) for such rules is called Sieve. Basically, Sieve is a way to manage server-side email rules. A rule consists of conditions and actions. For example if the sender address matches `steve@example.org` you could tell Dovecot to move such emails to your “steve” folder automatically. These rules are stored on the Dovecot server and executed automatically. Whether you connect from your smartphone your laptop or use the webmail access – the rules always work and require no configuration on the client side.
+
+As we use LMTP that’s where we need to tell the lmtp service that we want to use Dovecot’s “sieve” plugin. Edit the file `/etc/dovecot/conf.d/20-lmtp.conf` and within the “protocol lmtp” section change the “mail\_plugins” line to:
+
+```
+mail_plugins = $mail_plugins sieve
+```
+Restart Dovecot and you are done:
+```
+systemctl restart dovecot
+```

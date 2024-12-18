@@ -156,22 +156,47 @@ password_query = SELECT password FROM virtual_users WHERE email='%u'
 iterate_query = SELECT email AS user FROM virtual_users
 </pre>
 
+<Aside type="tip" title="Backslashes">
+Ending a line with a backslash (\) means that it is continued on the next line. It keeps the configuration more readable when it is split over multiple lines.
+</Aside>
+
+What these lines mean:
+
+- driver: the kind of database. MariaDB is the same kind as MySQL.
+- connect: where to find the MySQL database and how to access it (username, password)
+- user\_query: an SQL query that returns the user name (=the email address), the quota, the home directory, user ID and group ID.
+- password\_query: this SQL query just gets the password hash from the database
+- iterate\_query: ‘doveadm’ uses this query to get a list of all users. That allows you to use the “doveadm user ‘\*'” command later.
+
+The _user\_query_ gets several pieces of information from the database. Let’s look at it one by one:
+
+- email AS user  
+    It gets the the _email_ field from the database which corresponds to the user name. Dovecot expects it in the _user_ field so we set an alias to _“user”._
+- userdb\_quota\_rule  
+    This is the user’s quota in bytes. Think of it as the maximum possible space on disk that the user can occupy. As [documented](https://doc.dovecot.org/configuration_manual/quota/#per-user-quota) Dovecot expects the quota in a special format like “\*:bytes=10000” if the user should not be able to store more than 10,000 bytes. That’s why we begin the string with ‘\*:bytes=’.
+- userdb\_home  
+    This leads to the directory where all emails and various control files for this user are located. The placeholder ‘%d’ replaces the domain and ‘%n’ the user part. So for John that makes it “/var/vmail/example.org/john”.
+- userdb\_uid and userdb\_gid  
+    Those are the user ID and group ID of _vmail_ user – 5000 for both. Dovecot uses it to set the permissions of files it creates. As all users share the same system user “vmail” this is just a static number.s
+
+## Fix permissions
+
+Make sure that only root can access the SQL configuration file so nobody else is reading your database access passwords:
+
 ```
-driver = mysql
-
-connect = \\
-  host=127.0.0.1 \\
-  dbname=mailserver \\
-  user=mailserver \\
-  password=**x893dNj4stkHy1MKQq0USWBaX4ZZdq**
-
-user_query = SELECT email as user, \\
-  concat('*:bytes=', quota) AS quota_rule, \\
-  '/var/vmail/%d/%n' AS home, \\
-  5000 AS uid, 5000 AS gid \\
-  FROM virtual_users WHERE email='%u'
-
-password_query = SELECT password FROM virtual_users WHERE email='%u'
-
-iterate_query = SELECT email AS user FROM virtual_users
+chown root:root /etc/dovecot/dovecot-sql.conf.ext
+chmod go= /etc/dovecot/dovecot-sql.conf.ext
 ```
+
+Restart Dovecot from the shell:
+
+```
+systemctl restart dovecot
+```
+Look at your /var/log/mail.log logfile. You should see:
+
+```
+... Dovecot v2.3.13 (f79e8e7e4) starting up for imap, lmtp, sieve, pop3 (core dumps disabled)
+```
+
+If you get any error messages please double-check your configuration files.
