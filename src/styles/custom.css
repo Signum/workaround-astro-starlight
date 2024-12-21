@@ -34,4 +34,5 @@ li > br {
   text-indent: -1em !important; 
   padding-left: 2em !important; 
   text-wrap: wrap;
+  word-break: break-word;
 }
