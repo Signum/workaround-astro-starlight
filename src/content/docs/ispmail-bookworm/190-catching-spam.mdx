@@ -1,6 +1,6 @@
 ---
 title: Catching spam with rspamd
-lastUpdated: 2023-10-04
+lastUpdated: 2024-12-21
 slug: ispmail-bookworm/catching-spam-with-rspamd/
 sidebar:
     order: 190
@@ -53,13 +53,9 @@ sendmail john@example.org < gtube.txt
 Check your /var/log/mail.log. You will find something like this:
 
 ```
-Jan 13 09:21:01 mail postfix/cleanup[19945]: 95B7A42212: 
-    milter-reject: END-OF-MESSAGE from localhost[127.0.0.1]:
-    5.7.1 Gtube pattern; from=<root@mail.example.org> to=<john@example.org>
+Jan 13 09:21:01 mail postfix/cleanup[19945]: 95B7A42212: milter-reject: END-OF-MESSAGE from localhost[127.0.0.1]: 5.7.1 Gtube pattern; from=<root@mail.example.org> to=<john@example.org>
 
-Jan 13 09:21:01 jen postfix/cleanup[19945]: 95B7A42212:
-    to=<john@example.org>, relay=none, delay=0.18,
-    delays=0.18/0/0/0, dsn=5.7.1, status=bounced (Gtube pattern)
+Jan 13 09:21:01 jen postfix/cleanup[19945]: 95B7A42212: to=<john@example.org>, relay=none, delay=0.18, delays=0.18/0/0/0, dsn=5.7.1, status=bounced (Gtube pattern)
 ```
 
 “milter-reject” tells that the milter (rspamd) recommended to Postfix to reject the email. It gave the reason “5.7.1 Gtube pattern”. In mail communication you often find these three digit codes. They are defined in [RFC 3463](https://tools.ietf.org/html/rfc3463). The first digit is most important:
@@ -494,11 +490,7 @@ tail -f /var/log/mail.log
 Now open your IMAP client (Thunderbird, Evolution, Roundcube, mutt or whatever you prefer) and drag an email to your Junk folder. The mail log will show a lot of things that are going on. I tried to compact the output so that you better understand that it worked:
 
 ```
-imapsieve: Static mailbox rule [1]: mailbox=`Junk' from=`*'
-    causes=(COPY) =>
-    before=`file:/etc/dovecot/sieve/learn-spam.sieve'
-    after=(none)
-
+imapsieve: Static mailbox rule [1]: mailbox=`Junk' from=`*' causes=(COPY) => before=`file:/etc/dovecot/sieve/learn-spam.sieve' after=(none)
 imapsieve: Static mailbox rule [2]: mailbox=`*' from=`Junk'
     causes=(COPY) => before=`file:/etc/dovecot/sieve/learn-ham.sieve'
     after=(none)
@@ -535,5 +527,64 @@ Don’t forget to switch off “mail\_debug” again or your users’ actions wi
 rspamd keeps a verbose log of its actions in /var/log/rspamd/rspamd.log. If a user complains that a certain email got blocked or at least flagged as spam then take a look at this log. You can match the /var/log/mail.log with it by comparing the Postfix queue ID. Those are the 12-digit hexadecimal number like “**95CE05A00547**“. Those IDs can be found in the rspamd.log, too:
 
 ```
-<40985d>; task; rspamd\_task\_write\_log: id: <undef>, qid: <**95CE05A00547**\>,  ip: 12.13.51.194, from: <…>, (default: F (no action):  \[3.40/15.00\]  \[MISSING\_MID(2.50){},MISSING\_DATE(1.00){},MIME\_GOOD(-0.10){text/plain;},ARC\_NA(0.00){},ASN(0.00){asn:8220,  ipnet:212.123.192.0/18,  country:GB;},FROM\_EQ\_ENVFROM(0.00){},FROM\_NO\_DN(0.00){},RCPT\_COUNT\_ONE(0.00){1;},RCVD\_COUNT\_ZERO(0.00){0;},RCVD\_TLS\_ALL(0.00){},TO\_DN\_NONE(0.00){},TO\_DOM\_EQ\_FROM\_DOM(0.00){},TO\_MATCH\_ENVRCPT\_ALL(0.00){}\]),  len: 181, time: 16.000ms real, 6.385ms virtual, dns req: 0, digest:  <69b289a82827c11f759837c033cd800a>, rcpts: <…>, mime\_rcpt:  <…>
+<40985d>; task; rspamd_task_write_log: id: <undef>, qid: <**95CE05A00547**>,  ip: 12.13.51.194, from: <…>, (default: F (no action):  [3.40/15.00]  [MISSING_MID(2.50){},MISSING_DATE(1.00){},MIME_GOOD(-0.10){text/plain;},ARC_NA(0.00){},ASN(0.00){asn:8220,  ipnet:212.123.192.0/18,  country:GB;},FROM_EQ_ENVFROM(0.00){},FROM_NO_DN(0.00){},RCPT_COUNT_ONE(0.00){1;},RCVD_COUNT_ZERO(0.00){0;},RCVD_TLS_ALL(0.00){},TO_DN_NONE(0.00){},TO_DOM_EQ_FROM_DOM(0.00){},TO_MATCH_ENVRCPT_ALL(0.00){}]),  len: 181, time: 16.000ms real, 6.385ms virtual, dns req: 0, digest:  <69b289a82827c11f759837c033cd800a>, rcpts: <…>, mime_rcpt:  <…>
 ```
+
+## The web interface
+
+
+rspamd comes with a neat bonus feature: a web interface. It allows you to check emails for spam, get statistics and fine-tune scores. It is already installed and enabled by default and expects HTTP requests on port 11334 on the localhost interface. I suggest you add a simple proxy configuration to your already working HTTPS-enabled web mail configuration to get access.
+
+![rspamd dashboard](images/catching-spam-rspamd-dashboard.png)
+
+First you need to enable Apache’s modules for HTTP proxying and rewriting:
+
+```
+a2enmod proxy_http
+a2enmod rewrite
+```
+
+You can either create a new virtual host configuration or just edit the /etc/apache2/sites-available/webmail.**example.org**-https.conf file. Anywhere within the _VirtualHost_ tags add:
+
+```
+<Location /rspamd>
+  Require all granted   
+</Location>
+
+RewriteEngine On
+RewriteRule ^/rspamd$ /rspamd/ \[R,L\]
+RewriteRule ^/rspamd/(.\*) http://localhost:11334/$1 \[P,L\]
+```
+
+This piece of configuration will forward any requests to `https://webmail.example.org/rspamd` to localhost:11334 and thus give you access to the rspamd web interface.
+
+The interface is password protected. Let’s generate a new access password:
+
+```
+pwgen 15 1
+```
+
+This gives you a password like “eiLi1lueTh9mia4”. You could put that password in an rspamd configuration file. But cleartext passwords in configuration files are not quite elegant. Let’s create a hash of the password:
+
+```
+rspamadm pw
+Enter passphrase: …
+$2$icoahes75e7g9wxapnrbmqnpuzjoq7z…
+```
+
+Feed it the password that pwgen created for you and you will get a long hashed password. This procedure by the way is also documented on the [rspamd pages](https://rspamd.com/doc/tutorials/quickstart.html#setting-the-controller-password).
+
+Create a new configuration file `/etc/rspamd/local.d/worker-controller.inc` and put your hashed password in there:
+
+```
+password = "$2$icoahes75e7g9wxapnrbmqnpuzjoq7z…"
+```
+
+That’s it for the configuration. Finally restart both rspamd and Apache to load your changed configuration:
+
+```
+systemctl restart rspamd
+systemctl restart apache2
+```
+
+If everything went as expected you should now be able to access the rspamd web interface at `https://webmail.example.org/rspamd`

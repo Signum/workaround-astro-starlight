@@ -29,3 +29,9 @@ li > br {
 .starlight-aside {
   margin-top: 2em !important;
 }
+
+.ec-line .code {
+  text-indent: -1em !important; 
+  padding-left: 2em !important; 
+  text-wrap: wrap;
+}
