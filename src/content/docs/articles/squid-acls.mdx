@@ -1,0 +1,151 @@
+---
+title: How Squid ACLs work
+slug: squid-acls
+---
+
+For less experienced Squid administrators the concept of ACLs can be confusing at first. But they offer a great way of controlling who is allowed to access which web pages when.
+
+## ACLs
+
+First you need to define certain criteria like _accesses from the marketing department_ or _accesses to google.com_ or _need to authenticate_. There are certain types of ACLs for that purpose. The complete list of ACLs can be found at [http://www.visolve.com/squid/squid24s1/access\_controls.php](http://www.visolve.com/squid/squid24s1/access_controls.php)
+
+The syntax of an acl is:
+
+```
+acl name type definition1 definition2 definition3 ...
+
+```
+Examples:
+
+```
+acl accesses_to_google dstdomain .google.com
+acl accesses_to_search_engines dstdomain .yahoo.com .google.com .vivisimo.com
+acl accesses_from_marketing_department src 10.52.0.0/16
+acl need_to_authenticate proxy_auth
+```
+
+You can also use lists of definitions that are stored in files on your hard disk. Let’s assume you have a list of search engines URLs that you want to allow:
+
+```
+/etc/squid/search-engines-urls.txt:
+.google.com
+.yahoo.com
+.altavista.com
+.vivisimo.com
+```
+
+Then the ACL for that file would look like:
+
+```
+acl accessess_to_search_engines dstdomain "/etc/squid/search-engines-urls.txt"
+```
+
+The quotes are important here to tell Squid it needs to look up definitions in that file.
+
+## Using the ACLs: http\_access
+
+Defining the ACLs alone does not actually block anything – it’s just a definition. ACLs can be used in various places of your squid.conf. The most useful feature is the http\_access statement. It works similar to the way a firewall would handle rules. For each request that Squid receives it will look through all the http\_access statements in order until it finds a line that matches. It then either _accept_s or _deny_s depending on your setting. The remaining rules are ignored.
+
+The general syntax of an http\_access line is:
+
+```
+http_access (allow|deny) acl1 acl2 acl3 ...
+```
+
+Example:
+
+```
+http_access allow accesses_from_admins
+http_access deny accesses_to_porn_urls
+http_access allow accesses_during_lunchtime
+http_access deny all
+```
+
+This would allow accessing from the admins (whatever that ACL looks like – probably a **src** ACL pointing to the subnet where the admin workstations are in). For everyone else it will deny accesses to porn URLs. Then it would allow accesses from everyone to every web site during lunch time. And finally all other accesses would be denied.
+
+## Combining ACLs (AND/OR)
+
+Often you need to combine ACLs. Let’s say you want to allow access to google.com only for the back office. This combines two ACLS with an **AND**. This would look like this:
+
+```
+http_access allow accesses_to_google.com accesses_from_back_office
+```
+
+If you wanted to use an **OR** and say either accesses from the back office or accesses to google.com are allowed then the line would look like this:
+
+```
+http_access allow accesses_to_google.com
+http_access allow accesses_from_back_office
+```
+
+To summarize: **AND** means putting the conditions in one line. **OR** means using seperate lines.
+
+## Custom error pages (deny\_info)
+
+By default when you deny access the user gets the error page that is stored in the _ERR\_ACCESS\_DENIED_ file. But luckily you can define your own custom error pages and display them when you deny certain accesses. A simple example:
+
+```
+acl google dstdomain google.com
+deny_info error-google google
+http_access deny google
+```
+
+Put an error page into the directory where the HTML files are stored (look for _error\_directory_ in your squid.conf) and name it _error-google_. If the user tries to access `www.google.com` the access is denied and your error page is shown.
+
+Careful when you combine ACLs on a _http\_access_ line. Example:
+
+```
+acl google dstdomain google.com
+acl admin src 10.0.5.16
+deny_info google error-google
+http_access deny admin google
+```
+
+This will deny access only for the user from the IP address 10.0.5.16 when `www.google.com` is accessed. As you can see I have combined the ACLs _admin_ and _google_. In such a combination the _last_ ACL in the line is taken into account for lookups of _deny\_info_. So it’s important that you define a _deny\_info_ for the _google_ ACL.
+
+## Re-Authentication control
+
+Usually when a user is authenticated at the proxy you cannot “log out” and re-authenticate. The user has to close and re-open the browser windows to be able to re-login at the proxy. A simple configuration will probably look like this:
+
+```
+acl my_auth proxy_auth REQUIRED
+http_access allow my_auth
+http_access deny all
+```
+
+Now there is a tricky change that was introduced in Squid 2.5.10. It allows to control when the user is prompted to authenticate. Now it’s possible to force the user to re-authenticate although the username and password are still correct. Example configuration:
+
+```
+acl my_auth proxy_auth REQUIRED
+acl google dstdomain .google.com
+http_access allow my_auth
+http_access deny google my_auth
+http_access deny all
+```
+
+In this case if the user requests `www.google.com` then the second _http\_access_ line matches and triggers re-authentication. Remember: it’s always the last ACL on a _http\_access_ line that “matches”. If the matching ACL has to do with authentication a re-authentication is triggered. If you didn’t want that you would need to switch the order of ACLs so that you get http\_access deny my\_auth google.
+
+You might also run into an **authentication loop** if you are not careful. Assume that you use LDAP group lookups and want to deny access based on an LDAP group (e.g. only members of a certain LDAP group are allowed to reach certain web sites). In this case you may trigger re-authentication although you don’t intend to. This config is likely wrong for you:
+
+```
+acl ldap-auth proxy_auth REQUIRED
+acl ldapgroup-allowed external LDAP_group PROXY_ALLOWED
+
+http_access deny !ldap-auth
+http_access deny !ldapgroup-allowed
+http_access allow all
+```
+
+The second _http\_access_ line would force the user to re-authenticate time and again if he/she is not member of the PROXY\_ALLOWED group. This is perhaps not what you want. You rather wanted to deny access to non-members. So you need to rewrite this _http\_access_ line so that an ACL matches that has nothing to do with authentication. This is the correct example:
+
+```
+acl ldap-auth proxy_auth REQUIRED
+acl ldapgroup-allowed external LDAP_group PROXY_ALLOWED
+acl dummy src 0.0.0.0/0.0.0.0
+
+http_access deny !ldap-auth
+http_access deny !ldapgroup-allowed dummy
+http_access allow all
+```
+
+This way the second _http\_access_ line still matches. But it’s the _dummy_ ACL which is now last in the line. Since _dummy_ is a static ACL (that always matches) and has nothing to do with authentication you will find that the access is just denied.

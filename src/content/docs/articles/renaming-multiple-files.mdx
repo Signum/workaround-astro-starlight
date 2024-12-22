@@ -1,0 +1,24 @@
+---
+title: Renaming multiple files
+slug: linux/renaming-multiple-files/
+---
+
+If you need to rename a larger number of files following a certain pattern then you will long for an automated solution. The ‘rename’ command helps you here that is (at least on my Debian installation) part of the [Perl](http://www.perl.org/) installation. All you need to know is the basics of [regular expressions](http://www.regular-expressions.info/) to define how the renaming should happen.
+
+Say you want to add a ‘.old’ to every file in your current directory. At the end of each expression ($) a ‘.old’ will be set:
+```
+rename 's/$/.old' *
+```
+Or you want to make the filenames lowercase:
+```
+rename 'tr/A-Z/a-z/' *
+```
+Or you want to remove all double characters:
+```
+rename 'tr/a-zA-Z//s' *
+```
+Or you have many JPEG files that look like “img0000154.jpg” but you want the first five zeros removed as you don’t need them:
+```
+rename 's/img00000/img/' *.jpg
+```
+In fact you can use any Perl operator as an argument. The actual documentation for the ‘s’ and ‘y’/’tr’ operators are found in the ‘perlop’ manpage.

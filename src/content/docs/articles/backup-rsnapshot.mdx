@@ -1,0 +1,152 @@
+---
+title: Backups with rsnaphot to external USB drives
+slug: rsnapshot-and-usb-drives/
+---
+
+How long has it been since you last backed up your Linux system? Let me guess – you tried various backup systems and hate all of them? Let me show you how to use [rsnapshot](http://www.rsnapshot.org/) and an external inexpensive USB drive to back up precious data easily.
+
+## Why?
+
+I’m a sysadmin in my day job. How could I not care about half decent backups at home. For years I have been running Bacula which has served me half well. An old AIT drive, a couple of tapes, my trusted Adaptec 2940 card and a PostgreSQL-driven Bacula installation worked moderately well but became increasingly cumbersome and fragile. The server (a retired desktop computer) crashed randomly during backups (some ancient SCSI component started to die). Or I forgot to change one of the three needed tapes (as I lacked a changer) in time so that the backup job timeout killed the running backup. Then I had to declare the tapes as free again because cancelling a backup doesn’t make Bacula free the tapes again.Or I played with PostgreSQL and inadvertently killed the director process. So maybe one backup every two weeks really ran through. And restoring files took minutes until the database finally got me the list of files. Finally one of my tapes got stuck in the drive and the drive refused to eject it. Of course the emergency ejection screw did nothing. Enough was enough. So I thought I could use an external USB drive instead of tapes but Bacula did not actually support that. An ancient shell script (vchanger) should emulate a tape changer with USB disk drives. I was too far off from [KISS](http://en.wikipedia.org/wiki/KISS_principle). What in theory sounded like decent hard- and software failed me.
+
+## How?
+
+I decided to spend 50€ (the price of one AIT tape) on a 500 GB external USB disk drive and learn about rsnapshot. And in no time I had a simple backup running where I didn’t have to worry about a huge index database and could instantly access any files backed up. What I did:
+
+### Format, label and get the UUID
+
+After plugging in the disk for the first time I ran “dmesg” to find out which device the disk was occupying:
+
+```
+[219991.641225] scsi 12:0:0:0: Direct-Access     Seagate  Portable         0130 PQ: 0 ANSI: 4  
+[219991.641765] sd 12:0:0:0: Attached scsi generic sg4 type 0  
+[219991.642462] sd 12:0:0:0: [sdc] 976773168 512-byte logical blocks: (500 GB/465 GiB)  
+[219991.643080] sd 12:0:0:0: [sdc] Write Protect is off  
+[219991.643083] sd 12:0:0:0: [sdc] Mode Sense: 2f 08 00 00  
+[219991.643085] sd 12:0:0:0: [sdc] Assuming drive cache: write through  
+[219991.644964] sd 12:0:0:0: [sdc] Assuming drive cache: write through  
+[219991.646599]  sdc: sdc1  
+[219991.694834] sd 12:0:0:0: [sdc] Assuming drive cache: write through  
+[219991.695212] sd 12:0:0:0: [sdc] Attached SCSI disk
+```
+
+So the disk was at /dev/sdc1. I formatted the disk using
+```
+mkfs.ext4 /dev/sdc1
+```
+and read the UUID (a unique identifier assigned to each disk while formatting) using
+```
+tune2fs -l /dev/sdc1 | grep UUID
+```
+which gave me
+```
+Filesystem UUID:          44449456-2b13-47df-bfcf-9c5eedf3b287
+```
+### Set up autofs
+
+You will want to have your USB mounted automatically when you plug it in and use it. On a server there is no plug-and-play like that by default. But the “[autofs](http://wiki.debian.org/AutoFs)” software does that well. Install it:
+```
+apt-get install autofs
+```
+Edit the /etc/auto.master file and add this line:
+```
+/var/autofs/removable /etc/auto.usbdrive –timeout=2,sync,nodev,nosuid
+```
+Also create an /etc/auto.usbdrive file (that you just pointed to) and add the line into it:
+```
+usbdrive -fstype=auto    UUID=44449456-2b13-47df-bfcf-9c5eedf3b287
+```
+And finally restart the autofs process:
+```
+/etc/init.d/autofs restart
+```
+This does not yet mount the disk though. But if you change into the /var/autofs/removable/usbdrive directory then autofs will look for a disk with the given UUID and mount it there on-the-fly. Try it:
+```
+cd /var/autofs/removable/usbdrive
+```
+You may notice a short delay while autofs mounts the disk. Then you should find yourself on the mounted USB drive. Type “df .” to see the filesystem. It should look like:
+```
+Filesystem            Size  Used Avail Use% Mounted on  
+/dev/sdc1             459G  198M  435G   1% /var/autofs/removable/usbdrive
+```
+### Install and configure rsnapshot
+
+Install the rsnapshot package:
+```
+apt-get install rsnapshot
+```
+The default configuration file is located in /etc/rsnapshot.conf. Edit it. But beware that all elements have to be seperated by actual Tabs. I’m using VIM and in my default settings I used “expandtabs” which automatically turned my Tabs into spaces. You don’t want that.
+
+In that file configure “snapshot\_root” to point to your autofs directory:
+```
+snapshot_root   /var/autofs/removable/usbdrive
+```
+Unless you are happy with the default backup times you will want to change the “interval” section. Make sure that you edit the /etc/cron.d/rsnapshot, too, or else rsnapshot won’t run automatically at all. I found the intervals a bit tricky but the the “man rsnapshot” manpage helped me understand it. You can use different names for the different frequencies of backups you run. But the names like “hourly” or “daily” do not mean anything. rsnapshot doesn’t have any association of “hourly” to 60 minutes for example.
+
+My configuration reads:
+```
+retain  daily   7  
+retain  weekly  4
+```
+This is much less magical than you might imagine. It just means that if you run “rsnapshot daily” then it will create backups called daily.0 to daily.6 and rotate the numbers on every rsnapshot run. You won’t have more than 7 “daily” directories though which is what you specify in the “retain” line. And you need to make sure that you call “rsnapshot daily” through a crontab. As you can imagine I’m running 7 daily backups (up to one week) and 4 weekly backups (up to one month). So my /etc/cron.d/rsnapshot file has these lines:
+```
+30 2      * * *        root    /usr/bin/rsnapshot daily  
+0  4      * * 1        root    /usr/bin/rsnapshot weekly  
+```
+Are you unfamiliar with crontab entries? It’s quite easy. You specify the times that you want the certain command run. The columns stand for minute, hour, day of month, month and the day of the week. So my daily job runs at 2:30 at night every day. And the weekly job is run at 4:00 at night on every monday. See “man 5 crontab” for a reference.
+
+Back to your /etc/rsnapshot.conf. Define which directories you want to back up and which you want to have excluded. This is what I use:
+
+```
+backup  /var/       myserver/  
+backup  /home/      myserver/  
+backup  /etc/       myserver/  
+exclude /home/*/tmp/  
+exclude /home/*/.local/share/Trash/  
+exclude /home/*/.cache/  
+exclude /var/lib/mysql/  
+exclude /var/lib/postgresql/  
+exclude /var/tmp/  
+exclude /var/log/  
+exclude /var/cache/apt/archives/
+```
+
+Of course you can decide to backup your entire server and just exclude evil mount points like /mnt, /dev, /sys, /media and /proc. But in a case of total emergency I’d rather reinstall Debian, install the packages and restore the files. I’m excluding the database directories for MySQL and PostgreSQL here because I cannot just copy the files but need to run a proper backup.
+
+What I also do back up a list of installed Debian packages in case I would need to reinstall:
+```
+backup_script   /usr/bin/dpkg –get-selections > packages.txt   installed-packages/
+```
+And I backup the databases:
+```
+backup_script   /usr/bin/mysqldump –opt –databases mailserver mysql | gzip > mysqldump    mysql/
+```
+I have the MySQL root password stored in /root/.my.cnf so I don’t need to mention it here.
+
+### Test the rsnapshot configuration
+
+To make sure your configuration is correct run
+```
+rsnapshot configtest
+```
+Fix any errors until rsnapshot is happy and shows “Syntax OK”.
+
+You can simulate a daily backup by running:
+```
+rsnapshot -t daily
+```
+It will print out the commands that rsnapshot would run.
+
+### Restoring files
+
+If you want to access the files that rsnapshot backed up this is as simple as could be. In /var/autofs/removable/usbdrive/… you will find directories for hourly, daily and weekly backups. Since rsnapshot cleverly uses hardlinks unchanged files barely take up any space. You can just browse around in the respective subdirectories and access your files.
+
+That way you can even buy a second external USB disk drive and put the first disk off-site in case your house burns down, get burglared or your cat pees on the first disk.
+
+### Off-site backup
+
+Of course if you lost the one external disk then all your backups would be ruined. So I suggest you get a second external disk and once a month swap them. Depending on your paranoia you can lock them in your bank’s deposit box or give it to your mother-in-law. As opposed to other backup solutions you can just use the second disk without much configuration. Make sure the autofs knows about it and plug it in.
+
+## Thanks
+
+Kudos to Jochen R. who recommended rsnapshot to me.

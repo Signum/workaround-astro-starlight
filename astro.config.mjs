@@ -21,10 +21,10 @@ export default defineConfig({
           // slug: "ispmail-bookworm",
           autogenerate: { directory: "ispmail-bookworm" },
         },
-        // {
-        //   label: "Reference",
-        //   autogenerate: { directory: "reference" },
-        // },
+        {
+          label: "Misc articles",
+          autogenerate: { directory: "articles" },
+        },
       ],
       logo: {
         light: "./src/assets/logo.svg",

@@ -1,0 +1,60 @@
+---
+title: Monitoring and Backup
+slug: ispmail-bookworm/monitoring-and-backup/
+sidebar:
+    order: 230
+---
+
+You have come a long way. Glad you made it. So many weird things complicated the journey that evolved from the very beginning of using email roughly 35 years ago. But before you take your much deserved break from these adventures let’s take care of some final tasks.
+
+## Monitoring
+
+For me there is nothing more awkward than having your users tell me that my systems are not working properly. As a good sysadmin I should notice outages in advance. The most frequent cause for mail server issues is a disk that is running full. Users are pretty bad with cleaning their mess up. For them the space of their mailbox is infinite. So one way is to use quotas where possible. But at least you should get notified of error conditions on your mail server.
+
+I will not dive into monitoring deeply here. Setting up proper monitoring will easily fill a guide similar to the size of the one you are currently reading. But you should either have your own monitoring system set up or at least use an internet service to check if emails are getting through.
+
+Things I suggest you check frequently:
+
+- Is there enough space on disk? Especially /var/vmail?
+- Are the SMTP, Submission, POP and IMAP ports responding from other servers?
+- Is your mail server’s IP address blacklisted? There [are](http://rbl-check.org/) [several](https://www.debouncer.com/blacklistlookup) [services](https://mxtoolbox.com/blacklists.aspx) [you](https://www.dnsbl.info/) [can](https://dnschecker.org/ip-blacklist-checker.php) use.
+- Are any emails coming through? (I just do a simple count like “`grep -c relay= /var/log/mail.log`“)
+- Number of emails in the mail queue? (mailq)
+- Are your backups restoreable? A propos backups…
+
+## Backup
+
+No matter if you are running your family mail server or are in charge for an organisation – nobody likes to lose email. There are many different backup tools for different purposes. Just to name my open-source favorites that ship with Debian:
+
+- [rsnapshot](https://rsnapshot.org/). A simple solution if you want to send backups to other servers using SSH/SCP. You can also keep backups for different points in time on your local server. But if your disk crashes then all would be lost. Also rsnapshot can become slow with many emails because every file is copied as a link. But you can access the files directly without any restore procedure. It’s basically a frontend for _rsync_ which is very reliable.
+- [borg](https://borgbackup.readthedocs.io/en/stable/). This tools needs to be installed both on the client and the server. Setting up an archive (where backups live) on the server feels a bit weird. But you are rewarded by compression, encryption and deduplication. Also data is stored in chunks which takes less I/O than rsnapshot. It is very efficient.
+- [restic](https://restic.net/). Similar to Borg in a way. It also offers deduplication, compression and encryption. It’s main advantage is to be able to store backups in S3 buckets. Consider cheap storage providers like [Wasabi](https://wasabi.com/cloud-storage-pricing/) or [Backblaze](https://www.backblaze.com/). However purging old data through S3 is a very resource-intensive job. And Restic generally eats a lot of RAM and disk cache.
+- [Bareos](https://www.bareos.org/). Formerly known as Bacula until its author started to have crazy ideas and these guys forked it. This is a full-fledged system to handle many servers in parallel and store things on different media – for example LTO magnetic tapes in a big tape library.
+- Snapshots. If your mail server is running on a virtual server then check if your ISP is offering snapshot backups. My favorite ISP charges 20% extra costs for the service but it is totally worth it. If you break your server for any reason you can just restore it to the old glory without fiddling with configuration files. It does not replace a file-based backup though. So if a user accidentally deletes an email and wants to get it back then this kind of backup will not be right.
+
+If you cannot backup your entire disk then at least include these directories:
+
+- /etc (configuration)
+- /var/vmail (the actual emails)
+- /var/log (in case the system breaks you may be able to figure out what happened last)
+- /var/backups (for general backups)
+- /var/lib/rspamd/dkim/ (private part of the DKIM keys)
+
+Also make sure to exclude:
+
+- /var/lib/mysql
+
+Instead run…
+```
+mysqldump mailserver > /var/backups/mailserver.sql
+```
+…daily to get a proper database backup that can be restored later.
+
+I also like to backup the output of these files because they help me figure out the specific layout of a server:
+```
+fdisk -l  
+lshw  
+lsb_release -a  
+dpkg --get-selections
+```
+If one of your users just accidentally deleted an email and wants it back then simply get the files from /var/vmail/domain/user/Maildir/… from the backup and put them into the original location. Dovecot will handle everything else. You don’t need to restart anything.
