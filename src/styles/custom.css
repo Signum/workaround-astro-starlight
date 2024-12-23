@@ -36,3 +36,8 @@ li > br {
   text-wrap: wrap;
   word-break: break-word;
 }
+
+.comentario-root
+{
+  margin-top: 5em;
+}
