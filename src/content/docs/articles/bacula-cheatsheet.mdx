@@ -1,0 +1,140 @@
+---
+title: Bareos/Bacula Cheat Sheet
+slug: bacula-cheatsheet/
+---
+
+Bacula is a nifty backup software that is network-capable and stores data in the database for faster retrieval in case you need a certain file back. As a big fan of cheat sheets I created this cheat sheet.
+
+## What’s up?
+
+<table><tbody><tr><td style="width: 494.317px;">Which files shall be backed up?</td><td style="width: 243.233px;">show filesets</td><td style="width: 349.45px;">I=Included, E=Excluded</td></tr><tr><td style="width: 494.317px;">What’s the server doing?</td><td style="width: 243.233px;">status dir</td></tr><tr><td style="width: 494.317px;">What’s the status of a certain job?</td><td style="width: 243.233px;">status jobid=xx</td></tr><tr><td style="width: 494.317px;">What’s the client doing?</td><td style="width: 243.233px;">status client</td></tr><tr><td style="width: 494.317px;">What’s the streamer doing?</td><td style="width: 243.233px;">status storage</td></tr><tr><td style="width: 494.317px;">Anything new?</td><td style="width: 243.233px;">messages</td></tr></tbody></table>
+
+## Backing up
+
+<table><tbody><tr><td>Start a backup</td><td>run</td><td>…and choose the backup job</td></tr><tr><td>Label a new tape</td><td>label</td><td>…and run <em>mount</em> afterwards</td></tr></tbody></table>
+
+## Restoring
+
+The common way (a user accidentally removed a file and wants the newest version back from the tapes:
+
+- Use the _restore_ command.
+- Choose option 5 (**Select the most recent backup for a client**).
+- cd / ls / dir / mark / markdir / unmark / unmarkdir / lsmark / estimate / pwd / count / find
+- done
+
+## Jobs
+
+<table><tbody><tr><td>Last jobs</td><td>list jobs</td><td>…or <em>list jobid=xx’ for a specific job</em></td></tr><tr><td>Statistics about last jobs</td><td>list jobtotal</td></tr><tr><td>Which files were backed up?</td><td>list files jobid=xx</td></tr></tbody></table>
+
+### Job status
+
+<table><tbody><tr><td><strong>Status</strong></td><td><strong>means…</strong></td></tr><tr><td>T</td><td>Terminated normally</td></tr><tr><td>C</td><td>Created but not yet running</td></tr><tr><td>R</td><td>Running</td></tr><tr><td>B</td><td>Blocked</td></tr><tr><td>E</td><td>Terminated in Error</td></tr><tr><td>e</td><td>Non-fatal error</td></tr><tr><td>f</td><td>Fatal error</td></tr><tr><td>D</td><td>Verify Differences</td></tr><tr><td>A</td><td>Canceled by the user</td></tr><tr><td>F</td><td>Waiting on the File daemon</td></tr><tr><td>S</td><td>Waiting on the Storage daemon</td></tr><tr><td>m</td><td>Waiting for a new Volume to be mounted</td></tr><tr><td>M</td><td>Waiting for a Mount</td></tr><tr><td>s</td><td>Waiting for Storage resource</td></tr><tr><td>j</td><td>Waiting for Job resource</td></tr><tr><td>c</td><td>Waiting for Client resource</td></tr><tr><td>d</td><td>Wating for Maximum jobs</td></tr><tr><td>t</td><td>Waiting for Start Time</td></tr><tr><td>p</td><td>Waiting for higher priority job to finish</td></tr><tr><td>W</td><td>Terminated with warnings</td></tr></tbody></table>
+
+## Tapes
+
+<table><tbody><tr><td>Which tapes are in the pool?</td><td>list media</td></tr><tr><td>Remove a tape</td><td>delete media</td></tr><tr><td>Which pools are defined?</td><td>list pools</td></tr><tr><td>Which tapes are/were used for a certain job?</td><td>list jobmedia</td></tr><tr><td>Assign a tape to a certain pool</td><td>add</td></tr><tr><td>Change parameters of a tape</td><td>update volume</td></tr></tbody></table>
+
+## Troubleshooting
+
+<table style="height: 32px;"><tbody><tr style="height: 32px;"><td style="height: 32px;">Erase a label on the tape</td><td style="height: 32px;">mt rewind &amp;&amp; mt weof &amp;&amp; mt rewind</td></tr></tbody></table>
+
+# Terminology
+
+## Catalog
+
+It is data in a SQL database running on the Bareos server. The catalog stores information about all assets like jobs, clients and media. Without the catalog Bareos had no idea which files were backed up and cannot restore them. In case of a disastrous loss of the catalog you need to take the latest _bootstrap_ and start restoring the catalog first using that information. So the catalog itself is also backed up because without it the system is useless.
+
+## Volumes
+
+Volumes (also called “media”) are either files on disk or physical tapes. When backups run they save their data to volumes. Bareos keeps track in the catalog which data can be found on each volume. Usually multiple backups run in parallel leading to a multiplexed stream of data written to volumes. A volume always belongs to exactly one pool. Volumes have names/labels – tapes have the name that is printed on the barcode sticker if the library have a barcode scanner.
+
+## Pool
+
+A set of volumes. The pool can define a maximum number of volumes, the type of volumes (e.g. disk or tape) and the retention period. For example you can have short-lived disk pools for small frequent backups. On the other hand you may have long-lived tape pools that store data for several weeks or months.
+
+## Job
+
+A specific action like a backup, restore or copy (e.g. from disk to tape). Jobs are usually started automatically by the director following a pre-defined schedule. Multiple jobs can run in parallel and share their resources. The catalog keeps track of which jobs have run in the past in order to know which volumes would be required to restore data from them.
+
+In the bconsole you can see the running, past and scheduled jobs by running “stat dir”.
+
+## Job definition (aka jobdef)
+
+The definition of a job. It is not stored in the catalog but in text files in /etc/bareos.
+
+## Client
+
+A server to be backed up. Usually a file-daemon runs on the client. The director will talk to the client to run jobs.
+
+## Fileset
+
+Defines which files or directories to backup from a certain server. A job defines which fileset to use for a backup.
+
+## Bootstrap
+
+A small text file usually sent out via email frequently. It is required in case of a catalog loss to find the volume that contains the last backup of the catalog.
+
+The upstream documents reads: “The bootstrap ﬁle contains ASCII information that permits precise speciﬁcation of what ﬁles should be restored, what volume they are on, and where they are on the volume. It is a relatively compact form of specifying the information, is human readable, and can be edited with any text editor.”
+
+The bootstrap data is not confidential and should be forwarded to an external location in case of a disaster.
+
+## Message
+
+Bareos can send messages to the console or via email. Results of jobs are sent via email.
+
+## Schedule
+
+A definition of how often and at what time a job can be run.
+
+## Storage
+
+Defines a way to write volumes. It is used by the storage daemon. A storage can be a path on the local disks or the name of the tape device. Autochangers (aka “tape libraries”) are also supported.
+
+---
+
+## Retention
+
+A volume is locked after being written to. The retention period defines when the volume can be overwritten again.
+
+## Scratch
+
+This applies to tape volumes only. New tapes can be introduced into the “Scratch” pool. If a pool is out of volumes to use then Bareos will take a volume from the Scratch pool and take it into its own pool.
+
+## Levels
+
+Backups can happen in three different levels: Full, Differential and Incremental. Only Full backups are required. The other levels can be used to save space on volumes.
+
+- Full: every single file defined in assigned fileset is saved to the volume
+- Differential: only new files that were not contained in the last _Full_ backup are backed up
+- Incremental: only new files that were not contained in the last _Differential_ or _Incremental_ backup are backed up
+
+Using only Full backups is secure because if you lose a full backup then you take the full backup before it. However you are stubbornly backing up the same files time and again thus wasting space on the volumes. Complete restores are fastest though because only the last full backup has to be considered.
+
+Using Full and Differential backups saves some space. During restores the last Full and last Differential backup are considered. However multiple Differential backups may store files redundantly thus wasting a little space.
+
+Using Full and Incremental backups saves most space. However for a restore all Incremental backups since the last Full backup need to be working. If one Incremental backup is broken in the chain then only the last Full backup can be restored.
+
+Using Full + Differential + Incremental backups saves most space while still keeping the risk of losing data low. A restore requires the Incremental backups back up to the last Differential backup + the last Full backup. This could look like:
+
+- **Full**
+    - Differential
+        - Incremental
+        - Incremental
+        - Incremental
+        - Incremental
+    - **Differential**
+        - Incremental
+        - Incremental
+        - **Incremental**  «««
+        - Incremental
+- Full
+    - …
+
+To restore the highlighted Incremental backup you would need the previous Differential and Full backups printed in bold letters.
+
+Which mode to use depends on the type of data to backup. Database directories usually change in its entirety so a Full backup is the best solution. File servers with millions of files gain some advantage from using Full, Differential and Incremental backups.
+
+Dangerous configurations:
+
+- Using a rare Full backup and rely on many intermediate Incremental backups. If any of the many Incremental backups were faulty you would lose all data back to that time.
+- Losing the Full backup and only keeping Incremental backups. This may occur if the retention periods are not adequately configured for Full backups.
