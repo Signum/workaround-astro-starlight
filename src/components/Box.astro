@@ -11,7 +11,9 @@ const { icon } = Astro.props;
 
 <div
   class={`highlight-box content ${icon}`}
-  style={icon === "question-mark" ? `--box-icon-url: url('nah');` : ""}
+  style={icon === "question-mark"
+    ? `--box-icon-url: url('/src/assets/professor.webp');`
+    : ""}
 >
   <section>
     <slot />

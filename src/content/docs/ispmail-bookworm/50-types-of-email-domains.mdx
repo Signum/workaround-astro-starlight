@@ -7,6 +7,9 @@ sidebar:
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import MultipleChoice from '../../../components/MultipleChoice.astro';
+import Option from '../../../components/Option.astro';
+import Box from '../../../components/Box.astro';
 
 This is the pretty boring but at the same time very important part of the tutorial. Do not skip it. Most problems that
 readers have with their mail servers are caused by a misunderstanding of the different types of email domains. There is
@@ -98,7 +101,6 @@ So the left column lists the valid email addresses. And the right column is appa
 
 Before checking if a specific email address is valid Postfix first checks if it is responsible for the domain at all. That’s done by this mapping:
 
-
 | Virtualdomain (key) | Whateve (value) |
 | ------------------- | --------------- |
 | example.org         | Kittens         |
@@ -144,6 +146,55 @@ So basically this is the way that Postfix handles aliases:
 <Aside type="tip">
 Two email addresses are mandatory for every domain that you host. `postmaster@domain` and `abuse@domain`. These requirements are documented in RFC 521 and RFC 2142. Be sure to add aliases for them. If an email to those addresses would bounce, your domain reputation will suffer.
 </Aside>
+
+
+
+<Box icon="question-mark">
+
+## Test your knowledge
+
+Can a domain be both a canonical and virtual at the same time?
+
+    <MultipleChoice>
+      <Option>
+        Yes.
+      </Option>
+      <Option isCorrect>
+        No.
+      </Option>
+    </MultipleChoice>
+
+How many virtual domains can a mail server have?
+
+    <MultipleChoice>
+      <Option>
+        None.
+      </Option>
+      <Option isCorrect>
+        There is no limit.
+      </Option>
+      <Option>
+        As many as there are IP addresses.
+      </Option>
+    </MultipleChoice>
+
+What is a catch-all address?
+
+    <MultipleChoice>
+      <Option isCorrect>
+        It receives emails for any user in that domain.
+      </Option>
+      <Option>
+        It deletes all incoming email automatically.
+      </Option>
+      <Option>
+        It is just a fancy name for the `postmaster@domain` address.
+      </Option>
+    </MultipleChoice>
+
+</Box>
+
+
 
 ## Database
 
