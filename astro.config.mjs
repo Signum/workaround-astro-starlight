@@ -11,6 +11,9 @@ export default defineConfig({
     starlight({
       lastUpdated: true,
       title: "ISPmail Guide",
+      social: {
+        github: "https://github.com/Signum/workaround-astro-starlight",
+      },
       // https://expressive-code.com/key-features/word-wrap/#configuration
       components: {
         Footer: "./src/components/Footer.astro",
