@@ -138,7 +138,7 @@ So basically this is the way that Postfix handles aliases:
 
 1.  Is the domain of the email address defined as a virtual domain?
 2.  Get all rows of the table where the email address is found in the left column. Send a copy of the email to everyone mentioned in the right column. If the right column contains multiple email addresses separated by commas then split them first.
-3.  If there was no such row then check again if there is an `_@domain_` row.
+3.  If there was no such row then check again if there is an `@domain` row.
 4.  Still nothing found? Then reject the email.
 
 <Aside type="tip">
@@ -184,7 +184,7 @@ To use the above configuration file you have to configure it in Postfix’s main
 virtual_mailbox_maps = mysql:/etc/postfix/mysql-virtual_mailbox_maps.cf
 ```
 
-If you find that this mapping is not working as you expected then the “postmap -q” command is your friend. You can ask Postfix what the right-hand side value for a given left-side value is. Say that you are interested in the mailbox_path for the email_address “`john@example.org`”:
+If you find that this mapping is not working as you expected then the “postmap -q” command is your friend. You can ask Postfix what the right-hand side value for a given left-side value is. Say that you are interested in the mailbox_path for the email_address `john@example.org`:
 
 ```
 postmap -q john@example.org mysql:/etc/postfix/mysql-virtual_mailbox_maps.cf
@@ -193,7 +193,7 @@ postmap -q john@example.org mysql:/etc/postfix/mysql-virtual_mailbox_maps.cf
 Postfix will then run the above SQL query with your “`john@example.org`” argument:
 
 ```
-SELECT mailbox_path FROM virtual_users WHERE email_address='`john@example.org`'
+SELECT mailbox_path FROM virtual_users WHERE email_address='john@example.org'
 ```
 
 The result should be:

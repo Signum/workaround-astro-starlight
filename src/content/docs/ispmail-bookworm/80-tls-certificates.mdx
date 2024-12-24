@@ -9,7 +9,7 @@ sidebar:
 import { Aside } from "@astrojs/starlight/components";
 
 <Aside type="tip" title="TLS is SSL">
-If you are unfamiliar with the abbreviation “TLS“: it is the successor to SSL but works one the same principle. Every new version of TLS deprecates unsafe encryption methods (ciphers) of previous versions.
+If you are unfamiliar with the abbreviation “TLS“: it is the name successor to SSL but works one the same principle. SSL 3.0 was just renamed to TLS 1.0 in 1999. Every new version of TLS deprecates unsafe encryption methods (ciphers) of previous versions. You will still find people calling it _SSL_.
 </Aside>
 
 The internet is not a friendly place where you can trust people. If you send data over the internet there is a pretty good chance someone intercepts it. You don’t want that. Our best weapon against that is transport encryption. All you need is to create an encryption _key_ and a _certificate_ for Postfix (SMTP), Dovecot (IMAP/POP3) and Apache (HTTPS). If you are confused why that requires a key and certificate then please consider reading the Wikipedia about [public-key cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography). The single most important detail here: nobody but you must have access to the private key.
