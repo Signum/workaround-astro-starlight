@@ -2,6 +2,7 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import sitemap from '@astrojs/sitemap';
+import matomo from "astro-matomo";
 
 // https://astro.build/config
 export default defineConfig({
@@ -32,7 +33,7 @@ export default defineConfig({
         replacesTitle: true,
       },
     }),
-// https://github.com/felix-berlin/astro-matomo
+    // https://github.com/felix-berlin/astro-matomo
     matomo({
       enabled: import.meta.env.PROD, // Only load in production
       host: "https://matomo.workaround.org/",
