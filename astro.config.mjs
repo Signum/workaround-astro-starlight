@@ -13,6 +13,7 @@ export default defineConfig({
       title: "ISPmail Guide",
       social: {
         github: "https://github.com/Signum/workaround-astro-starlight",
+        matrix: "https://riot.im/app/#/room/#ispmail:matrix.org",
       },
       // https://expressive-code.com/key-features/word-wrap/#configuration
       components: {
