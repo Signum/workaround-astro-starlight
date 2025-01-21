@@ -125,12 +125,12 @@ As usual, Postfix expects a mapping for aliases. Time for another example:
 | 4    | `sophie@example.net`         | `hr@example.net`                          |
 | 5    | `hr@example.net`             | `rick@example.net`                        |
 |      | `hr@example.net`             | `tina@example.net`                        |
-| 6    | `@example.org`               | `jack@example.com` (DANGEROUS!)           |
+| 6    | `@example.org`               | `jack@example.com` (DANGEROUS)            |
 
 Quite a lot happens here. How does Postfix interpret this table?
 
-1.  Redirect emails for `postmaster@example.org` to `jack@example.org`
-2.  Redirect emails for `abuse@example.org` also to `jack@example.org`
+1.  Redirect emails for `postmaster@example.org` to `jack@example.com`
+2.  Redirect emails for `abuse@example.org` also to `jack@example.com`
 3.  Keep a copy of an incoming email for `jack@example.com` in his mailbox and send another copy to `jacky@workaround.org.` Yes, you can use multiple email addresses seperated by commas.
 4.  Sophie has left the organisation so her address is forwarded to HR.
 5.  The HR team consists of two members: `rick@example.net` and `tina@example.net.` Every email to `hr@example.net` will be forwarded to each of them. This works similar to (3) but this time the target addresses are not seperated by commas but stored in different rows.
