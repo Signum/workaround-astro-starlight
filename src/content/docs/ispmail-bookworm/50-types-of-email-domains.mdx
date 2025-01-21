@@ -3,13 +3,10 @@ title: Types of email domains
 lastUpdated: 2023-09-25
 slug: ispmail-bookworm/types-of-email-domains
 sidebar:
-    order: 50
+  order: 50
 ---
 
 import { Aside } from "@astrojs/starlight/components";
-import MultipleChoice from '../../../components/MultipleChoice.astro';
-import Option from '../../../components/Option.astro';
-import Box from '../../../components/Box.astro';
 
 This is the pretty boring but at the same time very important part of the tutorial. Do not skip it. Most problems that
 readers have with their mail servers are caused by a misunderstanding of the different types of email domains. There is
@@ -47,8 +44,8 @@ If you wanted to do it that way…
    essentially inviting attackers to harm your server.
 2. If you want to host many email accounts this becomes impractical.
 3. Postfix cannot distinguish the local domains. If you have three local domains “example.org”, “example.com” and
-   “example.net” then all these email addresses would lead to the same mailbox: `john@example.org`, `john@example.com` and
-   `john@example.net`. So you cannot use different domains for different purposes.
+   “example.net” then all these email addresses would lead to the same mailbox: `john@example.org`, `john@example.com`
+   and `john@example.net`. So you cannot use different domains for different purposes.
 
 To tell Postfix which domain you consider local you list them in the “mydestination” configuration setting in your
 main.cf configuration file. Example:
@@ -97,23 +94,31 @@ a right column. Postfix always looks for stuff in the left column (_key_) to fin
 | `jack@example.org`    | /var/vmail/example.org/jack/Maildir      |
 | `jack@example.com`    | /var/vmail/example.com/jack/Maildir      |
 
-So the left column lists the valid email addresses. And the right column is apparently some path on disk. Right, that’s all the magic. If an email for `jack@example.org` is received then Postfix will find the entry in the left column and can figure out where Jack’s mails are stored on disk.
+So the left column lists the valid email addresses. And the right column is apparently some path on disk. Right, that’s
+all the magic. If an email for `jack@example.org` is received then Postfix will find the entry in the left column and
+can figure out where Jack’s mails are stored on disk.
 
-Before checking if a specific email address is valid Postfix first checks if it is responsible for the domain at all. That’s done by this mapping:
+Before checking if a specific email address is valid Postfix first checks if it is responsible for the domain at all.
+That’s done by this mapping:
 
 | Virtualdomain (key) | Whateve (value) |
 | ------------------- | --------------- |
 | example.org         | Kittens         |
 | example.com         | Puppies         |
 
-So there are two domains in the left column. But what is that in the right column? Kittens? Really? Well, the truth is: it doesn’t matter. It can be anything. So why is that column there at all? The reason is that _mappings_ always have two columns. Postfix wants a list of domains but it has no concepts for one-dimensional _lists_. So it uses this format and ignores the right column.
+So there are two domains in the left column. But what is that in the right column? Kittens? Really? Well, the truth is:
+it doesn’t matter. It can be anything. So why is that column there at all? The reason is that _mappings_ always have two
+columns. Postfix wants a list of domains but it has no concepts for one-dimensional _lists_. So it uses this format and
+ignores the right column.
 
-Essentially these two mappings are all we need. Add a little configuration and you can already receive emails. However Postfix provides another useful feature: _aliases_. An alias is a redirection (or _forwarding_) of one email address to one or more other addresses. Possible uses:
+Essentially these two mappings are all we need. Add a little configuration and you can already receive emails. However
+Postfix provides another useful feature: _aliases_. An alias is a redirection (or _forwarding_) of one email address to
+one or more other addresses. Possible uses:
 
--   forward postmaster@… for all your domains to one mailbox
--   create an email distribution list for a team or department
--   forward copies of all your emails to another address
--   redirect emails meant for a coworker who has left the organisation
+- forward postmaster@… for all your domains to one mailbox
+- create an email distribution list for a team or department
+- forward copies of all your emails to another address
+- redirect emails meant for a coworker who has left the organisation
 
 As usual, Postfix expects a mapping for aliases. Time for another example:
 
@@ -131,84 +136,52 @@ Quite a lot happens here. How does Postfix interpret this table?
 
 1.  Redirect emails for `postmaster@example.org` to `jack@example.com`
 2.  Redirect emails for `abuse@example.org` also to `jack@example.com`
-3.  Keep a copy of an incoming email for `jack@example.com` in his mailbox and send another copy to `jacky@workaround.org.` Yes, you can use multiple email addresses seperated by commas.
+3.  Keep a copy of an incoming email for `jack@example.com` in his mailbox and send another copy to
+    `jacky@workaround.org.` Yes, you can use multiple email addresses seperated by commas.
 4.  Sophie has left the organisation so her address is forwarded to HR.
-5.  The HR team consists of two members: `rick@example.net` and `tina@example.net.` Every email to `hr@example.net` will be forwarded to each of them. This works similar to (3) but this time the target addresses are not seperated by commas but stored in different rows.
-6.  Forward any email address of the _example.org_ domain to `jack@example.com.` We call this a _catch-all_ address. This is dangerous for two reasons. First it will send the poor Jack anything that is sent to the _example.org_ domain if there is no user account for that address. (Yes, spammers guess addresses.) And second it disables a security check in Postfix that the destination address `jack@example.com` actually exists. Postfix may first receive the email and then be confused if the recipient is not reachable. That leads to backscatter and harms your reputation. But don’t worry. I will show you the proper way to use catch-all addresses later.
+5.  The HR team consists of two members: `rick@example.net` and `tina@example.net.` Every email to `hr@example.net` will
+    be forwarded to each of them. This works similar to (3) but this time the target addresses are not seperated by
+    commas but stored in different rows.
+6.  Forward any email address of the _example.org_ domain to `jack@example.com.` We call this a _catch-all_ address.
+    This is dangerous for two reasons. First it will send the poor Jack anything that is sent to the _example.org_
+    domain if there is no user account for that address. (Yes, spammers guess addresses.) And second it disables a
+    security check in Postfix that the destination address `jack@example.com` actually exists. Postfix may first receive
+    the email and then be confused if the recipient is not reachable. That leads to backscatter and harms your
+    reputation. But don’t worry. I will show you the proper way to use catch-all addresses later.
 
 So basically this is the way that Postfix handles aliases:
 
 1.  Is the domain of the email address defined as a virtual domain?
-2.  Get all rows of the table where the email address is found in the left column. Send a copy of the email to everyone mentioned in the right column. If the right column contains multiple email addresses separated by commas then split them first.
+2.  Get all rows of the table where the email address is found in the left column. Send a copy of the email to everyone
+    mentioned in the right column. If the right column contains multiple email addresses separated by commas then split
+    them first.
 3.  If there was no such row then check again if there is an `@domain` row.
 4.  Still nothing found? Then reject the email.
 
 <Aside type="tip">
-Two email addresses are mandatory for every domain that you host. `postmaster@domain` and `abuse@domain`. These requirements are documented in RFC 521 and RFC 2142. Be sure to add aliases for them. If an email to those addresses would bounce, your domain reputation will suffer.
+  Two email addresses are mandatory for every domain that you host. `postmaster@domain` and `abuse@domain`. These
+  requirements are documented in RFC 521 and RFC 2142. Be sure to add aliases for them. If an email to those addresses
+  would bounce, your domain reputation will suffer.
 </Aside>
-
-
-
-<Box icon="question-mark">
-
-## Test your knowledge
-
-Can a domain be both a canonical and virtual at the same time?
-
-    <MultipleChoice>
-      <Option>
-        Yes.
-      </Option>
-      <Option isCorrect>
-        No.
-      </Option>
-    </MultipleChoice>
-
-How many virtual domains can a mail server have?
-
-    <MultipleChoice>
-      <Option>
-        None.
-      </Option>
-      <Option isCorrect>
-        There is no limit.
-      </Option>
-      <Option>
-        As many as there are IP addresses.
-      </Option>
-    </MultipleChoice>
-
-What is a catch-all address?
-
-    <MultipleChoice>
-      <Option isCorrect>
-        It receives emails for any user in that domain.
-      </Option>
-      <Option>
-        It deletes all incoming email automatically.
-      </Option>
-      <Option>
-        It is just a fancy name for the `postmaster@domain` address.
-      </Option>
-    </MultipleChoice>
-
-</Box>
-
-
 
 ## Database
 
-Did you get the idea of mappings? Two columns in a table? Keys and values? Good. Now how do those mappings work when we want to put the information into an SQL database?
+Did you get the idea of mappings? Two columns in a table? Keys and values? Good. Now how do those mappings work when we
+want to put the information into an SQL database?
 
-Basically a relational database works in rows and columns, too. So we can take the format of the tables shown above and put them into database tables. Let’s call these tables…
+Basically a relational database works in rows and columns, too. So we can take the format of the tables shown above and
+put them into database tables. Let’s call these tables…
 
--   virtual_domains (for the list of domains)
--   virtual_aliases (for the aliases mapping)
--   virtual_users (for the email users and their mailboxes respectively)
+- virtual_domains (for the list of domains)
+- virtual_aliases (for the aliases mapping)
+- virtual_users (for the email users and their mailboxes respectively)
 
-I won’t bore you with the SQL stuff right now. We will deal with that in a later chapter. Let’s just briefly cover how Postfix can get data from the database. We provide Postfix with _configuration files_ for that purpose. These files often have a “.cf” suffix (**c**onfiguration **f**ile).
+I won’t bore you with the SQL stuff right now. We will deal with that in a later chapter. Let’s just briefly cover how
+Postfix can get data from the database. We provide Postfix with _configuration files_ for that purpose. These files
+often have a “.cf” suffix (**c**onfiguration **f**ile).
 
-Let’s take the virtual_domains table for example. This is the content of a file that is located at `/etc/postfix/mysql-virtual-mailbox-maps.cf`:
+Let’s take the virtual_domains table for example. This is the content of a file that is located at
+`/etc/postfix/mysql-virtual-mailbox-maps.cf`:
 
 ```
 # Information on how to connect to your MySQL server
@@ -221,13 +194,21 @@ dbname = mailserver
 query = SELECT mailbox_path FROM virtual_users WHERE email_address='%s'
 ```
 
-The first four lines describe how the database can be connected to. You provide a database user and database password as well as the IP address or hostname of the SQL server and the name of the database.
+The first four lines describe how the database can be connected to. You provide a database user and database password as
+well as the IP address or hostname of the SQL server and the name of the database.
 
-A more interesting bit is the _query_ that is defined in the last line. Postfix still thinks in left and right columns. So it will run this query and replace the %s by the email address it is looking for – that’s what is expected in the left column. The database will then get all rows from the database table that match this criterion. If one row matches the query then the “SELECT mailbox_path” will return just the value of what Postfix would expect to be in the right column.
+A more interesting bit is the _query_ that is defined in the last line. Postfix still thinks in left and right columns.
+So it will run this query and replace the %s by the email address it is looking for – that’s what is expected in the
+left column. The database will then get all rows from the database table that match this criterion. If one row matches
+the query then the “SELECT mailbox_path” will return just the value of what Postfix would expect to be in the right
+column.
 
-That’s all the magic that Postfix needs to talk to your SQL database. You tell Postfix how to connect to the database and how the data in the database table corresponds to the left and right columns.
+That’s all the magic that Postfix needs to talk to your SQL database. You tell Postfix how to connect to the database
+and how the data in the database table corresponds to the left and right columns.
 
-Note that a lookup here must only return just one row from the database. Postfix must uniquely know where the mailbox path for a given user is. There are other mappings though where it’s allowed to have multiple right-hand side items for one left-hand side item – for example in virtual aliases.
+Note that a lookup here must only return just one row from the database. Postfix must uniquely know where the mailbox
+path for a given user is. There are other mappings though where it’s allowed to have multiple right-hand side items for
+one left-hand side item – for example in virtual aliases.
 
 To use the above configuration file you have to configure it in Postfix’s main.cf file:
 
@@ -235,7 +216,9 @@ To use the above configuration file you have to configure it in Postfix’s main
 virtual_mailbox_maps = mysql:/etc/postfix/mysql-virtual_mailbox_maps.cf
 ```
 
-If you find that this mapping is not working as you expected then the “postmap -q” command is your friend. You can ask Postfix what the right-hand side value for a given left-side value is. Say that you are interested in the mailbox_path for the email_address `john@example.org`:
+If you find that this mapping is not working as you expected then the “postmap -q” command is your friend. You can ask
+Postfix what the right-hand side value for a given left-side value is. Say that you are interested in the mailbox_path
+for the email_address `john@example.org`:
 
 ```
 postmap -q john@example.org mysql:/etc/postfix/mysql-virtual_mailbox_maps.cf
@@ -259,4 +242,8 @@ In this guide we will use a slight variation of that SQL query:
 query = SELECT 1 FROM virtual_users WHERE email='%s'
 ```
 
-Postfix does not need to know where the mailbox is located on disk. We will not use Postfix to store the email to disk. Instead we will make Postfix hand over the email to Dovecot which stores the email. Dovecot has a couple of nice extra features (like server-side scripts) that we want to use. So Postfix just needs to know whether an email address is valid or not. We just return “1” because actually the right column is not considered anyway. Postfix just needs to know whether there is a database row or not.
+Postfix does not need to know where the mailbox is located on disk. We will not use Postfix to store the email to disk.
+Instead we will make Postfix hand over the email to Dovecot which stores the email. Dovecot has a couple of nice extra
+features (like server-side scripts) that we want to use. So Postfix just needs to know whether an email address is valid
+or not. We just return “1” because actually the right column is not considered anyway. Postfix just needs to know
+whether there is a database row or not.

@@ -8,7 +8,7 @@ import Default from "@astrojs/starlight/components/Footer.astro";
 
   {
     Astro.url.pathname !== "/" && (
-      <script defer src="https://comentario.workaround.org/comentario.js"></script>
+      <script defer is:inline src="https://comentario.workaround.org/comentario.js"></script>
       <comentario-comments no-fonts="true" id="comments"></comentario-comments>
     )
   }
