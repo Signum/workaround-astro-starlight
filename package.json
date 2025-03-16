@@ -6,6 +6,7 @@
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro check && astro build",
+    "deploy": "rsync -va --delete dist/ narnia.workaround.org:/srv/www/workaround.org/",
     "preview": "astro preview",
     "astro": "astro"
   },
