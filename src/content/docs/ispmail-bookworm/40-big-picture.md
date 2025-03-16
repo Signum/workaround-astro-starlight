@@ -56,9 +56,7 @@ The next situation I would like to explain is…
 
 This process is way simpler. It looks like this:
 
-![](https://workaround.org/wp-content/uploads/fetch-email.png)
-
-![](https://workaround.org/wp-content/uploads/fetch-email.png)
+![Diagram showing how a user connects via IMAP](images/big-picture-user-connects-imap.png)
 
 User connects through IMAP
 
@@ -72,9 +70,7 @@ Nowadays many users seem to prefer webmail to a mail client installed on their c
 
 The Roundcube software that provides the web mail interface is basically a PHP software that is a gateway between HTML pages and a built-in IMAP client. So when a user uses their browser to connect to the web mail interface…
 
-![](https://workaround.org/wp-content/uploads/webmail.png)
-
-![](https://workaround.org/wp-content/uploads/webmail.png)
+![Diagram showing a user connecting via Webmail](images/big-picture-user-connects-webmail.png)
 
 User connects through webmail
 
@@ -91,9 +87,7 @@ Okay, the final scenario I would like to explain is…
 
 Of course your users also want to send emails to other internet users. But they cannot send the email directly to the destination mail server. First their mail client does not know which destination server is responsible for the recipient (hint: DNS) – that functionality just is not built in. And second the user is likely assigned a _dynamic IP address_ which is blocked by most mail servers because they tend to get abused by infected Windows PCs that send out spam. So the correct way to send an email to the internet is through your mail server. This is called _relaying_ because your mail server acts as a relay. In this example your user wants to send an email to `fred@example.net`.
 
-![](https://workaround.org/wp-content/uploads/relaying.png)
-
-![](https://workaround.org/wp-content/uploads/relaying.png)
+![Diagram showing a user sending an email](images/big-picture-relaying.png)
 
 Relaying/sending email via the mail server
 
