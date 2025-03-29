@@ -71,15 +71,15 @@ You will be told that your query was OK and that one new row was added.
 Now you have an empty database. Let us give the “mailadmin” database user the required privileges to manage it.
 
 You are still connected to the database, right? To create a user with full permissions enter this SQL command. Please use the **first** password you just generated instead of mine:
-<pre class="wrap">
-grant all on mailserver.* to 'mailadmin'@'localhost' identified by '**gefk6lA2brMOeb8eR5WYaMEdKDQfnF**';
-</pre>
+```
+grant all privileges on mailserver.* to 'mailadmin'@'localhost' identified by 'gefk6lA2brMOeb8eR5WYaMEdKDQfnF';
+```
 
 Also create the read-only user that will grant Postfix and Dovecot database access later (use your **second** random password here).
 
-<pre class="wrap">
-grant select on mailserver.* to 'mailserver'@'127.0.0.1' identified by '**x893dNj4stkHy1MKQq0USWBaX4ZZdq**';
-</pre>
+```
+grant select on mailserver.* to 'mailserver'@'127.0.0.1' identified by 'x893dNj4stkHy1MKQq0USWBaX4ZZdq';
+```
 
 <Aside type="note" title="127.0.0.1 versus localhost">
 Wait a minute. Why is there “127.0.0.1” instead of “localhost” in the second SQL command? Is that a typo? No, it’s not. Well, in network terminology those two are identical. But MariaDB (and Oracle’s MySQL) distinguishes between the two. If you initiate a database connection to “localhost” then you talk to the socket file which lives at /var/run/mysqld/mysqld.sock on your server. But if you connect to “127.0.0.1” it will create a network connection talking to the TCP socket on port 3306 on your server. The difference is that any process on your server can talk to 127.0.0.1. But the socket file has certain user/group/other permissions just like any other file on your file system. Postfix will be restricted to its /var/spool/postfix directory and cannot by default access that socket file. So by using 127.0.0.1 we circumvent that limitation.
