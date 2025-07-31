@@ -86,19 +86,19 @@ Before you start signing your emails you must make sure that the public key is p
 Take a look at the TXT record. It will look something like this:
 
 ```
-**2019122401**._domainkey IN TXT ( "v=DKIM1; h=sha256; k=rsa; " "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCxenHupkYLPmFMbJjV9dQICKUl2xH/aexSRUwCuw7TJ9dkddqIN+6tyw4VKhnW8R0/UlbzlSFLmVgMU0uUkwTtVqyDHhtSU7LV/SkVYmUst4dTUF1r+8PvhAm7vobMYKdwvRsOq27ABtZc8P4oU2XXHqqa6LU8s4sNxs12hLW9swIDAQAB" ) ;
+2019122401._domainkey IN TXT ( "v=DKIM1; h=sha256; k=rsa; " "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCxenHupkYLPmFMbJjV9dQICKUl2xH/aexSRUwCuw7TJ9dkddqIN+6tyw4VKhnW8R0/UlbzlSFLmVgMU0uUkwTtVqyDHhtSU7LV/SkVYmUst4dTUF1r+8PvhAm7vobMYKdwvRsOq27ABtZc8P4oU2XXHqqa6LU8s4sNxs12hLW9swIDAQAB" ) ;
 ```
 
 If you are running your own DNS server you should be able to copy this entire file and put it into your DNS zone. However if your internet provider offers you just a web interface to manage your domains then create a new TXT record with a host name of “**2019122401**._domainkey” in your domain and put the string within the double-quotes into it as the value. In my example:
 
 ```
-**2019122401**._domainkey ➠p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCxenHupkYLPmFMbJjV9dQICKUl2xH/aexSRUwCuw7TJ9dkddqIN+6tyw4VKhnW8R0/UlbzlSFLmVgMU0uUkwTtVqyDHhtSU7LV/SkVYmUst4dTUF1r+8PvhAm7vobMYKdwvRsOq27ABtZc8P4oU2XXHqqa6LU8s4sNxs12hLW9swIDAQAB
+2019122401._domainkey ➠p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCxenHupkYLPmFMbJjV9dQICKUl2xH/aexSRUwCuw7TJ9dkddqIN+6tyw4VKhnW8R0/UlbzlSFLmVgMU0uUkwTtVqyDHhtSU7LV/SkVYmUst4dTUF1r+8PvhAm7vobMYKdwvRsOq27ABtZc8P4oU2XXHqqa6LU8s4sNxs12hLW9swIDAQAB
 ```
 
 Be aware that the string you got contains two strings “…” + “…” that must be merged into one to work. (The syntax with quotes is meant for a DNS zone file if you run your own name server like _bind_.) There must usually not be any _quotes_ in the record data. Depending on your ISP it may take a while until the new record is visible on the internet. You can use _dig_ to verify that:
 
 ```
-dig +trace **2019122401**._domainkey.example.org txt
+dig +trace 2019122401._domainkey.example.org txt
 ```
 
 If you get the TXT entry like as follows then you are ready to enable DKIM signing in rspamd for that domain:
@@ -165,7 +165,7 @@ rspamd will automatically pick up the files and does not need to be restarted.
 If you have another email account at another location then you could just send a test email there via your mail server. If you take a look at the received email it should have a DKIM header now like:
 
 ```
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=example.org; s=**2019122401**; t=1519400838 h=from:subject:date:message-id:to:mime-version:content-type:content-transfer-encoding; bh=kpYel1IlDvqXEUc0SyIpXbMte3XpQOCXHl+zTyHQvGc=;	b=NEUyWUoeKE…
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=example.org; s=2019122401; t=1519400838 h=from:subject:date:message-id:to:mime-version:content-type:content-transfer-encoding; bh=kpYel1IlDvqXEUc0SyIpXbMte3XpQOCXHl+zTyHQvGc=;	b=NEUyWUoeKE…
 ```
 
 ![DKIM signature verification failed](images/prevent-spoofing-dkim-spoofing-dkim-validation-failed.png)
@@ -203,7 +203,7 @@ There are [websites](https://easydmarc.com/tools/spf-record-generator) that help
 I mentioned that DMARC is the newer standard. So why use SPF anyway? Because some email providers value your effort if you use SPF, too. Technically it’s sufficient to specify a DMARC entry. In my opinion restricting the IP addresses allowed to send is a little dangerous and a little inflexible. It is far more interesting to require that emails from your domain have a valid DKIM signature. Such a record may look like:
 
 ```
-"v=DMARC1; p=reject; adkim=s; ruf=postmaster@**example.org**"
+"v=DMARC1; p=reject; adkim=s; ruf=postmaster@example.org"
 ```
 
 However to create a proper DMARC entry I suggest you use [one of](http://www.kitterman.com/dmarc/assistant.html) [the](https://dmarcian.com/dmarc-inspector/) [web](https://www.unlocktheinbox.com/dmarcwizard/) [sites](https://www.agari.com/resources/tools/dmarc) that aid you there and explain the restrictions and extra features.
