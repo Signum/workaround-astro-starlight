@@ -25,7 +25,7 @@ Edit Dovecot’s configuration file that deals with the LMTP daemon – you can 
 
 ```
 service lmtp {
-  unix\_listener /var/spool/postfix/private/dovecot-lmtp {
+  unix_listener /var/spool/postfix/private/dovecot-lmtp {
     group = postfix
     mode = 0600
     user = postfix
