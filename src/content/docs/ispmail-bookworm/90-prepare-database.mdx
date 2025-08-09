@@ -215,5 +215,5 @@ doveadm pw -s BLF-CRYPT
 Remember to remove that sample data before you go live with your mail server. Thanks to the _delete cascade_ you just need to remove the virtual\_domain. The alias and the mailbox will be deleted automatically. This would be the SQL query you should run before taking your mail server into production:
 
 ```sql
-DELETE FROM mailserver.virtual\_domains WHERE name='example.org';
+DELETE FROM mailserver.virtual_domains WHERE name='example.org';
 ```
