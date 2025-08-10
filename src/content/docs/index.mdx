@@ -3,118 +3,142 @@ title: Welcome to ISPmail – a free guide to your own mail server
 description: ISPmail – a free guide to your own mail server
 template: splash
 hero:
-  tagline: ISPmail is a free but extensive do-it-yourself guide to help you build a fully-functional mail server from 100% open-source components. It is based on Debian GNU/Linux. Light enough for your friends and family. Or powerful enough for professional use.
+  tagline:
+    ISPmail is a free but extensive do-it-yourself guide to help you build a fully-functional mail server from 100%
+    open-source components. It is based on Debian GNU/Linux. Light enough for your friends and family. Or powerful
+    enough for professional use.
   image:
     file: /public/large-pingu.jpg
   actions:
     - text: Let's build your mail server…
       link: /ispmail-bookworm
       icon: rocket
-# banner:
-#   content: |
-#     This guide has been re-done.
+banner:
+  content: |
+    Debian 13 has been released. An updated ISPmail guide is in the making. Stay tuned.
 ---
 
-import { Card, CardGrid  } from '@astrojs/starlight/components';
+import { Card, CardGrid } from "@astrojs/starlight/components";
 
 ## Features
 
 <CardGrid stagger>
-	<Card title="Educational" icon="open-book">
-		This is not a simple copy/paste walkthrough. You will learn the technical details of email exchange on the internet. And you will understand how the different pieces of software work and interact.
-	</Card>
-	<Card title="Free" icon="heart">
-		This guide is a not-for-profit fun project. You only need to get an internet domain and a cheap virtual server (~5€/$ per month). Powered by the desire to make the internet a bit more decentralized.
-	</Card>
-	<Card title="Since 2003" icon="seti:clock">
-		This guide has been maintained for over 20 years. Made for nerds who want a boring stable mail server that just works with little maintenance. But with all the features that make it fun.
-	</Card>
-	<Card title="You’re not alone" icon="comment">
-		You won’t get stuck. Every page of this guide has a comment section to ask questions and discuss the topic. For real-time help you can join our [support chat on Matrix](https://riot.im/app/#/room/#ispmail:matrix.org).
-	</Card>
-	<Card title="Open source" icon="linux">
-		All software that is used is completely open-source. No costs. Your new friends are Debian, Postfix, Dovecot, Roundcube, MariaDB, Apache and rspamd.
-	</Card>
-	<Card title="Standards" icon="star">
-		Only standard protocols are used. IMAP, POP3, SMTP and HTTPS. No proprietary protocols. No vendor lock-in. No public cloud.
-	</Card>
+  <Card title="Educational" icon="open-book">
+    This is not a simple copy/paste walkthrough. You will learn the technical details of email exchange on the internet.
+    And you will understand how the different pieces of software work and interact.
+  </Card>
+  <Card title="Free" icon="heart">
+    This guide is a not-for-profit fun project. You only need to get an internet domain and a cheap virtual server
+    (~5€/$ per month). Powered by the desire to make the internet a bit more decentralized.
+  </Card>
+  <Card title="Since 2003" icon="seti:clock">
+    This guide has been maintained for over 20 years. Made for nerds who want a boring stable mail server that just
+    works with little maintenance. But with all the features that make it fun.
+  </Card>
+  <Card title="You’re not alone" icon="comment">
+    You won’t get stuck. Every page of this guide has a comment section to ask questions and discuss the topic. For
+    real-time help you can join our [support chat on Matrix](https://riot.im/app/#/room/#ispmail:matrix.org).
+  </Card>
+  <Card title="Open source" icon="linux">
+    All software that is used is completely open-source. No costs. Your new friends are Debian, Postfix, Dovecot,
+    Roundcube, MariaDB, Apache and rspamd.
+  </Card>
+  <Card title="Standards" icon="star">
+    Only standard protocols are used. IMAP, POP3, SMTP and HTTPS. No proprietary protocols. No vendor lock-in. No public
+    cloud.
+  </Card>
 </CardGrid>
 
 ## What readers say
 
 - Kostja:
 
-	I have been using the workaround.org ISPMAIL tutorials for many years and still do it every time I upgrade my mailserver. It is a neat and straightforward approach and saves me a lot of time I otherwise would have to spend reading manuals, finding new packages and trying things out. Everything is on the point and I get the information I need, that’s perfect. Thank you very much for you great work.
+  I have been using the workaround.org ISPMAIL tutorials for many years and still do it every time I upgrade my
+  mailserver. It is a neat and straightforward approach and saves me a lot of time I otherwise would have to spend
+  reading manuals, finding new packages and trying things out. Everything is on the point and I get the information I
+  need, that’s perfect. Thank you very much for you great work.
 
 - David:
 
-	I just finished setting up my ~fifth ispmail server (squeeze, 2x stretch, now bullseye) and this time I didn’t even bother to do the recommended checks after each step because I knew that after following (and unterstanding) your tutorial, the server would go like a Swiss watch. I wasn’t disappointed. Everything works and again I learned a lot. Thank you for putting that much effort into the tutorials!
+  I just finished setting up my ~fifth ispmail server (squeeze, 2x stretch, now bullseye) and this time I didn’t even
+  bother to do the recommended checks after each step because I knew that after following (and unterstanding) your
+  tutorial, the server would go like a Swiss watch. I wasn’t disappointed. Everything works and again I learned a lot.
+  Thank you for putting that much effort into the tutorials!
 
 - Yannis:
 
-	Just wanted to say thanks for your amazing work. Not only proved up to date and accurate technically, but it is also presented in a very educational way. It really is high-quality learning material.
+  Just wanted to say thanks for your amazing work. Not only proved up to date and accurate technically, but it is also
+  presented in a very educational way. It really is high-quality learning material.
 
 - Ezerotszaz:
 
-	I’m finally done setting up two of these mail servers – for myself and also for a friend.
-	I struggled a lot when I was doing it for the first time, but after days of work it is done, it is working properly, I can send(and receive..) from four different addresses and I could not be happier!
-	Thank you so much for the insane amount of work that you put into this awesome guide.	
+  I’m finally done setting up two of these mail servers – for myself and also for a friend. I struggled a lot when I was
+  doing it for the first time, but after days of work it is done, it is working properly, I can send(and receive..) from
+  four different addresses and I could not be happier! Thank you so much for the insane amount of work that you put into
+  this awesome guide.
 
 - Impli:
 
-	It had been a long time since I had installed a mail server and the few tutorials I could find were not explicit.
-	But your guide is very well done. Complete and very detailed. With even some technical information as a bonus for the curious.
+  It had been a long time since I had installed a mail server and the few tutorials I could find were not explicit. But
+  your guide is very well done. Complete and very detailed. With even some technical information as a bonus for the
+  curious.
 
 - Niko:
 
-	I really like this guide. I was able to learn some new stuff and setup a nice configured server. I now have a server running 2 domains and several user accounts. It took me a few evenings of my spare time and i think it was worth it. Thank you very much for your guidance!
+  I really like this guide. I was able to learn some new stuff and setup a nice configured server. I now have a server
+  running 2 domains and several user accounts. It took me a few evenings of my spare time and i think it was worth it.
+  Thank you very much for your guidance!
 
 - Michael:
 
-	Great guide! Thanks! Very structured and clear! It took me about 2 hours to have a fully funktional email server including ISPmail on a Raspberry Pi 3 Model B Rev 1.2 with Raspbian GNU/Linux 11. 
+  Great guide! Thanks! Very structured and clear! It took me about 2 hours to have a fully funktional email server
+  including ISPmail on a Raspberry Pi 3 Model B Rev 1.2 with Raspbian GNU/Linux 11.
 
 - David:
 
-	Thank you so very much Christoph. I now have a successful mail server running on Linode, and it has all the pieces you have detailed here. It works very well. Best of all, I understand how the pieces hang together.
+  Thank you so very much Christoph. I now have a successful mail server running on Linode, and it has all the pieces you
+  have detailed here. It works very well. Best of all, I understand how the pieces hang together.
 
 - Shukuru:
 
-	This guide is pure gold. As a professional developer with some sysadmin skills I was able to set up my first email server in a week.
-	I learn a lot about how emails works and I can now take control on my privacy. Thanks.
+  This guide is pure gold. As a professional developer with some sysadmin skills I was able to set up my first email
+  server in a week. I learn a lot about how emails works and I can now take control on my privacy. Thanks.
 
 - Panos:
 
-	I am proud to be able to thank the author of this series of Guides publicly, for all the unbelievable work he has done, all these years. To anyone wishing to truly understand what running a mail server is about, this is the proper place to be.
+  I am proud to be able to thank the author of this series of Guides publicly, for all the unbelievable work he has
+  done, all these years. To anyone wishing to truly understand what running a mail server is about, this is the proper
+  place to be.
 
 - Cody:
 
-	Seen this guide a few times before and found it to be the most comprehensive one available.
+  Seen this guide a few times before and found it to be the most comprehensive one available.
 
 - Anthony:
 
-	Thanks again for such a comprehensive guide. I’ve been using it for several years and I appreciate the updates for the new versions.
-	I just did a “speed run” on a test mail server/domain and it took about 2 hours. TLS/DKIM/SPF are all passing too! I’ve gotten a lot of practice with your guide over the last few versions, so I would hope that I can complete it quickly.
+  Thanks again for such a comprehensive guide. I’ve been using it for several years and I appreciate the updates for the
+  new versions. I just did a “speed run” on a test mail server/domain and it took about 2 hours. TLS/DKIM/SPF are all
+  passing too! I’ve gotten a lot of practice with your guide over the last few versions, so I would hope that I can
+  complete it quickly.
 
 - James:
 
-	Thanks Christoph, For your work running this site and the ISPmail guides. I’ve been following them for each Debian release since Wheezy.
-	I use my mail server primarily for my personal email address and also have a handful of friends using it. Works great.
+  Thanks Christoph, For your work running this site and the ISPmail guides. I’ve been following them for each Debian
+  release since Wheezy. I use my mail server primarily for my personal email address and also have a handful of friends
+  using it. Works great.
 
 - Robbert:
 
-	I have been using this guide for 10 years now with great success. I truly appreciate how you explain each step you do. This makes it very easy to follow, and also easy to deviate from the guide if desired. Thanks a lot.
+  I have been using this guide for 10 years now with great success. I truly appreciate how you explain each step you do.
+  This makes it very easy to follow, and also easy to deviate from the guide if desired. Thanks a lot.
 
 - Nicole:
 
-	I used this guide already with my first mail servers I set up 15 years ago (round about, I’m not quite sure).
-	It always worked fine and is a very big help!
-	I have Debian servers with 5 – 30 users only, including one community project where also newsletters (i.e. many mails) are sent.
-	Today I set up my newest mail server and all works fine.
-	I want to thank Christoph for his great work and support and hope the guide will never end 🙂
+  I used this guide already with my first mail servers I set up 15 years ago (round about, I’m not quite sure). It
+  always worked fine and is a very big help! I have Debian servers with 5 – 30 users only, including one community
+  project where also newsletters (i.e. many mails) are sent. Today I set up my newest mail server and all works fine. I
+  want to thank Christoph for his great work and support and hope the guide will never end 🙂
 
 - Francisco:
 
-	Thank you Christoph.
-	I’ve just setup my mail server and i’m very happy with it. I’ve learned a lot.
-
-	
+  Thank you Christoph. I’ve just setup my mail server and i’m very happy with it. I’ve learned a lot.
