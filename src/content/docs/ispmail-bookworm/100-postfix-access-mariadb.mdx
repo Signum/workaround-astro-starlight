@@ -14,13 +14,13 @@ In the previous chapter you have created the SQL database schema and inserted�
 
 As described earlier a mapping in Postfix is just a table that contains a left-hand side (LHS) and a right-hand side (RHS). To make Postfix get information about virtual domains from the database we need to create a ‘cf’ file (_configuration file_). Start by creating a file called `/etc/postfix/mysql-virtual-mailbox-domains.cf` for the virtual\_mailbox\_domains mapping. Make it contain:
 
-<pre>
+```
 user = mailserver
-password = **x893dNj4stkHy1MKQq0USWBaX4ZZdq**
+password = x893dNj4stkHy1MKQq0USWBaX4ZZdq
 hosts = 127.0.0.1
 dbname = mailserver
 query = SELECT 1 FROM virtual_domains WHERE name='%s'
-</pre>
+```
 
 Please enter your own password for the _mailserver_ database user here. It is the first one you created before.
 
@@ -56,13 +56,13 @@ Similar to the above virtual\_domains mapping you need an SQL query that searche
 
 To accomplish that please create another configuration file at `/etc/postfix/mysql-virtual-mailbox-maps.cf`:
 
-<pre>
+```
 user = mailserver
 password = **x893dNj4stkHy1MKQq0USWBaX4ZZdq**
 hosts = 127.0.0.1
 dbname = mailserver
 query = SELECT 1 FROM virtual_users WHERE email='%s'
-</pre>
+```
 
 Again please use your actual password for the ‘mailserver’ database user.
 
@@ -80,13 +80,13 @@ The virtual\_alias\_maps mapping is used for forwarding emails from one email 
 
 Create another “.cf” file at `/etc/postfix/mysql-virtual-alias-maps.cf`:
 
-<pre>
+```
 user = mailserver
 password = **x893dNj4stkHy1MKQq0USWBaX4ZZdq**
 hosts = 127.0.0.1
 dbname = mailserver
 query = SELECT destination FROM virtual\_aliases WHERE source='%s'
-</pre>
+```
 
 Make Postfix use this database mapping:
 ```

@@ -48,13 +48,13 @@ This is outlined in the [virtual(5) man page](http://www.postfix.org/virtual.5.
 
 We do not want to add that “more specific” entry for each email address manually. Fortunately we can easily automate that. For that “john-to-himself” mapping you need to create another “.cf” file `/etc/postfix/mysql-email2email.cf` for the latter mapping:
 
-<pre>
+```
 user = mailserver
-password = **x893dNj4stkHy1MKQq0USWBaX4ZZdq**
+password = x893dNj4stkHy1MKQq0USWBaX4ZZdq
 hosts = 127.0.0.1
 dbname = mailserver
 query = SELECT email FROM virtual_users WHERE email='%s'
-</pre>
+```
 
 Check that you get John’s email address back when you ask Postfix if there are any aliases for him:
 ```

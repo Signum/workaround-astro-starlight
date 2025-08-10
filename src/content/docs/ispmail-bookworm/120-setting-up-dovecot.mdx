@@ -3,7 +3,7 @@ title: Setting up Dovecot
 lastUpdated: 2023-10-04
 slug: ispmail-bookworm/setting-up-dovecot
 sidebar:
-    order: 120
+  order: 120
 ---
 
 import { Aside } from "@astrojs/starlight/components";
@@ -11,35 +11,58 @@ import { Aside } from "@astrojs/starlight/components";
 This chapter of our journey leads us to Dovecot – the software that…
 
 - gets emails destined to your users from Postfix and saves them to disk
-- executes user-based _sieve_ filter rules (can be used to e.g. move emails to different folders based on certain criteria or to send automated vacation responses)
+- executes user-based _sieve_ filter rules (can be used to e.g. move emails to different folders based on certain
+  criteria or to send automated vacation responses)
 - allows the user to fetch emails using POP3 or IMAP
 
-Before we get to the actual configuration for security reasons I recommend that you create a new system user that will own all virtual mailboxes. The following shell commands will create a system group “vmail” with GID (group ID) 5000 and a system user “vmail” with UID (user ID) 5000. (Make sure that UID and GID are not yet used or choose another – the number can be anything between 1000 and 65000 that is not yet used):
+Before we get to the actual configuration for security reasons I recommend that you create a new system user that will
+own all virtual mailboxes. The following shell commands will create a system group “vmail” with GID (group ID) 5000 and
+a system user “vmail” with UID (user ID) 5000. (Make sure that UID and GID are not yet used or choose another – the
+number can be anything between 1000 and 65000 that is not yet used):
+
 ```
 groupadd -g 5000 vmail
 useradd -g vmail -u 5000 vmail -d /var/vmail -m
 ```
-If the /var/vmail directory was already there because you assigned it a dedicated mount point then you should make sure that the permissions are set correctly:
+
+If the /var/vmail directory was already there because you assigned it a dedicated mount point then you should make sure
+that the permissions are set correctly:
+
 ```
 chown -R vmail:vmail /var/vmail
 ```
-The configuration files for Dovecot are found in `/etc/dovecot/conf.d`/. All these files are loaded by Dovecot. This is done by this magical line at the end of the `/etc/dovecot/dovecot.conf` file:
+
+The configuration files for Dovecot are found in `/etc/dovecot/conf.d`. All these files are loaded by Dovecot. This is
+done by this magical line at the end of the `/etc/dovecot/dovecot.conf` file:
+
 ```
 !include conf.d/*.conf
 ```
-It loads all files in `/etc/dovecot/conf.d/` that end in “.conf” in alphanumerical order. So “10-auth.conf” is loaded first and “90-sieve-extprograms.conf” is loaded last. The big advantage is that you can edit or replace parts of the configuration without having to overwrite the entire configuration. The main `/etc/dovecot/dovecot.conf` file does not require any changes. Those other files in conf.d/ however do.
+
+It loads all files in `/etc/dovecot/conf.d/` that end in “.conf” in alphanumerical order. So “10-auth.conf” is loaded
+first and “90-sieve-extprograms.conf” is loaded last. The big advantage is that you can edit or replace parts of the
+configuration without having to overwrite the entire configuration. The main `/etc/dovecot/dovecot.conf` file does not
+require any changes. Those other files in conf.d/ however do.
 
 ## conf.d/
 
 ### 10-auth.conf
 
-The most common [authentication mechanism](https://doc.dovecot.org/configuration_manual/authentication/authentication_mechanisms/#authentication-authentication-mechanisms) is called _PLAIN_. However if you have Outl\*\*k users then you may need to add the _LOGIN_ mechanism, too.:
+The most common
+[authentication mechanism](https://doc.dovecot.org/configuration_manual/authentication/authentication_mechanisms/#authentication-authentication-mechanisms)
+is called _PLAIN_. However if you have Outl\*\*k users then you may need to add the _LOGIN_ mechanism, too.:
+
 ```
 auth_mechanisms = plain login
 ```
-These two mechanisms would ask for a password without enforcing encryption to secure the password. But don’t worry. By default Dovecot sets `disable_plaintext_auth = yes` which ensures that authentication is only accepted over TLS-encrypted connections.
 
-At the end of this file you will find various authentication backends that Dovecot ships with. By default it will use system users (those from the /etc/passwd). But we want to use the MariaDB database backend so go ahead and change this block to:
+These two mechanisms would ask for a password without enforcing encryption to secure the password. But don’t worry. By
+default Dovecot sets `disable_plaintext_auth = yes` which ensures that authentication is only accepted over
+TLS-encrypted connections.
+
+At the end of this file you will find various authentication backends that Dovecot ships with. By default it will use
+system users (those from the /etc/passwd). But we want to use the MariaDB database backend so go ahead and change this
+block to:
 
 ```
 #!include auth-system.conf.ext
@@ -53,14 +76,25 @@ At the end of this file you will find various authentication backends that Dovec
 ### 10-mail.conf
 
 Change the mail_location setting to:
+
 ```
 mail_location = maildir:~/Maildir
 ```
-This is the directory where Dovecot will look for the emails of a specific user. The tilde character (~) means the user’s _home directory_. That does not make sense yet. But further down on this page we will tell Dovecot what the _home directory_ is supposed to mean. For example `john@example.org` will have his home directory in /var/vmail/example.org/john.
 
-Further down in the 10-mail.conf file you will find sections defining the [namespaces](https://doc.dovecot.org/configuration_manual/namespace/). Those are folder structures that your email program sees when connecting to the mail server. If you use POP3 you can only access the “inbox” – which is where all incoming email is stored. Using the IMAP protocol you get access to a hierarchy of folders and subfolders. And you can even share folders between users. Or use a public folder that can be accessed by anyone – even anonymously. So IMAP is generally to be preferred.
+This is the directory where Dovecot will look for the emails of a specific user. The tilde character (~) means the
+user’s _home directory_. That does not make sense yet. But further down on this page we will tell Dovecot what the _home
+directory_ is supposed to mean. For example `john@example.org` will have his home directory in
+/var/vmail/example.org/john.
 
-Also edit the “mail_plugins” line to enable the _quota_ plugin we will configure later and turn it into:
+Further down in the 10-mail.conf file you will find sections defining the
+[namespaces](https://doc.dovecot.org/configuration_manual/namespace/). Those are folder structures that your email
+program sees when connecting to the mail server. If you use POP3 you can only access the “inbox” – which is where all
+incoming email is stored. Using the IMAP protocol you get access to a hierarchy of folders and subfolders. And you can
+even share folders between users. Or use a public folder that can be accessed by anyone – even anonymously. So IMAP is
+generally to be preferred.
+
+Also edit the “mail*plugins” line to enable the \_quota* plugin we will configure later and turn it into:
+
 ```
 mail_plugins = quota
 ```
@@ -69,9 +103,9 @@ mail_plugins = quota
 Migrating from a previous server? Previous versions of this guide told you to set the “separator” to either “.” or “/”. The default leads to a folder structure like:
 "/var/vmail/example.org/john/Maildir/.INBOX.staff.marketing.simon".
 
-If you see folders like this…
-"/var/vmail/example.org/john/Maildir/INBOX/staff/marketing/simon"
-…then please read Dovecot’s notes on the directory structure and the hierarchy separator. Hint: LAYOUT=fs.
+If you see folders like this… "/var/vmail/example.org/john/Maildir/INBOX/staff/marketing/simon" …then please read
+Dovecot’s notes on the directory structure and the hierarchy separator. Hint: LAYOUT=fs.
+
 </Aside>
 
 ### 10-master.conf
@@ -82,7 +116,8 @@ This configuration file deals with typical service ports like IMAP or POP3.
 Don’t worry about the standard unencrypted TCP ports 110 (for POP3) and 143 (for IMAP). They can be kept accessible. If a user connects to these ports they will have to issue a _STARTTLS_ command to switch into encrypted mode before they are allowed to send their password. There is basically no difference between using an plaintext port like 110 for POP3 and then using _STARTTLS_ – or connecting to the encrypted 995 port for POP3S (=secure). See the [Dovecot documentation](https://doc.dovecot.org/admin_manual/ssl/) for another explanation.
 </Aside>
 
-So most settings are sane here and do not have to be changed. However one change is required in the “service auth” section because we want Postfix to allow Dovecot as an authentication service. Make it look like this:
+So most settings are sane here and do not have to be changed. However one change is required in the “service auth”
+section because we want Postfix to allow Dovecot as an authentication service. Make it look like this:
 
 ```
 # Postfix smtp-auth
@@ -93,11 +128,13 @@ unix_listener /var/spool/postfix/private/auth {
 }
 ```
 
-Well, Postfix runs in a chroot environment located at /var/spool/postfix. It can't access anything outside of that directory. So to allow communication with Postfix we tell Dovecot to place a communication socket into that chroot.
+Well, Postfix runs in a chroot environment located at /var/spool/postfix. It can't access anything outside of that
+directory. So to allow communication with Postfix we tell Dovecot to place a communication socket into that chroot.
 
 ### 10-ssl.conf
 
-Earlier in this guide you created both a key and a certificate file to encrypt the communication with POP3, IMAPs and HTTPS between the users and your mail server. You need to tell Dovecot where to find these files:
+Earlier in this guide you created both a key and a certificate file to encrypt the communication with POP3, IMAPs and
+HTTPS between the users and your mail server. You need to tell Dovecot where to find these files:
 
 <pre>
 ssl\_cert = \</etc/letsencrypt/live/**webmail.example.org**/fullchain.pem
@@ -105,56 +142,64 @@ ssl\_key = \</etc/letsencrypt/live/**webmail.example.org**/privkey.pem
 </pre>
 
 And enforce TLS encryption by setting:
+
 ```
 ssl = required
 ```
+
 See the [Dovecot documentation on SSL encryption](https://doc.dovecot.org/admin_manual/ssl/) for more information.
 
 Next let’s take a look at how Dovecot knows about users and their passwords:
 
 ### auth-sql.conf.ext
 
-Dovecot reads the `auth-sql.conf.ext` which defines how to find user information in your database. Open the file. There are two sections:
+Dovecot reads the `auth-sql.conf.ext` which defines how to find user information in your database. Open the file. There
+are two sections:
 
 - userdb: where to find a user’s mailbox in the file system
 - passdb: where to find the user’s hashed password
 
-By default Dovecot will run two queries at your database. One for the _userdb_ that gets information like the user ID, group ID, home directory and quota. And another for the _passdb_ that gets the hashed password.
+By default Dovecot will run two queries at your database. One for the _userdb_ that gets information like the user ID,
+group ID, home directory and quota. And another for the _passdb_ that gets the hashed password.
 
 The “userdb” section already reads:
+
 ```
 userdb {
    driver = sql
    args = /etc/dovecot/dovecot-sql.conf.ext
 }
 ```
-As you can see Dovecot uses an SQL database lookup to get that information. And it refers to the dovecot-sql.conf.ext file for more information. Let’s see…
+
+As you can see Dovecot uses an SQL database lookup to get that information. And it refers to the dovecot-sql.conf.ext
+file for more information. Let’s see…
 
 ## /etc/dovecot/dovecot-sql.conf.ext
 
 (This configuration file is one level up and not in “conf.d”.)
 
-You will find this file well documented although all configuration directives are commented out. Add these lines at the bottom of the file:
+You will find this file well documented although all configuration directives are commented out. Add these lines at the
+bottom of the file:
 
-<pre>
+```
 driver = mysql
 
-connect = \\
-  host=127.0.0.1 \\
-  dbname=mailserver \\
-  user=mailserver \\
-  password=**x893dNj4stkHy1MKQq0USWBaX4ZZdq**
+connect = \
+  host=127.0.0.1 \
+  dbname=mailserver \
+  user=mailserver \
+  password=x893dNj4stkHy1MKQq0USWBaX4ZZdq
 
-user_query = SELECT email as user, \\
-  concat('*:bytes=', quota) AS quota_rule, \\
-  '/var/vmail/%d/%n' AS home, \\
-  5000 AS uid, 5000 AS gid \\
+user_query = SELECT email as user, \
+  concat('*:bytes=', quota) AS quota_rule, \
+  '/var/vmail/%d/%n' AS home, \
+  5000 AS uid, 5000 AS gid \
   FROM virtual_users WHERE email='%u'
 
 password_query = SELECT password FROM virtual_users WHERE email='%u'
 
 iterate_query = SELECT email AS user FROM virtual_users
-</pre>
+```
 
 <Aside type="tip" title="Backslashes">
 Ending a line with a backslash (\) means that it is continued on the next line. It keeps the configuration more readable when it is split over multiple lines.
@@ -164,20 +209,27 @@ What these lines mean:
 
 - driver: the kind of database. MariaDB is the same kind as MySQL.
 - connect: where to find the MySQL database and how to access it (username, password)
-- user\_query: an SQL query that returns the user name (=the email address), the quota, the home directory, user ID and group ID.
-- password\_query: this SQL query just gets the password hash from the database
-- iterate\_query: ‘doveadm’ uses this query to get a list of all users. That allows you to use the “doveadm user ‘\*'” command later.
+- user_query: an SQL query that returns the user name (=the email address), the quota, the home directory, user ID and
+  group ID.
+- password_query: this SQL query just gets the password hash from the database
+- iterate_query: ‘doveadm’ uses this query to get a list of all users. That allows you to use the “doveadm user ‘\*'”
+  command later.
 
-The _user\_query_ gets several pieces of information from the database. Let’s look at it one by one:
+The _user_query_ gets several pieces of information from the database. Let’s look at it one by one:
 
 - email AS user  
-    It gets the the _email_ field from the database which corresponds to the user name. Dovecot expects it in the _user_ field so we set an alias to _“user”._
-- userdb\_quota\_rule  
-    This is the user’s quota in bytes. Think of it as the maximum possible space on disk that the user can occupy. As [documented](https://doc.dovecot.org/configuration_manual/quota/#per-user-quota) Dovecot expects the quota in a special format like “\*:bytes=10000” if the user should not be able to store more than 10,000 bytes. That’s why we begin the string with ‘\*:bytes=’.
-- userdb\_home  
-    This leads to the directory where all emails and various control files for this user are located. The placeholder ‘%d’ replaces the domain and ‘%n’ the user part. So for John that makes it “/var/vmail/example.org/john”.
-- userdb\_uid and userdb\_gid  
-    Those are the user ID and group ID of _vmail_ user – 5000 for both. Dovecot uses it to set the permissions of files it creates. As all users share the same system user “vmail” this is just a static number.s
+   It gets the the _email_ field from the database which corresponds to the user name. Dovecot expects it in the _user_ field
+  so we set an alias to _“user”._
+- userdb_quota_rule  
+   This is the user’s quota in bytes. Think of it as the maximum possible space on disk that the user can occupy. As [documented](https://doc.dovecot.org/configuration_manual/quota/#per-user-quota)
+  Dovecot expects the quota in a special format like “\*:bytes=10000” if the user should not be able to store more than 10,000
+  bytes. That’s why we begin the string with ‘\*:bytes=’.
+- userdb_home  
+   This leads to the directory where all emails and various control files for this user are located. The placeholder ‘%d’
+  replaces the domain and ‘%n’ the user part. So for John that makes it “/var/vmail/example.org/john”.
+- userdb*uid and userdb_gid  
+   Those are the user ID and group ID of \_vmail* user – 5000 for both. Dovecot uses it to set the permissions of files it
+  creates. As all users share the same system user “vmail” this is just a static number.s
 
 ## Fix permissions
 
@@ -193,6 +245,7 @@ Restart Dovecot from the shell:
 ```
 systemctl restart dovecot
 ```
+
 Look at your /var/log/mail.log logfile. You should see:
 
 ```
