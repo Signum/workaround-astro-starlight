@@ -113,7 +113,11 @@ Dovecot’s notes on the directory structure and the hierarchy separator. Hint: 
 This configuration file deals with typical service ports like IMAP or POP3.
 
 <Aside type="tip" title="Plaintext services? Really?">
-Don’t worry about the standard unencrypted TCP ports 110 (for POP3) and 143 (for IMAP). They can be kept accessible. If a user connects to these ports they will have to issue a _STARTTLS_ command to switch into encrypted mode before they are allowed to send their password. There is basically no difference between using an plaintext port like 110 for POP3 and then using _STARTTLS_ – or connecting to the encrypted 995 port for POP3S (=secure). See the [Dovecot documentation](https://doc.dovecot.org/admin_manual/ssl/) for another explanation.
+  Don’t worry about the standard unencrypted TCP ports 110 (for POP3) and 143 (for IMAP). They can be kept accessible.
+  If a user connects to these ports they will have to issue a _STARTTLS_ command to switch into encrypted mode before
+  they are allowed to send their password. There is basically no difference between using an plaintext port like 110 for
+  POP3 and then using _STARTTLS_ – or connecting to the encrypted 995 port for POP3S (=secure). See the [Dovecot
+  documentation](https://doc.dovecot.org/admin_manual/ssl/) for another explanation.
 </Aside>
 
 So most settings are sane here and do not have to be changed. However one change is required in the “service auth”
@@ -136,10 +140,10 @@ directory. So to allow communication with Postfix we tell Dovecot to place a com
 Earlier in this guide you created both a key and a certificate file to encrypt the communication with POP3, IMAPs and
 HTTPS between the users and your mail server. You need to tell Dovecot where to find these files:
 
-<pre>
-ssl\_cert = \</etc/letsencrypt/live/**webmail.example.org**/fullchain.pem
-ssl\_key = \</etc/letsencrypt/live/**webmail.example.org**/privkey.pem
-</pre>
+```
+ssl\_cert = \</etc/letsencrypt/live/webmail.example.org/fullchain.pem
+ssl\_key = \</etc/letsencrypt/live/webmail.example.org/privkey.pem
+```
 
 And enforce TLS encryption by setting:
 
@@ -202,7 +206,8 @@ iterate_query = SELECT email AS user FROM virtual_users
 ```
 
 <Aside type="tip" title="Backslashes">
-Ending a line with a backslash (\) means that it is continued on the next line. It keeps the configuration more readable when it is split over multiple lines.
+  Ending a line with a backslash (\) means that it is continued on the next line. It keeps the configuration more
+  readable when it is split over multiple lines.
 </Aside>
 
 What these lines mean:
