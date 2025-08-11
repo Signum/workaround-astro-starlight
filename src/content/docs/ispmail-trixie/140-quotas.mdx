@@ -1,0 +1,201 @@
+---
+title: Quotas
+lastUpdated: 2023-10-04
+slug: ispmail-trixie/quotas
+sidebar:
+  order: 140
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+<Aside type="tip" title="Optional feature">
+This feature is completely optional. If you are eager to get finished then skip this page and maybe come back later.
+</Aside>
+
+Quotas are size limits for users. You can make sure that users do not waste arbitrary amounts of disk space but are
+forced to clean up old emails every now and then.
+
+The magic happens in two places:
+
+1. Postfix needs to reject new emails if the user’s mailbox is over quota.
+2. Dovecot needs to keep track of the quota and how much the user has already used up of it.
+
+### Dovecot quota policy service
+
+Let’s start with Dovecot. Find the file `/etc/dovecot/conf.d/90-quota.conf` and edit it. There are several `plugin {}`
+sections. Take one and make it look like:
+
+```
+plugin {
+  quota = count:User quota
+  quota_vsizes = yes
+
+  quota_status_success = DUNNO
+  quota_status_nouser = DUNNO
+  quota_status_overquota = "452 4.2.2 Mailbox is full and cannot receive any more emails"
+}
+```
+
+The first line defines that you want to calculate the used space in a user’s _maildir_. There are several
+[backends](https://doc.dovecot.org/configuration_manual/quota_plugin/) like that but the
+_[count](https://doc.dovecot.org/configuration_manual/quota/quota_count/#quota-backend-count)_ is the best choice in
+this context. (Previous guides used _maildir_ here.) The string “User quota” is just an arbitrary string that may be
+queried from a mail user agent.
+
+The lines starting with “`quota_status_…`” set return values for the service that you will set up in a minute. It will
+tell Postfix that it will not interfere (_DUNNO_ – colloquial way to say “I don’t know”). And it will return a string
+with a return code 452 if the user is over quota. Codes starting with “4” mean temporary errors. It will tell the
+sending party that it is worth retrying at a later time. However if the user does not resolve the issue it will lead to
+a _bounce_ error email after three days.
+
+In the same file (_90-quota.conf_) add another section:
+
+```
+service quota-status {
+  executable = /usr/lib/dovecot/quota-status -p postfix
+  unix_listener /var/spool/postfix/private/quota-status {
+    user = postfix
+  }
+}
+```
+
+This creates a new [Dovecot service](https://doc.dovecot.org/configuration_manual/service_configuration/) responding to
+requests from other processes. You surely recognize that we put it into the jail that Postfix runs in
+(_/var/spool/postfix_), so that Postfix can access it.
+
+Time to restart Dovecot:
+
+```
+systemctl restart dovecot
+```
+
+Take a look at the /var/spool/postfix/private directory. If all went as intended you will find a socket file called
+`quota-status` there. Otherwise please check the `/var/log/mail.log` file for errors.
+
+### Postfix recipient restrictions
+
+If we stopped here, then Dovecot would reject emails for users who have no space left. However Postfix would still
+happily receive new emails and attempt to forward them to Dovecot via LMTP. Dovecot however will deny that. It will then
+keep the email in its queue and retry for a while. In the end it will send a _bounce_ back to the sender telling them
+about the problem. So why is this bad?
+
+1. The sender will assume that the email was delivered while it is stuck in the queue for up to three days.
+2. Spam emails use forged senders. So at the time that Postfix generates the _bounce email_ it will likely send it to an
+   innocent person. This is called _backscatter_ and considered a mail server misconfiguration. Such a problem may get
+   your mail server blacklisted. You don’t want that.
+
+So the next logical step is to make Postfix check whether a mailbox is over quota whenever a new email arrives. Let’s
+hook up into the “RCPT TO” phase of the SMTP dialog when a new email comes in. Postfix checks its
+_smtpd_recipient_restrictions_ configuration at this stage. Run this command in the shell:
+
+```
+postconf smtpd_recipient_restrictions=reject_unauth_destination, \
+    "check_policy_service unix:private/quota-status"
+```
+
+This adds two checks:
+
+1. `reject_unauth_destination` checks whether the mail server is the final destination for the recipient’s email
+   address. This is pretty much the default behavior if you do not define any restrictions.
+2. `check_policy_service` connects to the socket file at `/var/spool/postfix/private/quota-status` that was put there by
+   Dovecot. It will use it to ask Dovecot whether the user is over quota in which case the email would get rejected.
+
+### Test it
+
+If you are curious to see this working, then set John’s mailbox quota to 5 KB:
+
+```sql
+# mysql mailserver
+mysql> update virtual_users set quota=4000 where email='john@example.org';
+```
+
+Send him a few emails using the ‘swaks’ tool:
+
+```
+swaks --server localhost --to john@example.org
+```
+
+After a few emails you will see the rejection message:
+
+```
+-> RCPT TO:john@example.org
+ <** 452 4.2.2 john@example.org: Recipient address rejected: Mailbox is full and cannot receive any more emails
+```
+
+### Troubleshooting
+
+These are things you should consider if quotas do not seem to work properly:
+
+- Check if you have enabled “quota” in the “mail_plugins” in the 10-mail.conf file.
+- Your users may complain that they have deleted many emails but are still over quota. Let them check if they actually
+  emptied the _Trash_ folder. Of course emails in that folder also contribute to the disk space usage. Once the Trash
+  folder is expunged the problem should be gone. You may also allow your users more space in the Trash folder. That’s
+  explained in the [Dovecot documentation](https://doc.dovecot.org/configuration_manual/quota/#quota-rules).
+- If you directly remove files from a user’s Maildir instead of properly accessing the mailbox using IMAP then you will
+  screw up the quota calculation. In that case let Dovecot recalculate the quota:  
+   `doveadm quota recalc -u john@example.org`
+
+### Automatic warning emails
+
+The last step is to inform the poor users if they accidentally went over quota. After all they do not necessarily
+recognize that on their own. Let’s do that by sending them an email with a warning. Yes, we will make sure that the
+email gets through even if the quota is reached.
+
+Edit the `90-quota.conf` file again. Add this section to the file (derived from the
+[Dovecot documentation](https://doc.dovecot.org/configuration_manual/quota/#quota-warning-scripts)):
+
+```
+plugin {
+   quota_warning = storage=95%% quota-warning 95 %u
+   quota_warning2 = storage=80%% quota-warning 80 %u
+}
+service quota-warning {
+   executable = script /usr/local/bin/quota-warning.sh
+   unix_listener quota-warning {
+     user = vmail
+     group = vmail
+     mode = 0660
+   }
+}
+```
+
+This section defines two automatic quota warnings. The first (quota_warning) is triggered if the user reaches 95% of the
+quota. The second (quota_warning2) at 80%. These lines follow this schema:
+
+- **Trigger** (e.g. “storage=95%”). The “%” sign needs to be used twice if you want to emit a literal percent sign. So
+  this is not a typo.
+- The **socket** you want to call in that case. Our socket is the “service quota-warning” that calls a shell script.
+- Additional **parameters** that are passed to the shell script in our case. They tell the script the percentage that
+  has been reached (e.g. 95) and the address of the user who should get the warning.
+
+Apparently we need the script to run. So please create a new file at `/usr/local/bin/quota-warning.sh` and put these
+lines into it:
+
+```
+#!/bin/sh
+PERCENT=$1
+USER=$2
+cat << EOF | /usr/lib/dovecot/dovecot-lda -d $USER -o "plugin/quota=maildir:User quota:noenforcing"
+From: postmaster@webmail.example.org
+Subject: Quota warning - $PERCENT% reached
+
+Your mailbox can only store a limited amount of emails.
+Currently it is $PERCENT% full. If you reach 100% then
+new emails cannot be stored. Thanks for your understanding.
+EOF
+```
+
+Make this file executable:
+
+```
+chmod +x /usr/local/bin/quota-warning.sh
+```
+
+Time to restart Dovecot again:
+
+```
+systemctl restart dovecot
+```
+
+Dovecot’s quota limits can be configured in many ways. If you have special needs then give
+[their documentation](https://doc.dovecot.org/configuration_manual/quota/) a look.

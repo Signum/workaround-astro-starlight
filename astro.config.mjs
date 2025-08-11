@@ -22,6 +22,11 @@ export default defineConfig({
       customCss: ["./src/styles/custom.css"],
       sidebar: [
         {
+          label: "ISPmail for Debian 13",
+          // slug: "ispmail-bookworm",
+          autogenerate: { directory: "ispmail-trixie" },
+        },
+        {
           label: "ISPmail for Debian 12",
           // slug: "ispmail-bookworm",
           autogenerate: { directory: "ispmail-bookworm" },

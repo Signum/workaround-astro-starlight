@@ -1,0 +1,183 @@
+---
+title: Install software packages
+lastUpdated: 2023-10-03
+slug: ispmail-trixie/install-the-software-packages
+sidebar:
+    order: 70
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+After the basic installation your server will reboot and allow you to login. You can either login at the console (if you have physical access to the system) or using SSH (_secure shell_).
+
+<Aside type="tip" title="SSH as root with password login?">
+
+By default the server will not allow logging in as “root” over SSH for security reasons. Instead use the non-root user you created during the installation. Then enter “su -” to become _root_. I recommend you use _SSH public key authentication_ which means creating an SSH key (if you don’t have one yet) using _ssh-keygen_ on your workstation and and _ssh-copy-id_ to copy your public key file from ~/.ssh/id\_rsa.pub file to ~/.ssh/authorized\_keys on the server. If logging in still does not work please check the /var/log/auth.log file on the server. You may have some permissions wrong.
+</Aside>
+
+Unless you just installed the server it is a good idea to install all missing updates first:
+
+```
+apt update
+apt upgrade
+```
+
+## Packages
+
+Let us install the necessary Debian packages to make it an actual mail server. Take a moment to read through this list of package – we will do the installation afterwards:
+
+- mariadb-server  
+    The database service that will store information about your email accounts and domains. (If you haven’t heard of MariaDB yet, it is a fork of MySQL after being acquired by Oracle.)
+- postfix  
+    The MTA (mail transport agent) that speaks SMTP to receive and send emails.
+- postfix-mysql  
+    An extension that allows Postfix to get its information from a MySQL/MariaDB database.
+- dovecot-mysql  
+    The IMAP/POP3 mail server including an extension to query information from a MySQL/MariaDB database.
+- dovecot-pop3d _(optional)_  
+    An extension to Dovecot that allows users to fetch emails using the POP3 protocol. (_This is optional. Only few users nowadays still use POP3._)
+- dovecot-imapd  
+    An extension to Dovecot that allows users to access emails using the IMAP protocol.
+- dovecot-lmtpd  
+    Enables Dovecot to receive [LMTP](https://en.wikipedia.org/wiki/Local_Mail_Transfer_Protocol) connections. We will need it later for the internal transfer of emails from Postfix to Dovecot.
+- dovecot-managesieved _(optional)_  
+    An extension to Dovecot that allows users to define filter rules that are automatically run on the server when a new email arrives.
+- apache2 and php8.2  
+    The web server that powers the webmail interface. PHP is the scripting language that the Roundcube webmail software is written in.
+- adminer _(optional)_  
+    A web interface to manage your SQL database if you are not comfortable crafting SQL queries by hand.
+- rspamd  
+    A third-party software that deals with spam and handles automatic domain key (DKIM) signing.
+- redis-server  
+    A key-value store. It is a simple but fast kind of database service where Rspamd stores training data about spam and ham.
+- pwgen  
+    A tool to create random passwords.
+- swaks  
+    The _SWiss Army Knife of Smtp_. A utility to send emails through SMTP for testing purposes.
+- mutt  
+    A console-based program that can speak IMAP and also read Maildirs directly. Very helpful for testing the functionality of your mail server.
+- certbot  
+    A tool that talks to the LetsEncrypt certificate service to request and renew certificates. You will not need it if you have bought a certificate for your webmail server.
+- ca-certificates  
+    A set of certificates from common certificate authorities on the internet. It is required for the proper function of _wget_ for example.
+- fail2ban _(optional)_  
+    A daemon that tracks log files to recognize brute force attacks. It can block IP addresses of attackers. We will use it to defend against evil people trying to get into our mail server.
+
+## pwgen
+
+Let’s start with the _pwgen_ utility. It helps you create secure passwords. Unless you already have a tool for that…
+
+```
+apt install -y pwgen
+```
+You will need a random passwords later to create a database user for the mail server. Just as an example: to create a secure password having a length of 20 characters you would run:
+
+```
+pwgen -s 20 1
+```
+
+That gets you a string like “W2EzNUFJzjEmA8tQT7A0”.    
+
+## MariaDB server
+
+If you used MySQL before you may remember that you were forced to specify a password for the ‘root’ _database user_. That has changed with MariaDB in Debian – for the better. Now you can access the database server without any password if you are logged in as ‘root’ on the server. You might as well set a password but it is not necessary.
+
+Go install the MariaDB server package:
+
+```
+apt install -y mariadb-server
+```
+If all went well you can now run “mysql” and get a connection to your MySQL database:
+
+```
+root@buster:~# mysql
+ Welcome to the MariaDB monitor.  Commands end with ; or \\g.
+ Your MariaDB connection id is 30
+ Server version: 10.3.18-MariaDB-0+deb10u1 Debian 10
+ Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+ Type 'help;' or 'h' for help. Type 'c' to clear the current input statement.
+ MariaDB [(none)]> 
+```
+
+Exit the SQL shell by typing “exit” or pressing CTRL-D.
+
+## Postfix
+
+Now on to the Postfix packages:
+
+```
+apt install -y postfix postfix-mysql
+```
+When you get asked for the mail server configuration type please choose “Internet site”. Enter your own mail server name (the fully qualified domain name) or just press enter. The host name and domain does not need to match any of your email domains.
+
+## Apache and PHP
+
+To provide a webmail service you need the Apache web server software and the PHP scripting language support:
+
+```
+apt install -y apache2 php8.2
+```
+
+<Aside type="note">
+I have been asked several times why I endorse Apache. Why not use [Nginx](https://www.nginx.com/) instead? Well, Apache is still pretty common. And if you use PHP – which we need for the web mail software – there is no performance advantage of using Nginx anyway. If you prefer Nginx then go with it – PHP-FPM is your friend.
+</Aside>
+
+## rspamd
+
+Just like in previous versions of this guide we will deal with spam using _[rspamd](https://rspamd.com/)_. (The rspamd principal developer endorses his [own software packages](https://rspamd.com/downloads.html) but in this guide we will use the packages in Debian for stability.)
+
+{/* TODO: Using the upstream packages has advantages regarding spam detection. */}
+
+We also install Redis as a storage backend for Rspamd to store its training data about spam and ham.
+
+```
+apt install -y rspamd redis-server
+```
+
+## swaks
+
+A very useful tool to test email delivery later is [SWAKS](https://www.jetmore.org/john/code/swaks/) (the _SWiss Army Knife for Smtp_):
+
+```
+apt install -y swaks
+```
+
+## mutt
+
+This is a full-featured IMAP mail client. Think of it as the _vi_ of mail clients. It cannot display HTML but it is very helpful to test IMAP mail servers. And some hardcore users still prefer it over any other mail client.
+
+```
+apt install -y mutt
+```
+
+## certbot
+
+You will want to use encrypted connections where possible. So you need a certificate for your services. The _certbot_ software helps you to request and manage [Let’s Encrypt](https://letsencrypt.org/) certificates automatically.
+
+```
+apt install -y certbot
+```
+
+## Dovecot
+
+In addition to Postfix (that handles SMTP communication) you will need [Dovecot](https://dovecot.org/) to store received emails and provide IMAP (and optionally POP3) access for your users:
+
+```
+apt install -y dovecot-mysql dovecot-pop3d dovecot-imapd dovecot-managesieved dovecot-lmtpd
+```
+
+## Adminer
+
+SQL databases are called like that because SQL (_structured query language_) is the way you talk to it. But as we are just puny humans let’s have a more user-friendly way to manage the database. I suggest _Adminer_ which is a tool similar to phpMyAdmin.
+
+```
+apt install -y adminer
+```
+
+## ca-certificates
+
+To avoid errors when downloading files using _wget_ you should install the default set of certificates of common certificate authorities on the internet:
+
+```
+apt install -y ca-certificates
+```

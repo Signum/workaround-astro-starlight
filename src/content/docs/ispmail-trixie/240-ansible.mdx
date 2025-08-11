@@ -1,0 +1,19 @@
+---
+title: Automatic installation with Ansible
+slug: ispmail-trixie/automatic-installation-with-ansible
+sidebar:
+    order: 240
+---
+
+If you want to set up multiple mail servers then automation is your friend. Nowadays [Ansible](https://docs.ansible.com/) is commonly used for that purpose. If you are dealing with system administration you should have such a tool in your toolbox.
+
+I have created an [Ansible playbook on Github](https://github.com/Signum/ispmail-bookworm-ansible) that you can download and use. Using it is pretty simple:
+
+```
+apt install ansible git
+git clone https://github.com/Signum/ispmail-bookworm-ansible.git
+cd ispmail-bookworm-ansible/ansible
+ansible-playbook ispmail.yml -c local
+```
+
+Please follow the hints in the README.md within the repository.
