@@ -1,0 +1,41 @@
+---
+title: Installing Debian
+lastUpdated: 2025-08-14
+slug: ispmail-trixie/install-debian
+sidebar:
+  order: 130
+---
+
+import { Aside } from "@astrojs/starlight/components";
+import { FileTree } from "@astrojs/starlight/components";
+
+<Aside type="caution">
+  This page is only relevant if you will install Debian yourself. If your data center has provided you with a ready
+  Debian Trixie server, just skip this page.
+</Aside>
+
+You have a blank computer or virtual machine? Then simply install Debian Bookworm yourself. Get a boot medium from the
+[Debian website](https://www.debian.org/distrib/netinst). The smaller _network installer_ is sufficient – it will
+download all required packages directly from the internet. Make sure you choose ‘English’ as the installation language
+even if it is not your native language. If you have trouble with the server you will more likely find help when
+searching for English error messages on the internet.
+
+Most of the installation is pretty straightforward. You don’t need me holding your hand. I strongly recommend that you
+use the _logical volume manager_ (LVM) for your partitions to stay flexible if your server grows. See my
+[article on LVM](https://workaround.org/understanding-lvm/) if you want some help understanding its concept.
+
+## Partitioning
+
+These are the relevant paths and the minimum amount of space I would suggest. If you use LVM, enlarging partitions later
+is very simple.
+
+<FileTree>
+
+- / (operating system – 5 GB)
+  - var/
+    - vmail/ (actual emails will be stored here – 10 GB)
+    - log/
+      - journal/ (systemd saves logs here – 5 GB)
+  - tmp/ (temporary storage – 1 GB)
+
+</FileTree>

@@ -1,0 +1,180 @@
+---
+title: Upgrading from Debian Bookworm
+lastUpdated: 2025-08-09
+slug: ispmail-trixie/upgrading
+sidebar:
+  order: 110
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+<Aside type="caution">
+  This page is only relevant if you already built a mail server using the ISPmail guide for Debian Bookworm. If you are
+  starting from scratch, just skip to the next page.
+</Aside>
+
+Did you follow the ISPmail guide for Debian Bookworm to install your mail server? Then let's take it to Debian Trixie.
+
+# Architectural changes
+
+In the past I tried to keep things similar to previous versions of this guide. Most of us are happy with their mail
+servers and want to change as little as possible when a new Debian release comes along. However this time I decided to
+change a few things because I reckon that an average mail server is used for friends and family or maybe a small
+organisation. So I replaced resource-hungry components by more lightweight software:
+
+- Apache and PHP were needed to run Roundcube as a webmail service. Apache is pretty heavy and no fun to configure. This
+  guide uses _Caddy_ instead – a very lightweight web server that also handles the job of _certbot_ to get you an
+  HTTPS/TLS certificate from Let's Encrypt automatically.
+- MySQL/MariaDB was used to store control data about your domains, the email accounts and aliases. That is quite a lot
+  of RAM wasted for this little amount of data we need to store. So this guide uses _SQLite_ instead.
+- rsyslogd was a classic choice to write log files like /var/log/mail.log. As Debian is using _systemd_ we no longer
+  need rsyslogd and logrotate. The logs can be read using _journalctl_ instead.
+
+# Version changes
+
+A new Debian stable release comes with newer software versions. So I checked the changelogs to determine what we will
+have to change:
+
+- Postfix 3.7.6 -&gt; 3.10.3. No breaking changes. In this guide we will turn off _chroot_ mode though to simplify
+  things a bit. The author of Postfix does not recommend it anyway.
+- Dovecot 2.3.19 -&gt; 2.4.1. Various deprecations of the configuration. This guide uses the new syntax.
+- PHP 8.2 -&gt; 8.4. Roundcube has no issues with the newer PHP version.
+- rspamd 3.4.1 -&gt; 3.12.1. No breaking changes.
+- Roundcube 1.6.1 -&gt; 1.6.11. No breaking changes.
+
+# Fresh installation
+
+Please do not try to upgrade your previous server using `apt-get dist-upgrade`. It is very hard to do the upgrade
+without losing mails. Set up a new server instead. Once you are ready, come back here.
+
+## Preparing the DNS/IP switch
+
+At some point during the migration, you need switch your DNS record to point to the new server. There are a couple of
+options:
+
+1. Lower the TTL of your MX record. The TTL (time-to-live) defines how long your record can be cached. If you lower that
+   value to 60 seconds, you can change the MX record and other servers will pick it up quickly.
+1. If your data center allows it, move your IP address over. Some offer _reserved addresses_ that you can assign to a
+   server. That way there will be no delay in the switch-over. And other servers on the internet will recognize your
+   server as a mail server already, because some companies attach a _reputation_ to an IP address.
+1. Add a second MX record pointing to your new server. Assign the same priority. That way you can safely switch off your
+   old server and later remove its MX record.
+
+## Migrate the mailserver database
+
+You need to copy the database that contains the control data about your email domains and accounts. Log into the old
+(Bookworm) server as root and back up the *mailserver* database. That is as easy as running…
+
+(TODO: sqlite)
+
+```
+mysqldump mailserver > mailserver.sql
+```
+
+Copy that file to the new server (using *scp*) and import it there:
+
+```
+mysql mailserver < mailserver.sql
+```
+
+Obviously any database changes on the old server from now on will have to be done on the new server as well until the
+migration is done.
+
+## Roundcube contacts
+
+(TODO: sqlite)
+
+If your users are using Roundcube as a webmail interface then you should migrate their data like their contact lists.
+Dump the SQL from the old server:
+
+```
+mysqldump roundcube > roundcube.sql
+```
+
+Copy that file to the new server and import it:
+
+```
+mysql roundcube < roundcube.sql
+```
+
+One caveat though. To distinguish multiple mail servers Roundcube stores the server’s name in the mail_host column of
+the users table. So as a last step change that column if your new mail server has a new FQDN/hostname by running this
+SQL query on the new roundcube database:
+
+```sql
+UPDATE users SET mail_host='new.mail.server';
+```
+
+## Migrate rspamd spam training data
+
+If you have been using rspamd with the Redis backend then copy over the Redis database from your previous server.
+Details are found in the rspamd chapter.
+
+## Migrate the Maildirs hot
+
+Fortunately Dovecot uses the maildir format that stores emails as plain files on disk. Login to the new (Bookworm)
+server and use *rsync* to copy over the mails from the old (Bullseye) mail server:
+
+```
+rsync -va oldserver:/var/vmail/ /var/vmail/
+```
+
+(Note the trailing slashes. Type them exactly as shown above or your files will end up in wrong places.)
+
+There is no need to shut down Dovecot on your production Bullseye server. Copying the files while Dovecot is running
+will not break anything. This is called a “hot copy”. It may not be consistent but it will save time during the final
+synchronization.
+
+## Copy certificates
+
+(TODO: ignore with Caddy)
+
+Copy over everything in /etc/letsencrypt and /var/lib/rspamd/dkim from your old to the new server.
+
+```
+rsync -va oldserver:/etc/letsencrypt/ /etc/letsencrypt/
+rsync -va oldserver:/var/lib/rspamd/dkim/ /var/lib/rspamd/dkim/
+```
+
+## Downtime
+
+You told your users about the downtime, right? The time has come? Okay. Shut down Dovecot on both servers.
+
+## Migrate the emails cold
+
+Let’s synchronize again. *rsync* will only copy those files that have changed which makes it much faster than the first
+sync. On your new server run:
+
+```
+rsync -va --delete oldserver:/var/vmail/ /var/vmail/
+```
+
+(The “`--delete`” option makes sure that files that have been removed from the old server will also be deleted from the
+new server. So if a user has deleted an email it will be deleted on the new server as well.)
+
+# Switch the DNS records
+
+For all your domains you will have to change the DNS “MX” or “A” record to point to your new server.
+
+## Enable soft_bounce
+
+Accidents happen. And you don’t want to lose emails. So run this command to enable your safety net on the new server:
+
+```
+postconf soft_bounce=yes
+```
+
+This makes Postfix always keep emails in the queue that it would otherwise reject. So you can fix any errors and the
+queue will empty. Start Postfix and Dovecot on the new server. Watch your /var/log/mail.log and run “mailq” from time to
+time to see what emails get stuck in the queue. If you are certain that emails can be removed from the queue then use
+“postsuper -d QUEUE-ID” (as shown in the “mailq” output).
+
+Once you are certain that emails are properly received and sent you can switch off the _soft_bounce_ mode again:
+
+```
+postconf soft_bounce=no
+```
+
+## Shut down the old server
+
+If possible do a final backup of the old server. If users are not complaining then dismiss the old system after a week.
