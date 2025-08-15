@@ -6,8 +6,6 @@ sidebar:
   order: 150
 ---
 
-import { Aside } from "@astrojs/starlight/components";
-
 Your mail server will have one fully qualified domain name — for example, `postbox.example.com`. In this case, the base
 domain is `example.com`. If someone visits `https://example.com/`, they might be greeted by the Roundcube webmail login
 page.

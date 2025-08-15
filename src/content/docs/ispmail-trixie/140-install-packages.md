@@ -17,11 +17,10 @@ DEBIAN_FRONTEND=noninteractive \
     crowdsec crowdsec-firewall-bouncer unattended-upgrades
 ```
 
-While the server is downloading and installing the packages, let me give you a quick explanation:
+While the server is downloading and installing the packages, let me give you a quick explanation of each package:
 
 - postfix-sqlite \
-  Postfix is the MTA (mail transport agent) that speaks SMTP to send and receive emails. This package allows Postfix to
-  access SQLite databases.
+  Postfix is the MTA (mail transport agent) that speaks SMTP to send and receive emails. This package installs Postfix with support for SQLite databases.
 - dovecot \
   Dovecot manages the emsrc/content/docs/ispmail-trixie/140-install-packages.mdx emails using IMAP.
   - -lmtpd \
