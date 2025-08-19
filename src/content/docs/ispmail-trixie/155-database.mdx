@@ -1,27 +1,20 @@
 ---
-title: SQLite Database
+title: Database setup
 lastUpdated: 2025-08-14
-slug: ispmail-trixie/sqlite
+slug: ispmail-trixie/database
 sidebar:
   order: 155
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 
-Your mail server must know which domains and email addresses it is responsible for, so it can reject spam sent to
-non-existent users. That information will be put into an SQLite database file that will be located at
-`/var/vmail/ispmail.sqlite`.
-
-<Aside title="What is SQLite?">
-  SQLite is a lightweight, relational database that stores data in tables with rows and columns, just like bigger
-  database systems such as MySQL or PostgreSQL. Unlike those, it doesn’t need a permanently running server process —
-  instead, it’s just a library your application uses directly, storing everything in a single file. This makes it easy
-  to set up, fast, and ideal for small projects.
-</Aside>
+Your mail server must know which domains and email addresses it is responsible for, so it can reject emails sent to
+non-existent users. That information will be put into a database. We are using MariaDB for that purpose.
 
 The database will contain three tables:
 
-- virtual*domains: list of domains (\_name*) that your mail server is responsible for
+- virtual*domains: list of domains (\_name*) that your mail server is responsible for. A domain can have many mailboxes
+  and many aliases.
 - virtual_users: list of email addresses that lead to mailboxes. We store the email address, a hashed/salted password
   and optionally a quota to limit the disk space usage.
 - virtual*aliases: list of email addresses (\_source*) that forward to other addresses (_destination_)
@@ -75,6 +68,10 @@ You have now created the schema. It defines the _fields_ (or _columns_) of each 
 Graphically it looks like:
 
 ![ISPmail database schema](images/sqlite-schema.png)
+
+<Aside title="What are foreign keys?">
+
+</Aside>
 
 Paste the following block to create some test data to play with:
 
