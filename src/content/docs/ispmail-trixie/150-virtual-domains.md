@@ -23,6 +23,6 @@ This is what _virtual domains_ are for. You give your mail server a list of doma
 receive emails for them. Your users will also have passwords that they need to type in to retrieve their emails. You can
 even set up mailing lists that take messages sent to one address and forward them to several users at once.
 
-To make all this work, we’ll store the configuration in a small SQLite database file. Postfix, Dovecot, and Roundcube
-will all read from this database to know which domains exist, which users they have, and where each email should go. You
-will create that simple database on the next page.
+To make all this work, we’ll store the configuration in a small MariaDB database. Postfix, Dovecot, and Roundcube will
+all read from this database to know which domains exist, which users they have, and where each email should go. You will
+create that simple database on the next page.
