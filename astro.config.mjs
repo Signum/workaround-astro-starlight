@@ -1,7 +1,7 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
-import starlight from '@astrojs/starlight';
-import sitemap from '@astrojs/sitemap';
+import { defineConfig } from "astro/config";
+import starlight from "@astrojs/starlight";
+import sitemap from "@astrojs/sitemap";
 import matomo from "astro-matomo";
 
 // https://astro.build/config
@@ -11,10 +11,10 @@ export default defineConfig({
     starlight({
       lastUpdated: true,
       title: "ISPmail Guide",
-      social: {
-        github: "https://github.com/Signum/workaround-astro-starlight",
-        matrix: "https://riot.im/app/#/room/#ispmail:matrix.org",
-      },
+      social: [
+        { icon: "github", label: "GitHub", href: "https://github.com/Signum/workaround-astro-starlight" },
+        { icon: "matrix", label: "Matrix", href: "https://riot.im/app/#/room/#ispmail:matrix.org" },
+      ],
       // https://expressive-code.com/key-features/word-wrap/#configuration
       components: {
         Footer: "./src/components/Footer.astro",
