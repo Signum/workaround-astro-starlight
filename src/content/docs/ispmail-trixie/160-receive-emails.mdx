@@ -1,0 +1,79 @@
+---
+title: Receive emails
+lastUpdated: 2025-08-20
+slug: ispmail-trixie/receive-emails
+sidebar:
+  order: 160
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+import "@splidejs/splide/css";
+import { Splide, SplideSlide } from "astro-splide";
+
+I have created a little slideshow to help you understand the process of receiving an email from a remote mail server.
+Use the arrows to navigate between slides:
+
+<Splide>
+  {Array.from({ length: 24 }, (_, i) => i + 1).map((i) => (
+    <SplideSlide>
+      <img src={`/big-picture-receive/${String(i).padStart(2, "0")}.svg`} alt={`Slide ${i}`} />
+    </SplideSlide>
+  ))}
+</Splide>
+
+So:
+
+- DNS is used to find your mail server. First the MX record. Then the A and/or AAAA record.
+- Postfix receives emails using SMTP (the Simple Mail Transport Protocol)
+- MariaDB stores information about your domains and mail users
+- rspamd checks if it is spam
+- Dovecot saves it to disk
+
+## DNS
+
+Let's begin with setting up the DNS records. Say that you want to receive emails for the `example.com` domain. If some
+other mail server on the internet wants to send an email to your server, it looks for two records:
+
+- **MX record (`example.com`)**  
+  The MX (Mail Exchange) record tells other mail servers _where to deliver emails_ for the domain `example.com`.  
+  Instead of pointing directly to an IP address, it points to a **hostname** (for example, `smtp.example.com`).  
+  MX records also include a **priority value**. If multiple mail servers are listed, the one with the lowest priority
+  number is tried first. Others are used as fallback if the first is unavailable.
+
+- **A / AAAA record (`smtp.example.com`)**  
+  The hostname specified in the MX record (`smtp.example.com`) must resolve to an IP address so that other mail servers
+  know how to reach it.
+  - An **A record** maps the hostname to an IPv4 address.
+  - An **AAAA record** maps the hostname to an IPv6 address.
+
+  Once resolved, the sending mail server connects to that IP address on **TCP port 25**, which is the standard port for
+  email delivery (SMTP).
+
+<Aside>
+
+If no MX record is found, the remote mail server will instead directly look for an A or AAAA record of `example.com`.
+
+</Aside>
+
+<Aside type="caution">
+
+The MX record must point to a hostname. It **must not** point to an IP address directly.
+
+</Aside>
+
+In zone syntax you would create something like:
+
+```
+@ IN MX 10 smtp
+smtp IN A 100.64.17.3
+smtp IN A fd7a:115c:a1e0::17
+```
+
+If possible, also add a PTR record that makes the IP addresses point back to the name `smtp.example.com`. Other mail
+servers may be more likely so flag your sent emails as spam if you do not have a PTR record. Preferable the forward
+(A/AAAA) and reverse (PTR) records match.
+
+## Postfix
+
+…
