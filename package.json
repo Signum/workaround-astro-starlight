@@ -13,10 +13,10 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",
-    "@astrojs/sitemap": "^3.4.2",
-    "@astrojs/starlight": "^0.32.6",
+    "@astrojs/sitemap": "^3.5.0",
+    "@astrojs/starlight": "^0.35.2",
     "@splidejs/splide": "^4.1.4",
-    "astro": "^5.12.9",
+    "astro": "^5.13.2",
     "astro-matomo": "^1.9.0",
     "astro-splide": "^2.0.0",
     "sharp": "^0.32.6",
