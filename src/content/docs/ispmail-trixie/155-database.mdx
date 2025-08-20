@@ -7,91 +7,198 @@ sidebar:
 ---
 
 import { Aside } from "@astrojs/starlight/components";
+import { Tabs, TabItem } from "@astrojs/starlight/components";
 
-Your mail server must know which domains and email addresses it is responsible for, so it can reject emails sent to
-non-existent users. That information will be put into a database. We are using MariaDB for that purpose.
+Now it’s time to prepare the MariaDB database that stores the information that controls your mail server. In the process
+you will have to enter [SQL](http://en.wikipedia.org/wiki/SQL) queries – the language of relational database servers.
+You may enter them in a terminal window using the ‘mariadb’ command. But if you are less experienced with SQL you may
+prefer using a web interface. That’s what you installed _[Adminer](https://www.adminer.org/)_ for. TODO: link to Adminer
+setup in a later section
 
-The database will contain three tables:
+<Aside type="tip" title="MariaDB versus MySQL">
 
-- virtual*domains: list of domains (\_name*) that your mail server is responsible for. A domain can have many mailboxes
-  and many aliases.
-- virtual_users: list of email addresses that lead to mailboxes. We store the email address, a hashed/salted password
-  and optionally a quota to limit the disk space usage.
-- virtual*aliases: list of email addresses (\_source*) that forward to other addresses (_destination_)
-
-Creating and accessing the database is done using the _sqlite3_ command. The "3" is because SQLite has some breaking
-changes in the past and _sqlite3_ is used to make it clear that this only works for version 3 database files.
-
-On your server run:
-
-```sh
-sqlite3 /var/vmail/ispmail.sqlite
-```
-
-The database file is created and you will be greeted with:
-
-```
-SQLite version 3.46.1 2024-08-13 09:16:08
-Enter ".help" for usage hints.
-sqlite>
-```
-
-At this point you can run SQL queries or use special commands that start with a dot like ".dump" or ".schema". Paste
-this SQL block to create the necessary tables:
-
-```sql
-CREATE TABLE IF NOT EXISTS virtual_domains (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS virtual_users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    domain_id INTEGER NOT NULL,
-    email TEXT NOT NULL UNIQUE,
-    password TEXT NOT NULL,
-    quota INTEGER NOT NULL DEFAULT 0,
-    FOREIGN KEY (domain_id) REFERENCES virtual_domains(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS virtual_aliases (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    domain_id INTEGER NOT NULL,
-    source TEXT NOT NULL,
-    destination TEXT NOT NULL,
-    FOREIGN KEY (domain_id) REFERENCES virtual_domains(id) ON DELETE CASCADE
-);
-```
-
-You have now created the schema. It defines the _fields_ (or _columns_) of each row.
-
-Graphically it looks like:
-
-![ISPmail database schema](images/sqlite-schema.png)
-
-<Aside title="What are foreign keys?">
+We are using MariaDB here. However, you’ll still see mysql mentioned in places – for example in the postfix-mysql
+package. The reason goes back to 2009, when Oracle acquired MySQL. Concerned about Oracle’s stewardship, the original
+MySQL developers forked the project and created MariaDB. To remain fully compatible, they kept providing a
+libmysqlclient library with the same name and API as MySQL’s client library. That compatibility layer ensured a smooth
+transition, but it also meant the mysql name stuck around—so you’ll still see it appear from time to time, even when
+you’re actually using MariaDB.
 
 </Aside>
 
-Paste the following block to create some test data to play with:
+## Create the ‘mailserver’ database
+
+This step is simple. Connect to the database using the ‘mariadb’ command in your shell:
+
+```sh
+mariadb
+```
+
+You should see the MariaDB prompt that allows you to enter further SQL commands:
+
+```
+MariaDB [(none)]>
+```
+
+To create the new database, send this SQL command:
 
 ```sql
-REPLACE INTO virtual_domains (id, name)
-VALUES (1, 'example.org');
+CREATE DATABASE mailserver;
+```
 
-REPLACE INTO virtual_users (id, domain_id, password, email)
-VALUES (
-    1,
-    1,
-    '{BLF-CRYPT}$2y$05$.WedBCNZiwxY1CG3aleIleu6lYjup2CIg0BP4M4YCZsO204Czz07W',
-    'john@example.org'
+## Create the database users
+
+In this section you will create the basic database `mailserver` and two users:
+
+| User       | Permissions | Purpose                                                    |
+| :--------- | :---------- | :--------------------------------------------------------- |
+| mailserver | read        | Used by Postfix/Dovecot                                    |
+| mailadmin  | read/write  | Used by you <br/> Used by Roundcube (for password changes) |
+
+Use the _pwgen_ tool to create two random passwords for these users:
+
+```sh
+pwgen -s1 30 2
+```
+
+Take a note of the passwords or store them somewhere safe.
+
+1. Create the `mailadmin` (read/write) user. Replace the password by the **first** one you created:
+
+   ```sql
+   grant all privileges on mailserver.* to 'mailadmin'@'localhost' identified by 'FIRST-PASSWORD-HERE';
+   ```
+
+1. Create the `mailserver` (read-only) user. Replace the password by the **second** one you created:
+
+   ```sql
+   grant select on mailserver.* to 'mailserver'@'localhost' identified by 'SECOND-PASSWORD-HERE';
+   ```
+
+<Aside type="note" title="Changed since Debian Bookworm">
+
+In the past, we used 127.0.0.1 instead of localhost because Postfix was running in a chroot environment. Starting with
+Debian Trixie, we’ve disabled chroot mode for Postfix, which means we can now use just `localhost`.
+
+</Aside>
+
+## Creating the database tables
+
+By now you have an empty database and user accounts to access it. Let's create three tables that we need:
+
+- virtual_domains
+- virtual_users
+- virtual_mailboxes
+
+Let's create the entire database schema in one go:
+
+{/* <!-- prettier-ignore-start --> */}
+
+```sql
+USE mailserver;
+
+CREATE TABLE IF NOT EXISTS `virtual_domain` (
+  `id` int(11) NOT NULL auto_increment,
+  `name` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`)
 );
 
-REPLACE INTO virtual_aliases (id, domain_id, source, destination)
-VALUES (
-    1,
-    1,
-    'jack@example.org',
-    'john@example.org'
+CREATE TABLE IF NOT EXISTS `virtual_users` (
+  `id` int(11) NOT NULL auto_increment,
+  `domain_id` int(11) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `password` varchar(150) NOT NULL,
+  `quota` bigint(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`),
+  FOREIGN KEY (domain_id) REFERENCES virtual_domains(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS `virtual_aliases` (
+  `id` int(11) NOT NULL auto_increment,
+  `domain_id` int(11) NOT NULL,
+  `source` varchar(100) NOT NULL,
+  `destination` varchar(100) NOT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (domain_id) REFERENCES virtual_domains(id) ON DELETE CASCADE
+);
+```
+
+{/* <!-- prettier-ignore-end --> */}
+
+## virtual_domains
+
+This table keeps the list of domains that your mail server will be responsible for. Each row in this table represents a
+domain.
+
+- **id**: A unique number identifying each row. It is added by the database automatically.
+
+| **Column** | **Purpose**                                                                      |
+| ---------- | -------------------------------------------------------------------------------- |
+| id         | A unique number identifying each row. It is added by the database automatically. |
+| name       | The name of the domain you want to receive email for.                            |
+
+### virtual_users
+
+The next table contains information about your users. Each mail account takes up one row.
+
+| **Column** | **Purpose**                                                                                                                                                                                                                                                                                  |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| domain_id  | Contains the number of the domain’s id in the _virtual_domains_ table. This is called a _[foreign key](https://en.wikipedia.org/wiki/Foreign_key)_. A “delete cascade” makes sure that if a domain is deleted that all user accounts in that domain are also deleted to avoid orphaned rows. |
+| email      | The email address of the mail account.                                                                                                                                                                                                                                                       |
+
+| **Column** | **Purpose**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| domain_id  | Contains the number of the domain’s id in the _virtual_domains_ table. This is called a _[foreign key](https://en.wikipedia.org/wiki/Foreign_key)_. A “delete cascade” makes sure that if a domain is deleted that all user accounts in that domain are also deleted to avoid orphaned rows.                                                                                                                                                                                                                                                                                                                                                                                                          |
+| email      | The email address of the mail account.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| password   | The hashed password of the mail account. It is prepended by the [password scheme](https://doc.dovecot.org/configuration_manual/authentication/password_schemes/). By [default](https://doc.dovecot.org/configuration_manual/authentication/password_schemes/) it is `{BLF-CRYPT}` also known as _bcrypt_ which is considered very secure. Previous ISPmail guides used `{SHA256-CRYPT}` or even older crypt schemes. Prepending the password field the hashing algorithm in curly brackets allows you to have different kinds of hashes. So you can easily migrate your old passwords without locking out users. Users with older schemes should get a new password if possible to increase security. |
+| quota      | The number of bytes that this mailbox can store. You can use this value to limit how much space a mailbox can take up. The default value is 0 which means that there is no limit.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+
+| **Column** | **Purpose**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| domain_id  | Contains the number of the domain’s id in the _virtual_domains_ table. This is called a _[foreign key](https://en.wikipedia.org/wiki/Foreign_key)_. A “delete cascade” makes sure that if a domain is deleted that all user accounts in that domain are also deleted to avoid orphaned rows.                                                                                                                                                                                                                                                                                                                                                                                                          |
+| email      | The email address of the mail account.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| password   | The hashed password of the mail account. It is prepended by the [password scheme](https://doc.dovecot.org/configuration_manual/authentication/password_schemes/). By [default](https://doc.dovecot.org/configuration_manual/authentication/password_schemes/) it is `{BLF-CRYPT}` also known as _bcrypt_ which is considered very secure. Previous ISPmail guides used `{SHA256-CRYPT}` or even older crypt schemes. Prepending the password field the hashing algorithm in curly brackets allows you to have different kinds of hashes. So you can easily migrate your old passwords without locking out users. Users with older schemes should get a new password if possible to increase security. |
+| quota      | The number of bytes that this mailbox can store. You can use this value to limit how much space a mailbox can take up. The default value is 0 which means that there is no limit.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+
+As described in the section about domain types there can be multiple targets for one source email address. You just
+would need to insert several rows with the same source address and different destination addresses that will get copies
+of an email. Postfix will consider all matching rows.
+
+## Example data to play with
+
+Too much theory so far? I can imagine. Let’s populate the database with an `example.org` domain, a `john@example.org`
+email account and a forwarding of `jack@example.org` to `john@example.org`. We will use that information in the next
+chapter to play with.
+
+To add that sample data just run these SQL queries:
+
+```sql
+REPLACE INTO mailserver.virtual\_domains (id,name) VALUES ('1','example.org');
+
+REPLACE INTO mailserver.virtual\_users (id,domain\_id,password,email)
+ VALUES ('1', '1',
+ '{BLF-CRYPT}$2y$05$.WedBCNZiwxY1CG3aleIleu6lYjup2CIg0BP4M4YCZsO204Czz07W',
+ 'john@example.org');
+
+REPLACE INTO mailserver.virtual\_aliases (id,domain\_id,source,destination)
+ VALUES ('1', '1', 'jack@example.org', 'john@example.org');
+```
+
+Do you wonder how I got the long cryptic password? I ran…
+
+```
+doveadm pw -s BLF-CRYPT
+```
+
+…to create a secure hash of the simple password “summersun”. Once you have installed Dovecot you can try that yourself
+but you will get a different output. The reason is that the passwords are
+[salted](<https://en.wikipedia.org/wiki/Salt_(cryptography)>) to increase their security.
+
+Remember to remove that sample data before you go live with your mail server. Thanks to the _delete cascade_ you just
+need to remove the virtual_domain. The alias and the mailbox will be deleted automatically. This would be the SQL query
+you should run before taking your mail server into production:
+
+```sql
+DELETE FROM mailserver.virtual_domains WHERE name='example.org';
 ```
