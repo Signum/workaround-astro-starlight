@@ -10,18 +10,20 @@ Let's install the necessary Debian packages. Run this command as root on your se
 
 ```sh
 DEBIAN_FRONTEND=noninteractive \
-    apt -y install postfix-sqlite dovecot-sqlite \
+    apt -y install postfix-mysql dovecot-mysql \
     dovecot-imapd dovecot-lmtpd dovecot-managesieved \
-    caddy php-fpm php-sqlite3 php-intl php-mbstring php-xml unzip \
+    apache python3-certbot-apache libapache2-mod-php \
+    php-intl php-mbstring php-xml unzip \
     roundcube-sqlite3 roundcube swaks ufw mutt \
-    crowdsec crowdsec-firewall-bouncer unattended-upgrades
+    crowdsec crowdsec-firewall-bouncer unattended-upgrades \
+    mariadb-server
 ```
 
 While the server is downloading and installing the packages, let me give you a quick explanation of each package:
 
-- **postfix-sqlite** \
+- **postfix** / **postfix-mysql** \
   Postfix is the MTA (mail transport agent) that speaks SMTP to send and receive emails. This package installs Postfix
-  with support for SQLite databases.
+  with support for MariaDB databases.
 - **dovecot** \
   Dovecot manages the emsrc/content/docs/ispmail-trixie/140-install-packages.mdx emails using IMAP.
   - **-lmtpd** \
@@ -29,12 +31,15 @@ While the server is downloading and installing the packages, let me give you a q
   - **-managesieved** \
     Lets you configure automatic processing rules on the server. Like out-of-office emails or filtering incoming emails
     to folders.
-- **caddy** \
-  Web server with automatic HTTPS support via Let's Encrypt certificates. Needed for webmail.
-- **php-fpm** (and other php-\* packages) \
-  PHP is the programming language that Roundcube (the webmail software) is written in. FPM (Fast Process Manager) is the
-  glue between Caddy and PHP.
-- **roundcube** / **roundcube-sqlite3** \
+  - **-mysql** \
+    Makes Dovecot able to query MariaDB databases.
+- **apache** \
+  Web server. Needed for webmail.
+- **php-\*** \
+  PHP is the programming language that Roundcube (the webmail software) is written in.
+- **mariadb-server** \
+  Database server that helps us store control data in a MariaDB database on the mail server.
+- **roundcube** / **roundcube-mysql** \
   Webmail software that lets you access your emails in any web browser. Roundcube speaks to Dovecot to fetch emails. And
   to Postfix to send emails.
 - **swaks** \
