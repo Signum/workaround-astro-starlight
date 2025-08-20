@@ -6,6 +6,8 @@ sidebar:
   order: 140
 ---
 
+import { Aside } from "@astrojs/starlight/components";
+
 Let's install the necessary Debian packages. Run this command as root on your server as _root_:
 
 ```sh
@@ -17,6 +19,8 @@ DEBIAN_FRONTEND=noninteractive \
     roundcube-sqlite3 roundcube swaks ufw mutt \
     crowdsec crowdsec-firewall-bouncer unattended-upgrades \
     mariadb-server
+
+postfix chroot off
 ```
 
 While the server is downloading and installing the packages, let me give you a quick explanation of each package:
@@ -57,6 +61,12 @@ While the server is downloading and installing the packages, let me give you a q
 - **unattended-upgrades** \
   Installs security updates automatically.
 
-TODO: move crowdsec into optional chapter
+<Aside type="note" title="postfix chroot off?">
 
-TODO: postfix in no-chroot mode
+By default, Debian enables Postfix to run in chroot mode. While this may sound like a security improvement, even
+Postfix’s author advises against it, arguing that it mostly creates a false sense of security. For this reason, we are
+disabling chroot mode—which also simplifies some configuration details for us later on.
+
+</Aside>
+
+TODO: move crowdsec into optional chapter
