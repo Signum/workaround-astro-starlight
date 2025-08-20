@@ -15,20 +15,20 @@ You may enter them in a terminal window using the ‘mariadb’ command. But if 
 prefer using a web interface. That’s what you installed _[Adminer](https://www.adminer.org/)_ for. TODO: link to Adminer
 setup in a later section
 
-<Aside type="tip" title="MariaDB versus MySQL">
+<Aside title="MariaDB versus MySQL">
 
 We are using MariaDB here. However, you’ll still see mysql mentioned in places – for example in the postfix-mysql
 package. The reason goes back to 2009, when Oracle acquired MySQL. Concerned about Oracle’s stewardship, the original
 MySQL developers forked the project and created MariaDB. To remain fully compatible, they kept providing a
 libmysqlclient library with the same name and API as MySQL’s client library. That compatibility layer ensured a smooth
-transition, but it also meant the mysql name stuck around—so you’ll still see it appear from time to time, even when
+transition, but it also meant the mysql name stuck around — so you’ll still see it appear from time to time, even when
 you’re actually using MariaDB.
 
 </Aside>
 
 ## Create the ‘mailserver’ database
 
-This step is simple. Connect to the database using the ‘mariadb’ command in your shell:
+This step is simple. Connect to the database using the `mariadb` command in your shell:
 
 ```sh
 mariadb
@@ -63,17 +63,12 @@ pwgen -s1 30 2
 
 Take a note of the passwords or store them somewhere safe.
 
-1. Create the `mailadmin` (read/write) user. Replace the password by the **first** one you created:
+Create the database users:
 
-   ```sql
-   grant all privileges on mailserver.* to 'mailadmin'@'localhost' identified by 'FIRST-PASSWORD-HERE';
-   ```
-
-1. Create the `mailserver` (read-only) user. Replace the password by the **second** one you created:
-
-   ```sql
-   grant select on mailserver.* to 'mailserver'@'localhost' identified by 'SECOND-PASSWORD-HERE';
-   ```
+```sql
+grant all privileges on mailserver.* to 'mailadmin'@'localhost' identified by 'FIRST-PASSWORD-HERE';
+grant select on mailserver.* to 'mailserver'@'localhost' identified by 'SECOND-PASSWORD-HERE';
+```
 
 <Aside type="note" title="Changed since Debian Bookworm">
 
@@ -84,7 +79,7 @@ Debian Trixie, we’ve disabled chroot mode for Postfix, which means we can now 
 
 ## Creating the database tables
 
-By now you have an empty database and user accounts to access it. Let's create three tables that we need:
+By now you have an empty database and two user accounts to access it. Now you need three tables:
 
 - virtual_domains
 - virtual_users
@@ -97,7 +92,7 @@ Let's create the entire database schema in one go:
 ```sql
 USE mailserver;
 
-CREATE TABLE IF NOT EXISTS `virtual_domain` (
+CREATE TABLE IF NOT EXISTS `virtual_domains` (
   `id` int(11) NOT NULL auto_increment,
   `name` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
@@ -126,44 +121,80 @@ CREATE TABLE IF NOT EXISTS `virtual_aliases` (
 
 {/* <!-- prettier-ignore-end --> */}
 
-## virtual_domains
+### virtual_domains
 
-This table keeps the list of domains that your mail server will be responsible for. Each row in this table represents a
-domain.
+The first table keeps the list of domains that your mail server will be responsible for. Each row in this table
+represents a domain.
 
-- **id**: A unique number identifying each row. It is added by the database automatically.
+- **id**: A unique number identifying each row. It is set automatically.
+- **name**: Domain name.
 
-| **Column** | **Purpose**                                                                      |
-| ---------- | -------------------------------------------------------------------------------- |
-| id         | A unique number identifying each row. It is added by the database automatically. |
-| name       | The name of the domain you want to receive email for.                            |
+<Aside type="tip" icon="right-caret" title="Example">
+
+| id  | name        |
+| :-- | :---------- |
+| 12  | example.org |
+| 15  | example.com |
+
+</Aside>
 
 ### virtual_users
 
-The next table contains information about your users. Each mail account takes up one row.
+The second table contains information about your users. Each mail account requires one row in this table.
 
-| **Column** | **Purpose**                                                                                                                                                                                                                                                                                  |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| domain_id  | Contains the number of the domain’s id in the _virtual_domains_ table. This is called a _[foreign key](https://en.wikipedia.org/wiki/Foreign_key)_. A “delete cascade” makes sure that if a domain is deleted that all user accounts in that domain are also deleted to avoid orphaned rows. |
-| email      | The email address of the mail account.                                                                                                                                                                                                                                                       |
+- **id**: A unique number identifying each row. It is set automatically.
+- **domain_id**: A [reference](https://en.wikipedia.org/wiki/Foreign_key) to the domain in the `virtual_domains` table.
+  So each domain can have many virtual users.
+- **email**: The email address of the mailbox.
+- **password**: The hashed password of the mail account. It is prepended by the
+  [password scheme](https://doc.dovecot.org/main/core/config/auth/schemes.html). By default it is `{BLF-CRYPT}` also
+  known as _bcrypt_ which is considered very secure. Older ISPmail guides used `{SHA256-CRYPT}` or even older crypt
+  schemes. Prepending the password field the hashing algorithm in curly brackets allows you to have different kinds of
+  hashes. So you can easily migrate your old passwords without locking out users. Users with older schemes should get a
+  new password if possible to increase security.
+- **quota**: The number of bytes that this mailbox can store. You can use this value to limit how much space a mailbox
+  can take up. The default value is 0 which means that there is no limit. This is an optional feature that is discussed
+  later. TODO: link
 
-| **Column** | **Purpose**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| domain_id  | Contains the number of the domain’s id in the _virtual_domains_ table. This is called a _[foreign key](https://en.wikipedia.org/wiki/Foreign_key)_. A “delete cascade” makes sure that if a domain is deleted that all user accounts in that domain are also deleted to avoid orphaned rows.                                                                                                                                                                                                                                                                                                                                                                                                          |
-| email      | The email address of the mail account.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| password   | The hashed password of the mail account. It is prepended by the [password scheme](https://doc.dovecot.org/configuration_manual/authentication/password_schemes/). By [default](https://doc.dovecot.org/configuration_manual/authentication/password_schemes/) it is `{BLF-CRYPT}` also known as _bcrypt_ which is considered very secure. Previous ISPmail guides used `{SHA256-CRYPT}` or even older crypt schemes. Prepending the password field the hashing algorithm in curly brackets allows you to have different kinds of hashes. So you can easily migrate your old passwords without locking out users. Users with older schemes should get a new password if possible to increase security. |
-| quota      | The number of bytes that this mailbox can store. You can use this value to limit how much space a mailbox can take up. The default value is 0 which means that there is no limit.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+<Aside type="tip" icon="right-caret" title="Example">
 
-| **Column** | **Purpose**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| domain_id  | Contains the number of the domain’s id in the _virtual_domains_ table. This is called a _[foreign key](https://en.wikipedia.org/wiki/Foreign_key)_. A “delete cascade” makes sure that if a domain is deleted that all user accounts in that domain are also deleted to avoid orphaned rows.                                                                                                                                                                                                                                                                                                                                                                                                          |
-| email      | The email address of the mail account.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| password   | The hashed password of the mail account. It is prepended by the [password scheme](https://doc.dovecot.org/configuration_manual/authentication/password_schemes/). By [default](https://doc.dovecot.org/configuration_manual/authentication/password_schemes/) it is `{BLF-CRYPT}` also known as _bcrypt_ which is considered very secure. Previous ISPmail guides used `{SHA256-CRYPT}` or even older crypt schemes. Prepending the password field the hashing algorithm in curly brackets allows you to have different kinds of hashes. So you can easily migrate your old passwords without locking out users. Users with older schemes should get a new password if possible to increase security. |
-| quota      | The number of bytes that this mailbox can store. You can use this value to limit how much space a mailbox can take up. The default value is 0 which means that there is no limit.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| id  | domain_id | email               | password       | quota |
+| :-- | :-------- | :------------------ | :------------- | :---- |
+| 8   | 12        | `joe@example.org`   | `{BLF-CRYPT}…` | 0     |
+| 9   | 12        | `tom@example.org`   | `{BLF-CRYPT}…` | 0     |
+| 11  | 15        | `boris@example.com` | `{BLF-CRYPT}…` | 0     |
 
-As described in the section about domain types there can be multiple targets for one source email address. You just
-would need to insert several rows with the same source address and different destination addresses that will get copies
-of an email. Postfix will consider all matching rows.
+</Aside>
+
+### virtual_aliases
+
+The third table contain optional forwardings from one email address to another – or several others.
+
+- **id**: A unique number identifying each row. It is set automatically.
+- **domain_id**: References the domain in the `virtual_domains` table.
+- **source**: The alias email address.
+- **destination**: The email address where this alias gets forwarded to.
+
+<Aside type="tip" icon="right-caret" title="Example">
+
+| id  | domain_id | source                      | destination               |
+| :-- | :-------- | :-------------------------- | :------------------------ |
+| 1   | 12        | `info@example.org`          | `boris@example.com`       |
+| 2   | 12        | `info@example.org`          | `tom@example.org`         |
+| 3   | 15        | `info@example.com`          | `info@example.com`        |
+| 4   | 15        | `boris-at-home@example.com` | `bevans@external.address` |
+| 5   | 15        | `@example.com`              | `joe@example.org`         |
+
+This means:
+
+- (1+2+3) Email for `info@example.org` is redirected to both `boris@example.com` and `tom@example.org`. As
+  `info@example.com` is also listed as a destination address, it will keep a copy of the email. Multiple rows for a
+  source are totally fine – Postfix will consider all matching rows.
+- (4) Email for `boris-at-home@example.com` is redirected to `bevans@external.address`.
+- (5) Email for any other address in the `example.com` domain is redirected to `joe@example.com`. TODO: link to catchall
+  section
+
+</Aside>
 
 ## Example data to play with
 
@@ -173,17 +204,31 @@ chapter to play with.
 
 To add that sample data just run these SQL queries:
 
+{/* <!-- prettier-ignore-start --> */}
+
 ```sql
-REPLACE INTO mailserver.virtual\_domains (id,name) VALUES ('1','example.org');
+REPLACE INTO virtual_domains
+  (id, name)
+  VALUES (10,'example.org');
 
-REPLACE INTO mailserver.virtual\_users (id,domain\_id,password,email)
- VALUES ('1', '1',
- '{BLF-CRYPT}$2y$05$.WedBCNZiwxY1CG3aleIleu6lYjup2CIg0BP4M4YCZsO204Czz07W',
- 'john@example.org');
+REPLACE INTO virtual_users
+  (id, domain_id, password, email)
+  VALUES (
+    1,
+    10,
+  '{BLF-CRYPT}$2y$05$.WedBCNZiwxY1CG3aleIleu6lYjup2CIg0BP4M4YCZsO204Czz07W',
+  'john@example.org');
 
-REPLACE INTO mailserver.virtual\_aliases (id,domain\_id,source,destination)
- VALUES ('1', '1', 'jack@example.org', 'john@example.org');
+REPLACE INTO virtual_aliases
+  (id, domain_id, source, destination)
+  VALUES (
+    1,
+    10,
+    'jack@example.org',
+    'john@example.org');
 ```
+
+{/* <!-- prettier-ignore-end --> */}
 
 Do you wonder how I got the long cryptic password? I ran…
 
@@ -193,7 +238,8 @@ doveadm pw -s BLF-CRYPT
 
 …to create a secure hash of the simple password “summersun”. Once you have installed Dovecot you can try that yourself
 but you will get a different output. The reason is that the passwords are
-[salted](<https://en.wikipedia.org/wiki/Salt_(cryptography)>) to increase their security.
+[salted](<https://en.wikipedia.org/wiki/Salt_(cryptography)>). Every time you will get a different hash. That prevents
+reverse-engineering the original password.
 
 Remember to remove that sample data before you go live with your mail server. Thanks to the _delete cascade_ you just
 need to remove the virtual_domain. The alias and the mailbox will be deleted automatically. This would be the SQL query
