@@ -1,0 +1,565 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/28.0.6 Chrome/138.0.7204.100 Electron/37.2.3 Safari/537.36" version="28.0.6">
+  <diagram name="Seite-1" id="KTvmaRo9VcoZ5VeuPiA4">
+    <mxGraphModel dx="2402" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-4" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="120" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-9" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="110" y="150" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-17" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="640" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-24" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" parent="1" source="gQG6ldMYRfHswNwDJcwK-65" target="gQG6ldMYRfHswNwDJcwK-22">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-22" value="Name server&lt;div&gt;(DNS)&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="370" y="670" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-29" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1160" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-34" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1680" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-40" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="2200" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-45" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="2720" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-46" value="SMTP&lt;div&gt;(TCP port 25)&lt;/div&gt;" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" target="gQG6ldMYRfHswNwDJcwK-50" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="172.85714285714312" y="2790" as="sourcePoint" />
+            <mxPoint x="370" y="2770" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-50" value="Postfix&lt;div&gt;mail server&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="190" y="2930" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-51" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="3240" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-56" value="07" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-120" y="3470" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-57" value="06" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-130" y="2930" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-58" value="05" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-130" y="2370" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-59" value="04" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-130" y="1890" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-60" value="03" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-140" y="1350" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-61" value="02" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-140" y="850" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-62" value="01" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-110" y="300" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-64" value="&lt;span style=&quot;font-size: 16px;&quot;&gt;I would like to send an email to john@example.com&lt;/span&gt;" style="whiteSpace=wrap;html=1;shape=mxgraph.basic.cloud_callout;fontFamily=Helvetica;fontSize=11;labelBackgroundColor=none;flipV=1;fillColor=#fff2cc;strokeColor=#d6b656;spacingLeft=20;spacingTop=20;spacingRight=20;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="220" y="180" width="230" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-65" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="110" y="670" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-28" value="What is the MX record for the domain example.com?" style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="200" y="710" width="140" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-66" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" source="gQG6ldMYRfHswNwDJcwK-67" target="gQG6ldMYRfHswNwDJcwK-68" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-120" y="1110" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-67" value="Name server&lt;div&gt;(DNS)&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="370" y="1190" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-68" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="110" y="1190" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-33" value="smtp01.example.net" style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=1;fillColor=#fff2cc;strokeColor=#d6b656;flipH=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="1230" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-69" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" source="gQG6ldMYRfHswNwDJcwK-71" target="gQG6ldMYRfHswNwDJcwK-70" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-70" value="Name server&lt;div&gt;(DNS)&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="370" y="1710" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-71" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="110" y="1710" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-39" value="What are the A and AAAAA records for smtp01.example.net?" style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="200" y="1750" width="170" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-72" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" source="gQG6ldMYRfHswNwDJcwK-73" target="gQG6ldMYRfHswNwDJcwK-74" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-120" y="2150" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-73" value="Name server&lt;div&gt;(DNS)&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="370" y="2230" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-74" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="110" y="2230" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-44" value="A: 100.17.195.84&lt;div&gt;AAAA: 2001:876:18:5::ce&lt;/div&gt;" style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=1;fillColor=#fff2cc;strokeColor=#d6b656;flipH=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="2270" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-75" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="120" y="2750" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-76" value="220 smtp01.example.net&lt;div&gt;ESMTP Postfix&lt;/div&gt;" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" target="gQG6ldMYRfHswNwDJcwK-78" parent="1" source="gQG6ldMYRfHswNwDJcwK-77">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="172.85714285714312" y="3310" as="sourcePoint" />
+            <mxPoint x="690" y="3290" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-77" value="Postfix&lt;div&gt;mail server&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="190" y="3450" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-78" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="120" y="3270" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-55" value="Nice to see you." style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="300" y="3410" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-79" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="3760" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-80" value="EHLO remoteserver" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" target="gQG6ldMYRfHswNwDJcwK-81" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="172.85714285714312" y="3830" as="sourcePoint" />
+            <mxPoint x="370" y="3810" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-81" value="Postfix&lt;div&gt;mail server&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="190" y="3970" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-82" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="120" y="3790" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-83" value="08" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-70" y="3970" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-84" value="Hi, my name is &quot;remoteserver&quot;" style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="240" y="3800" width="170" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-85" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="4280" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-86" value="&lt;div&gt;250-smtp01.example.com&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: light-dark(#ffffff, var(--ge-dark-color, #121212)); color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;250-SIZE 40000000&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: light-dark(#ffffff, var(--ge-dark-color, #121212)); color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;250-STARTTLS&lt;/span&gt;&lt;/div&gt;&lt;div&gt;250-ENHANCEDSTATUSCODES&lt;/div&gt;&lt;div&gt;250-8BITMIME&lt;/div&gt;" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" source="gQG6ldMYRfHswNwDJcwK-87" target="gQG6ldMYRfHswNwDJcwK-88" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="192.85714285714312" y="4390" as="sourcePoint" />
+            <mxPoint x="216.1111111111113" y="4400" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-87" value="Postfix&lt;div&gt;mail server&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="220" y="4560" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-88" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="120" y="4310" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-89" value="These are the features that I support." style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="330" y="4510" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-90" value="09" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-80" y="4480" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-91" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="4800" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-92" value="STARTTLS" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" target="gQG6ldMYRfHswNwDJcwK-93" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="172.85714285714312" y="4870" as="sourcePoint" />
+            <mxPoint x="370" y="4850" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-93" value="Postfix&lt;div&gt;mail server&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="210" y="5090" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-94" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="120" y="4830" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-95" value="Let us switch to encrypted communication" style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="230" y="4850" width="170" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-96" value="10" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-50" y="4970" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-97" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="5320" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-98" value="MAIL FROM: &amp;lt;someone@else.com&amp;gt;" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" target="gQG6ldMYRfHswNwDJcwK-99" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="172.85714285714312" y="5390" as="sourcePoint" />
+            <mxPoint x="370" y="5370" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-99" value="Postfix&lt;div&gt;mail server&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="210" y="5610" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-100" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="120" y="5350" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-101" value="I have an email from someone@else.com" style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="230" y="5370" width="170" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-102" value="11" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-60" y="5530" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-103" value="" style="sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;fillColor=#00188D;shape=mxgraph.mscae.enterprise.lock;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="160" y="5430" width="30" height="38.46" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-104" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="5840" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-105" value="Ok" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" target="gQG6ldMYRfHswNwDJcwK-107" parent="1" source="gQG6ldMYRfHswNwDJcwK-106">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="172.85714285714312" y="5910" as="sourcePoint" />
+            <mxPoint x="-130" y="5840" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-106" value="Postfix&lt;div&gt;mail server&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="210" y="6130" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-107" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="120" y="5870" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-109" value="" style="sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;fillColor=#00188D;shape=mxgraph.mscae.enterprise.lock;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="160" y="5950" width="30" height="38.46" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-110" value="12" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-50" y="6050" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-112" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="6360" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-113" value="RCPT TO: &amp;lt;john@example.org&amp;gt;" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" target="gQG6ldMYRfHswNwDJcwK-114" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="172.85714285714312" y="6430" as="sourcePoint" />
+            <mxPoint x="370" y="6410" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-114" value="Postfix&lt;div&gt;mail server&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="210" y="6650" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-115" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="120" y="6390" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-116" value="That email is meant for john@example.org" style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="230" y="6410" width="170" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-117" value="" style="sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;fillColor=#00188D;shape=mxgraph.mscae.enterprise.lock;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="160" y="6470" width="30" height="38.46" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-118" value="13" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-30" y="6580" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-124" value="14" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-60" y="7080" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-125" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="6880" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-126" value="" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;strokeColor=#CCCCCC;" edge="1" target="gQG6ldMYRfHswNwDJcwK-127" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="172.85714285714312" y="6950" as="sourcePoint" />
+            <mxPoint x="370" y="6930" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-132" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" parent="1" source="gQG6ldMYRfHswNwDJcwK-127" target="gQG6ldMYRfHswNwDJcwK-131">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-127" value="Postfix&lt;div&gt;mail server&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="210" y="7170" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-128" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="120" y="6910" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-130" value="" style="sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;fillColor=#00188D;shape=mxgraph.mscae.enterprise.lock;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="160" y="6990" width="30" height="38.46" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-131" value="MariaDB&lt;div&gt;database&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="570" y="7170" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-133" value="Is example.org our domain?" style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="300" y="7110" width="130" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-134" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="7400" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-135" value="" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;strokeColor=#CCCCCC;" edge="1" target="gQG6ldMYRfHswNwDJcwK-137" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="172.85714285714312" y="7470" as="sourcePoint" />
+            <mxPoint x="370" y="7450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-136" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" source="gQG6ldMYRfHswNwDJcwK-140" target="gQG6ldMYRfHswNwDJcwK-137" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="8020" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-137" value="Postfix&lt;div&gt;mail server&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="210" y="7690" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-138" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="120" y="7430" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-139" value="" style="sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;fillColor=#00188D;shape=mxgraph.mscae.enterprise.lock;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="160" y="7510" width="30" height="38.46" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-140" value="MariaDB&lt;div&gt;database&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="570" y="7690" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-141" value="Yes, I found it in my virtual_domains table" style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=0;fillColor=#fff2cc;strokeColor=#d6b656;flipH=1;" vertex="1" parent="1">
+          <mxGeometry x="470" y="7610" width="150" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-142" value="15" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-50" y="7600" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-143" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="7920" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-144" value="" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;strokeColor=#CCCCCC;" edge="1" target="gQG6ldMYRfHswNwDJcwK-146" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="172.85714285714312" y="7990" as="sourcePoint" />
+            <mxPoint x="370" y="7970" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-145" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" source="gQG6ldMYRfHswNwDJcwK-146" target="gQG6ldMYRfHswNwDJcwK-149" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-146" value="Postfix&lt;div&gt;mail server&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="210" y="8210" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-147" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="120" y="7950" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-148" value="" style="sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;fillColor=#00188D;shape=mxgraph.mscae.enterprise.lock;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="160" y="8030" width="30" height="38.46" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-149" value="MariaDB&lt;div&gt;database&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="570" y="8210" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-150" value="And is john@example.org a known user?" style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="300" y="8130" width="180" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-151" value="16" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-30" y="8155" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-152" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="8440" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-153" value="" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;strokeColor=#CCCCCC;" edge="1" target="gQG6ldMYRfHswNwDJcwK-155" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="172.85714285714312" y="8510" as="sourcePoint" />
+            <mxPoint x="370" y="8490" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-154" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" source="gQG6ldMYRfHswNwDJcwK-158" target="gQG6ldMYRfHswNwDJcwK-155" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="9060" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-155" value="Postfix&lt;div&gt;mail server&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="210" y="8730" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-156" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="120" y="8470" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-157" value="" style="sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;fillColor=#00188D;shape=mxgraph.mscae.enterprise.lock;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="160" y="8550" width="30" height="38.46" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-158" value="MariaDB&lt;div&gt;database&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="570" y="8730" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-159" value="Yes, I found it in my virtual_mailboxes table" style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=0;fillColor=#fff2cc;strokeColor=#d6b656;flipH=1;" vertex="1" parent="1">
+          <mxGeometry x="440" y="8660" width="180" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-160" value="17" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-50" y="8640" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-161" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="8960" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-171" value="Ok" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" parent="1" source="gQG6ldMYRfHswNwDJcwK-164" target="gQG6ldMYRfHswNwDJcwK-165">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-164" value="Postfix&lt;div&gt;mail server&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="210" y="9250" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-165" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="120" y="8990" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-166" value="" style="sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;fillColor=#00188D;shape=mxgraph.mscae.enterprise.lock;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="160" y="9070" width="30" height="38.46" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-169" value="18" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-30" y="9180" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-170" value="Looks good." style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="320" y="9200" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-172" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="9480" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-173" value="DATA" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" source="gQG6ldMYRfHswNwDJcwK-175" target="gQG6ldMYRfHswNwDJcwK-174" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-200" y="9510" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-174" value="Postfix&lt;div&gt;mail server&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="210" y="9770" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-175" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="120" y="9510" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-176" value="" style="sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;fillColor=#00188D;shape=mxgraph.mscae.enterprise.lock;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="160" y="9590" width="30" height="38.46" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-177" value="19" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-30" y="9700" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-179" value="Let me send you the email now" style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="220" y="9540" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-180" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="10000" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-181" value="" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;strokeColor=#CCCCCC;" edge="1" target="gQG6ldMYRfHswNwDJcwK-183" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="172.85714285714312" y="10070" as="sourcePoint" />
+            <mxPoint x="370" y="10050" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-182" value="TCP port 11332" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" source="gQG6ldMYRfHswNwDJcwK-183" target="gQG6ldMYRfHswNwDJcwK-186" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-183" value="Postfix&lt;div&gt;mail server&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="210" y="10290" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-184" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent;&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0;fontColor=#CCCCCC;" vertex="1" parent="1">
+          <mxGeometry x="120" y="10030" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-185" value="" style="sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;fillColor=#00188D;shape=mxgraph.mscae.enterprise.lock;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="160" y="10110" width="30" height="38.46" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-186" value="rspamd&lt;div&gt;Spam check&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="620" y="10180" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-188" value="20" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-40" y="10210" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-189" value="Do you think this email is spam?" style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=1;fillColor=#fff2cc;strokeColor=#d6b656;flipH=0;" vertex="1" parent="1">
+          <mxGeometry x="330" y="10310" width="145" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-190" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="10520" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-191" value="" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;strokeColor=#CCCCCC;" edge="1" target="gQG6ldMYRfHswNwDJcwK-193" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="172.85714285714312" y="10590" as="sourcePoint" />
+            <mxPoint x="370" y="10570" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-192" value="" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" source="gQG6ldMYRfHswNwDJcwK-196" target="gQG6ldMYRfHswNwDJcwK-193" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1140" y="10950" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-193" value="Postfix&lt;div&gt;mail server&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="210" y="10810" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-194" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent;&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="120" y="10550" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-195" value="" style="sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;fillColor=#00188D;shape=mxgraph.mscae.enterprise.lock;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="160" y="10630" width="30" height="38.46" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-196" value="rspamd&lt;div&gt;Spam check&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="620" y="10700" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-197" value="21" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-40" y="10730" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-199" value="A few minor issues but the email seems legit" style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=0;fillColor=#fff2cc;strokeColor=#d6b656;flipH=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="10620" width="145" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-200" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="11040" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-201" value="250 2.0.0 Ok: queued as 7855B7FD86" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;strokeColor=#000000;" edge="1" target="gQG6ldMYRfHswNwDJcwK-204" parent="1" source="gQG6ldMYRfHswNwDJcwK-203">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="172.85714285714312" y="11110" as="sourcePoint" />
+            <mxPoint x="-80" y="11370" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-203" value="Postfix&lt;div&gt;mail server&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="210" y="11330" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-204" value="Other&lt;div&gt;mail&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;server&lt;/span&gt;&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="120" y="11070" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-205" value="" style="sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;fillColor=#00188D;shape=mxgraph.mscae.enterprise.lock;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="160" y="11150" width="30" height="38.46" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-208" value="22" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-20" y="11250" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-209" value="Thanks. I will deliver it." style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=1;fillColor=#fff2cc;strokeColor=#d6b656;flipH=0;" vertex="1" parent="1">
+          <mxGeometry x="320" y="11360" width="130" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-210" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="11560" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-218" value="/var/spool/postfix/private/dovecot-lmtp" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" parent="1" source="gQG6ldMYRfHswNwDJcwK-212" target="gQG6ldMYRfHswNwDJcwK-217">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-212" value="Postfix&lt;div&gt;mail server&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="210" y="11850" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-215" value="23" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-20" y="11770" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-216" value="Please save this new email for john@example.org" style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=1;fillColor=#fff2cc;strokeColor=#d6b656;flipH=0;" vertex="1" parent="1">
+          <mxGeometry x="320" y="11880" width="180" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-217" value="Dovecot&lt;div&gt;IMAP server&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="630" y="11700" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-223" value="24" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="-20" y="12290" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-228" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=5;verticalAlign=bottom;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="12080" width="800" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-229" value="" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#CCCCCC;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" source="gQG6ldMYRfHswNwDJcwK-230" target="gQG6ldMYRfHswNwDJcwK-233" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-230" value="Postfix&lt;div&gt;mail server&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;opacity=50;fontColor=#CCCCCC;" vertex="1" parent="1">
+          <mxGeometry x="210" y="12370" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-235" style="edgeStyle=none;shape=connector;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;strokeWidth=3;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=classic;" edge="1" parent="1" source="gQG6ldMYRfHswNwDJcwK-233" target="gQG6ldMYRfHswNwDJcwK-234">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-233" value="Dovecot&lt;div&gt;IMAP server&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="630" y="12220" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-234" value="&lt;font style=&quot;font-size: 16px; color: rgb(0, 0, 0);&quot;&gt;/var/vmail&lt;/font&gt;" style="fontColor=#0066CC;verticalAlign=top;verticalLabelPosition=bottom;labelPosition=center;align=center;html=1;outlineConnect=0;fillColor=#CCCCCC;strokeColor=#6881B3;gradientColor=none;gradientDirection=north;strokeWidth=2;shape=mxgraph.networks.storage;fontFamily=Helvetica;fontSize=11;labelBackgroundColor=default;" vertex="1" parent="1">
+          <mxGeometry x="670" y="12415" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-236" value="Alright. Saving to disk." style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=0;fillColor=#fff2cc;strokeColor=#d6b656;flipH=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="12140" width="120" height="90" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
