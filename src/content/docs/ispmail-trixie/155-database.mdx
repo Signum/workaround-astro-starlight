@@ -82,7 +82,7 @@ Debian Trixie, we’ve disabled chroot mode for Postfix, which means we can now 
 By now you have an empty database and two user accounts to access it. Now you need three tables:
 
 - virtual_domains
-- virtual_users
+- virtual_aliases
 - virtual_mailboxes
 
 Let's create the entire database schema in one go:
@@ -98,7 +98,16 @@ CREATE TABLE IF NOT EXISTS `virtual_domains` (
   PRIMARY KEY (`id`)
 );
 
-CREATE TABLE IF NOT EXISTS `virtual_users` (
+CREATE TABLE IF NOT EXISTS `virtual_aliases` (
+  `id` int(11) NOT NULL auto_increment,
+  `domain_id` int(11) NOT NULL,
+  `source` varchar(100) NOT NULL,
+  `destination` varchar(100) NOT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (domain_id) REFERENCES virtual_domains(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS `virtual_mailboxes` (
   `id` int(11) NOT NULL auto_increment,
   `domain_id` int(11) NOT NULL,
   `email` varchar(100) NOT NULL,
@@ -106,15 +115,6 @@ CREATE TABLE IF NOT EXISTS `virtual_users` (
   `quota` bigint(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`),
-  FOREIGN KEY (domain_id) REFERENCES virtual_domains(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS `virtual_aliases` (
-  `id` int(11) NOT NULL auto_increment,
-  `domain_id` int(11) NOT NULL,
-  `source` varchar(100) NOT NULL,
-  `destination` varchar(100) NOT NULL,
-  PRIMARY KEY (`id`),
   FOREIGN KEY (domain_id) REFERENCES virtual_domains(id) ON DELETE CASCADE
 );
 ```
@@ -138,13 +138,13 @@ represents a domain.
 
 </Aside>
 
-### virtual_users
+### virtual_mailboxes
 
 The second table contains information about your users. Each mail account requires one row in this table.
 
 - **id**: A unique number identifying each row. It is set automatically.
 - **domain_id**: A [reference](https://en.wikipedia.org/wiki/Foreign_key) to the domain in the `virtual_domains` table.
-  So each domain can have many virtual users.
+  So each domain can have many mailboxes.
 - **email**: The email address of the mailbox.
 - **password**: The hashed password of the mail account. It is prepended by the
   [password scheme](https://doc.dovecot.org/main/core/config/auth/schemes.html). By default it is `{BLF-CRYPT}` also
@@ -211,7 +211,7 @@ REPLACE INTO virtual_domains
   (id, name)
   VALUES (10,'example.org');
 
-REPLACE INTO virtual_users
+REPLACE INTO virtual_mailboxes
   (id, domain_id, password, email)
   VALUES (
     1,

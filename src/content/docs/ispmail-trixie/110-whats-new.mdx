@@ -29,6 +29,7 @@ organisation. So I replaced resource-hungry components by more lightweight softw
   of RAM wasted for this little amount of data we need to store. So this guide uses _SQLite_ instead.
 - rsyslogd was a classic choice to write log files like /var/log/mail.log. As Debian is using _systemd_ we no longer
   need rsyslogd and logrotate. The logs can be read using _journalctl_ instead.
+- The MariaDB table `virtual_users` is renamed to `virtual_mailboxes` because it resembles how Postfix calls them.
 
 # Version changes
 
