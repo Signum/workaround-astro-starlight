@@ -1,7 +1,7 @@
 ---
-title: Receive emails
+title: "Receive emails: Postfix"
 lastUpdated: 2025-08-20
-slug: ispmail-trixie/receive-emails
+slug: ispmail-trixie/receive-emails-postfix
 sidebar:
   order: 160
 ---
@@ -11,26 +11,53 @@ import { Aside } from "@astrojs/starlight/components";
 import "@splidejs/splide/css";
 import { Splide, SplideSlide } from "astro-splide";
 
-I have created a little slideshow to help you understand the process of receiving an email from a remote mail server.
-Use the arrows to navigate between slides:
+import { Steps } from "@astrojs/starlight/components";
+
+import Box from "../../../components/Box.astro";
+
+import StepList from "../../../components/StepList.astro";
+
+<StepList
+  steps={[
+    { title: "Install Astro", description: "Set up your project." },
+    { title: "Add Starlight", description: "Install the theme." },
+    { title: "Customize", description: "Adjust settings to your needs." },
+    { title: "Deploy", description: "Publish to production." },
+  ]}
+  currentStep={2}
+/>
+
+I have created a slideshow to help you understand the process of receiving an email from a remote mail server. Use the
+arrows to navigate between slides:
 
 <Splide>
   {Array.from({ length: 24 }, (_, i) => i + 1).map((i) => (
-    <SplideSlide>
+    <SplideSlide key={i}>
       <img src={`/big-picture-receive/${String(i).padStart(2, "0")}.svg`} alt={`Slide ${i}`} />
     </SplideSlide>
   ))}
 </Splide>
 
-So:
-
-- DNS is used to find your mail server. First the MX record. Then the A and/or AAAA record.
-- Postfix receives emails using SMTP (the Simple Mail Transport Protocol)
-- MariaDB stores information about your domains and mail users
-- rspamd checks if it is spam
-- Dovecot saves it to disk
-
 ## DNS
+
+<ul class="steps steps-vertical lg:steps-horizontal">
+  <li class="step step-primary">Register</li>
+  <li class="step step-primary">Choose plan</li>
+  <li class="step">Purchase</li>
+  <li class="step">Receive Product</li>
+</ul>
+
+<Box icon='check-list'>
+<Steps>
+
+1. **DNS is used to find your mail server. First the MX record. Then the A and/or AAAA record.**
+1. Postfix receives emails using SMTP (the Simple Mail Transport Protocol)
+1. MariaDB stores information about your domains and mail users
+1. rspamd checks if it is spam (optional)
+1. Dovecot saves it to disk
+
+</Steps>
+</Box>
 
 Let's begin with setting up the DNS records. Say that you want to receive emails for the `example.com` domain. If some
 other mail server on the internet wants to send an email to your server, it looks for two records:
@@ -73,6 +100,10 @@ smtp IN A fd7a:115c:a1e0::17
 If possible, also add a PTR record that makes the IP addresses point back to the name `smtp.example.com`. Other mail
 servers may be more likely so flag your sent emails as spam if you do not have a PTR record. Preferable the forward
 (A/AAAA) and reverse (PTR) records match.
+
+<div class="scroll-trigger" data-slide="5">
+  dingdong
+</div>
 
 ## Postfix
 

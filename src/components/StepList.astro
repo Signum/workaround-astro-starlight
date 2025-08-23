@@ -1,0 +1,95 @@
+---
+interface Step {
+  title: string;
+}
+
+const { steps, currentStep } = Astro.props as {
+  steps: Step[];
+  currentStep: number;
+};
+---
+
+<div class="step-box">
+  <ol class="steps">
+    {
+      steps.map((step, i) => (
+        <li class="step">
+          <div class={`circle ${i < currentStep ? "done" : i === currentStep ? "current" : "todo"}`}>{i + 1}</div>
+          <p class="label">{step.title}</p>
+        </li>
+      ))
+    }
+  </ol>
+</div>
+
+<style>
+  .step-box {
+    background: #f9fafb; /* light gray */
+    border: 1px solid #e5e7eb; /* gray border */
+    border-radius: 0.75rem; /* rounded corners */
+    padding: 1.5rem;
+    max-width: 400px; /* optional, keeps it compact */
+  }
+
+  .steps {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .circle {
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    border: 2px solid gray;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+
+  .circle.done {
+    background: #22c55e; /* green */
+    border-color: #22c55e;
+    color: white;
+  }
+
+  .circle.current {
+    background: #3b82f6; /* blue */
+    border-color: #3b82f6;
+    color: white;
+    animation: pulse 1.5s infinite;
+  }
+
+  .circle.todo {
+    border-color: #9ca3af; /* gray */
+    color: #9ca3af;
+  }
+
+  .label {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #374151; /* gray-700 */
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.6);
+    }
+    50% {
+      box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+    }
+  }
+</style>

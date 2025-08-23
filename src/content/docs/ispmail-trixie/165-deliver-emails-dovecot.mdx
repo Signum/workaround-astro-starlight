@@ -1,0 +1,203 @@
+---
+title: "Deliver emails: Dovecot"
+lastUpdated: 2025-08-22
+slug: ispmail-trixie/deliver-emails-dovecot
+sidebar:
+  order: 165
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+In the previous chapter you have prepared Postfix to receive emails. As shown in the slideshow, Postfix hands incoming
+emails over to Dovecot which in turn saves it to a mailbox on disk.
+
+So:
+
+- DNS is used to find your mail server. First the MX record. Then the A and/or AAAA record.
+- Postfix receives emails using SMTP (the Simple Mail Transport Protocol)
+- MariaDB stores information about your domains and mail users
+- rspamd checks if it is spam
+- Dovecot saves it to disk
+
+## DNS
+
+Let's begin with setting up the DNS records. Say that you want to receive emails for the `example.com` domain. If some
+other mail server on the internet wants to send an email to your server, it looks for two records:
+
+- **MX record (`example.com`)**  
+  The MX (Mail Exchange) record tells other mail servers _where to deliver emails_ for the domain `example.com`.  
+  Instead of pointing directly to an IP address, it points to a **hostname** (for example, `smtp.example.com`).  
+  MX records also include a **priority value**. If multiple mail servers are listed, the one with the lowest priority
+  number is tried first. Others are used as fallback if the first is unavailable.
+
+- **A / AAAA record (`smtp.example.com`)**  
+  The hostname specified in the MX record (`smtp.example.com`) must resolve to an IP address so that other mail servers
+  know how to reach it.
+  - An **A record** maps the hostname to an IPv4 address.
+  - An **AAAA record** maps the hostname to an IPv6 address.
+
+  Once resolved, the sending mail server connects to that IP address on **TCP port 25**, which is the standard port for
+  email delivery (SMTP).
+
+<Aside>
+
+If no MX record is found, the remote mail server will instead directly look for an A or AAAA record of `example.com`.
+
+</Aside>
+
+<Aside type="caution">
+
+The MX record must point to a hostname. It **must not** point to an IP address directly.
+
+</Aside>
+
+In zone syntax you would create something like:
+
+```
+@ IN MX 10 smtp
+smtp IN A 100.64.17.3
+smtp IN A fd7a:115c:a1e0::17
+```
+
+If possible, also add a PTR record that makes the IP addresses point back to the name `smtp.example.com`. Other mail
+servers may be more likely so flag your sent emails as spam if you do not have a PTR record. Preferable the forward
+(A/AAAA) and reverse (PTR) records match.
+
+## Postfix
+
+Now that other mail servers can locate your mail server, the next step is to make sure it can receive and process
+incoming emails. This task is handled by Postfix, which communicates using the SMTP protocol.
+
+Postfix knows if an email address is valid by checking for…
+
+- Virtual Domains (am I responsible for this domain?)
+- Virtual Aliases (do I have to redirect this address to another address?)
+- Virtual Mailboxes (do I have a valid mailbox to store the email to?)
+
+### Virtual Domains
+
+There are different ways for Postfix to get that information. From text files, LDAP, MongoDB or PostgreSQL. Or via
+MariaDB – which is what we will use. But whatever kind of data source you configure, Postfix needs the information as a
+_mapping_. Consider it as a _question_ and an _answer_.
+
+- Question: is `example.org` one of our virtual domains?
+- Answer: yes
+
+If the information is **not** available you just get no answer:
+
+- Question: is `example.net` one of our virtual domains?
+- Answer: (no answer)
+
+So Postfix hast to ask MariaDB that question:
+
+```sql
+SELECT "yes" FROM virtual_domains WHERE name='example.net'
+```
+
+Run the following code in your shell to create a configuration file creating that mapping:
+
+```sh
+cat > /etc/postfix/virtual-mailbox-domains.cf << EOF
+user = mailserver
+password = SECOND-PASSWORD-HERE
+hosts = 127.0.0.1
+dbname = mailserver
+query = SELECT 1 FROM virtual_domains WHERE name='%s'
+EOF
+```
+
+This has created a configuration file called `/etc/postfix/virtual-mailbox-domains.cf`. The `user`, `password`, `hosts`
+and `dbname` definitions tell Postfix how to connect to the database. And the `query` asks the _question_ if a certain
+domain is present in the database table `virtual_domains`. Using `SELECT 1` we return just the number 1 if such an entry
+was found. In fact it does not matter what we return. Any _answer_ is fine.
+
+Don't forget to replace the `SECOND-PASSWORD-HERE` by your own password for the `mailserver` user.
+
+### Virtual Aliases
+
+Now let's deal with aliases. As shown earlier an alias redirects an email to another email address. So the _question_
+and _answer_ game goes like this:
+
+- Question: is there an alias for `jack@example.org`?
+- Answer: `john@example.org`
+
+Postfix would then check if there are further aliases:
+
+- Question: is there an alias for `john@example.org`?
+- Answer: (no answer)
+
+Apparently, there aren't any. So the email will go to `john@example.org`.
+
+Run this code to create the appropriate mapping file:
+
+```sh
+cat > /etc/postfix/virtual-alias-maps.cf << EOF
+user = mailserver
+password = SECOND-PASSWORD-HERE
+hosts = 127.0.0.1
+dbname = mailserver
+query = SELECT destination FROM virtual_aliases WHERE source='%s'
+EOF
+```
+
+The query now gets all the `destination` email addresses from the database for a certain `source` email address.
+
+### Virtual Mailboxes
+
+The last mapping we need is a query to find valid mailboxes. Without further ado:
+
+```sh
+cat > /etc/postfix/virtual-mailbox-maps.cf << EOF
+user = mailserver
+password = SECOND-PASSWORD-HERE
+hosts = 127.0.0.1
+dbname = mailserver
+query = SELECT 1 FROM virtual_mailboxes WHERE email='%s'
+EOF
+```
+
+Just the same story as with virtual domains. The database returns `1` if there is a `virtual_mailboxes` record matching
+that specific email address.
+
+Actually the _answer_ is usually not `1` but the path to the mailbox on disk. But that applies only if Postfix would be
+saving the email. In our setup the email will be passed on to Dovecot in a later step. Dovecot will then handle the
+files on disk. Postfix just has to know is whether a mailbox exists. And that's why any _answer_ is sufficient here.
+
+### Tell Postfix
+
+You have created the config files for the three mappings. Now you just need to tell Postfix to use them:
+
+```sh
+postconf virtual_mailbox_domains=mysql:/etc/postfix/mysql-virtual-mailbox-domains.cf
+postconf virtual_mailbox_maps=mysql:/etc/postfix/mysql-virtual-mailbox-maps.cf
+postconf virtual_alias_maps=mysql:/etc/postfix/mysql-virtual-alias-maps.cf
+
+chown root:postfix /etc/postfix/*.cf
+chmod o= /etc/postfix/*.cf
+```
+
+`postconf` is a command that changes configuration in `/etc/postfix/main.cf` and applies them instantly. You don't have
+to restart Postfix.
+
+The last two lines set the owner of the config files (_user=root, group=postfix_) and make sure that _others_ have no
+access. After all a database password is found in these files.
+
+### Test it
+
+Give the mappings a quick test using the `postmap -q` command (_q_ stands for _query_):
+
+```sh
+postmap -q example.org mysql:/etc/postfix/mysql-virtual-mailbox-domains.cf
+postmap -q jack@example.org mysql:/etc/postfix/mysql-virtual-alias-maps.cf
+postmap -q john@example.org mysql:/etc/postfix/mysql-virtual-mailbox-maps.cf
+```
+
+These three commands use the three mapping files (`*.cf`) to query your three database tables. The result should show:
+
+```
+1
+john@example.org
+1
+```
+
+If you get anything else, please check those three config files. Perhaps the database password is wrong?
