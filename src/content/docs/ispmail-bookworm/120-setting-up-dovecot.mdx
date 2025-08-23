@@ -223,18 +223,19 @@ What these lines mean:
 The _user_query_ gets several pieces of information from the database. Let’s look at it one by one:
 
 - email AS user  
-   It gets the the _email_ field from the database which corresponds to the user name. Dovecot expects it in the _user_ field
-  so we set an alias to _“user”._
+   It gets the the _email_ field from the database which corresponds to the user name. Dovecot expects it in the _user_
+  field so we set an alias to _“user”._
 - userdb_quota_rule  
-   This is the user’s quota in bytes. Think of it as the maximum possible space on disk that the user can occupy. As [documented](https://doc.dovecot.org/configuration_manual/quota/#per-user-quota)
-  Dovecot expects the quota in a special format like “\*:bytes=10000” if the user should not be able to store more than 10,000
-  bytes. That’s why we begin the string with ‘\*:bytes=’.
+   This is the user’s quota in bytes. Think of it as the maximum possible space on disk that the user can occupy. As
+  [documented](https://doc.dovecot.org/configuration_manual/quota/#per-user-quota) Dovecot expects the quota in a
+  special format like “\*:bytes=10000” if the user should not be able to store more than 10,000 bytes. That’s why we
+  begin the string with ‘\*:bytes=’.
 - userdb_home  
-   This leads to the directory where all emails and various control files for this user are located. The placeholder ‘%d’
-  replaces the domain and ‘%n’ the user part. So for John that makes it “/var/vmail/example.org/john”.
+   This leads to the directory where all emails and various control files for this user are located. The placeholder
+  ‘%d’ replaces the domain and ‘%n’ the user part. So for John that makes it “/var/vmail/example.org/john”.
 - userdb*uid and userdb_gid  
-   Those are the user ID and group ID of \_vmail* user – 5000 for both. Dovecot uses it to set the permissions of files it
-  creates. As all users share the same system user “vmail” this is just a static number.s
+   Those are the user ID and group ID of \_vmail* user – 5000 for both. Dovecot uses it to set the permissions of files
+  it creates. As all users share the same system user “vmail” this is just a static number.s
 
 ## Fix permissions
 
