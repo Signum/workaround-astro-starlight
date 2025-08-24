@@ -1,0 +1,15 @@
+---
+import StepList from "./StepList.astro";
+
+const { currentStep } = Astro.props;
+---
+
+<StepList
+  steps={[
+    { title: "DNS records point to your server" },
+    { title: "Postfix fetches information from MariaDB" },
+    { title: "Postfix hands over emails to Dovecot" },
+    { title: "Dovecot saves the email to disk" },
+  ]}
+  currentStep={currentStep}
+/>
