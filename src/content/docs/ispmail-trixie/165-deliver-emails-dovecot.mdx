@@ -157,7 +157,7 @@ chown root:root /etc/dovecot/conf.d/auth-sql.conf.ext
 chmod go= /etc/dovecot/conf.d/auth-sql.conf.ext
 ```
 
-## Restart Dovecot
+## Restart and test
 
 Restart Dovecot from the shell:
 
@@ -205,5 +205,37 @@ journalctl -n 10 -fu dovecot
 ```
 
 If you prefer the old way of having log files, just install the `rsyslog` package.
+
+</Aside>
+
+<Aside icon="approve-check-circle" title="Test it">
+
+To test the `userdb` query:
+
+```sh
+doveadm user john@example.org
+```
+
+That should give you:
+
+```
+field	value
+uid
+gid
+home	/var/vmail/example.org/john
+mail_path	/var/vmail/example.org/john/Maildir
+```
+
+To test the `iterate` query that gets a list of all users:
+
+```sh
+doveadm user '*'
+```
+
+As there is currently only one user the output should be:
+
+```
+john@example.org
+```
 
 </Aside>
