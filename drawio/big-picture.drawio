@@ -381,7 +381,7 @@
         <mxCell id="gQG6ldMYRfHswNwDJcwK-158" value="MariaDB&lt;div&gt;database&lt;/div&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" parent="1" vertex="1">
           <mxGeometry x="570" y="8730" width="150" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="gQG6ldMYRfHswNwDJcwK-159" value="Yes, I found it in my virtual_mailboxes table" style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=0;fillColor=#fff2cc;strokeColor=#d6b656;flipH=1;" parent="1" vertex="1">
+        <mxCell id="gQG6ldMYRfHswNwDJcwK-159" value="Yes, I found it in my virtual_users table" style="whiteSpace=wrap;html=1;shape=mxgraph.basic.roundRectCallout;dx=30;dy=15;size=5;boundedLbl=1;fontFamily=Helvetica;fontSize=16;labelBackgroundColor=none;flipV=0;fillColor=#fff2cc;strokeColor=#d6b656;flipH=1;" parent="1" vertex="1">
           <mxGeometry x="440" y="8660" width="180" height="80" as="geometry" />
         </mxCell>
         <mxCell id="gQG6ldMYRfHswNwDJcwK-160" value="17" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="1" vertex="1">

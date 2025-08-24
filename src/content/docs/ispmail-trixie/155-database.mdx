@@ -83,7 +83,7 @@ By now you have an empty database and two user accounts to access it. Now you ne
 
 - virtual_domains
 - virtual_aliases
-- virtual_mailboxes
+- virtual_users
 
 Let's create the entire database schema in one go:
 
@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS `virtual_aliases` (
   FOREIGN KEY (domain_id) REFERENCES virtual_domains(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS `virtual_mailboxes` (
+CREATE TABLE IF NOT EXISTS `virtual_users` (
   `id` int(11) NOT NULL auto_increment,
   `domain_id` int(11) NOT NULL,
   `email` varchar(100) NOT NULL,
@@ -138,7 +138,7 @@ represents a domain.
 
 </Aside>
 
-### virtual_mailboxes
+### virtual_users
 
 The second table contains information about your users. Each mail account requires one row in this table.
 
@@ -211,7 +211,7 @@ REPLACE INTO virtual_domains
   (id, name)
   VALUES (10,'example.org');
 
-REPLACE INTO virtual_mailboxes
+REPLACE INTO virtual_users
   (id, domain_id, password, email)
   VALUES (
     1,
