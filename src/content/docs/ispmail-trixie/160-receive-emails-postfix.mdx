@@ -15,17 +15,7 @@ import { Steps } from "@astrojs/starlight/components";
 
 import Box from "../../../components/Box.astro";
 
-import StepList from "../../../components/StepList.astro";
-
-<StepList
-  steps={[
-    { title: "Install Astro", description: "Set up your project." },
-    { title: "Add Starlight", description: "Install the theme." },
-    { title: "Customize", description: "Adjust settings to your needs." },
-    { title: "Deploy", description: "Publish to production." },
-  ]}
-  currentStep={2}
-/>
+import StepListReceive from "../../../components/StepListReceive.astro";
 
 I have created a slideshow to help you understand the process of receiving an email from a remote mail server. Use the
 arrows to navigate between slides:
@@ -38,29 +28,17 @@ arrows to navigate between slides:
   ))}
 </Splide>
 
+---
+
+Let's tackle the receiving of emails step by step:
+
 ## DNS
 
-<ul class="steps steps-vertical lg:steps-horizontal">
-  <li class="step step-primary">Register</li>
-  <li class="step step-primary">Choose plan</li>
-  <li class="step">Purchase</li>
-  <li class="step">Receive Product</li>
-</ul>
+<StepListReceive currentStep={1} />
 
-<Box icon='check-list'>
-<Steps>
-
-1. **DNS is used to find your mail server. First the MX record. Then the A and/or AAAA record.**
-1. Postfix receives emails using SMTP (the Simple Mail Transport Protocol)
-1. MariaDB stores information about your domains and mail users
-1. rspamd checks if it is spam (optional)
-1. Dovecot saves it to disk
-
-</Steps>
-</Box>
-
-Let's begin with setting up the DNS records. Say that you want to receive emails for the `example.com` domain. If some
-other mail server on the internet wants to send an email to your server, it looks for two records:
+As shown in the slideshow, you need to have proper DNS records set up. Say that you want to receive emails for the
+`example.com` domain. If some other mail server on the internet wants to send an email to your server, it looks for two
+records:
 
 - **MX record (`example.com`)**  
   The MX (Mail Exchange) record tells other mail servers _where to deliver emails_ for the domain `example.com`.  
@@ -101,20 +79,46 @@ If possible, also add a PTR record that makes the IP addresses point back to the
 servers may be more likely so flag your sent emails as spam if you do not have a PTR record. Preferable the forward
 (A/AAAA) and reverse (PTR) records match.
 
-<div class="scroll-trigger" data-slide="5">
-  dingdong
-</div>
+<Aside icon="approve-check-circle" title="Test it">
+
+Use the `host` command to check your domain's MX record.
+
+```sh
+$> host -t mx example.com
+example.com mail is handled by 10 smtp.example.com.
+```
+
+Then check if that result resolves to an IP address:
+
+```sh
+$> host smtp.example.com
+smtp.example.com has address 49.13.89.249
+smtp.example.com has IPv6 address 2a01:4f8:c012:62d1::1
+```
+
+Preferably the IP addresses should resolve back to the mail server's name:
+
+```sh
+$> host 49.13.89.249
+249.89.13.49.in-addr.arpa domain name pointer smtp.example.com.
+$> host 2a01:4f8:c012:62d1::1
+1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.1.d.2.6.2.1.0.c.8.f.4.0.1.0.a.2.ip6.arpa domain name pointer smtp.example.com.
+```
+
+</Aside>
 
 ## Postfix
+
+<StepListReceive currentStep={2} />
 
 Now that other mail servers can locate your mail server, the next step is to make sure it can receive and process
 incoming emails. This task is handled by Postfix, which communicates using the SMTP protocol.
 
 Postfix knows if an email address is valid by checking for…
 
-- Virtual Domains (am I responsible for this domain?)
-- Virtual Aliases (do I have to redirect this address to another address?)
-- Virtual Mailboxes (do I have a valid mailbox to store the email to?)
+- **Virtual Domains** (am I responsible for this domain?)
+- **Virtual Aliases** (do I have to redirect this address to another address?)
+- **Virtual Mailboxes** (do I have a valid mailbox to store the email to?)
 
 ### Virtual Domains
 
@@ -128,9 +132,9 @@ _mapping_. Consider it as a _question_ and an _answer_.
 If the information is **not** available you just get no answer:
 
 - Question: is `example.net` one of our virtual domains?
-- Answer: (no answer)
+- Answer: _(no answer)_
 
-So Postfix hast to ask MariaDB that question:
+In SQL language Postfix has to ask MariaDB the question:
 
 ```sql
 SELECT "yes" FROM virtual_domains WHERE name='example.net'
@@ -166,9 +170,9 @@ and _answer_ game goes like this:
 Postfix would then check if there are further aliases:
 
 - Question: is there an alias for `john@example.org`?
-- Answer: (no answer)
+- Answer: _(no answer)_
 
-Apparently, there aren't any. So the email will go to `john@example.org`.
+Apparently, there aren't any more. So the email will go to `john@example.org`.
 
 Run this code to create the appropriate mapping file:
 
@@ -202,8 +206,9 @@ Just the same story as with virtual domains. The database returns `1` if there i
 that specific email address.
 
 Actually the _answer_ is usually not `1` but the path to the mailbox on disk. But that applies only if Postfix would be
-saving the email. In our setup the email will be passed on to Dovecot in a later step. Dovecot will then handle the
-files on disk. Postfix just has to know is whether a mailbox exists. And that's why any _answer_ is sufficient here.
+saving the email to disk on its own. In our setup the email will be passed on to Dovecot in a later step. Dovecot will
+then handle the files on disk. Postfix just has to know is whether a mailbox exists. And that's why **any** _answer_ is
+sufficient here.
 
 ### Tell Postfix
 
@@ -224,7 +229,7 @@ to restart Postfix.
 The last two lines set the owner of the config files (_user=root, group=postfix_) and make sure that _others_ have no
 access. After all a database password is found in these files.
 
-### Test it
+<Aside icon="approve-check-circle" title="Test it">
 
 Give the mappings a quick test using the `postmap -q` command (_q_ stands for _query_):
 
@@ -243,3 +248,5 @@ john@example.org
 ```
 
 If you get anything else, please check those three config files. Perhaps the database password is wrong?
+
+</Aside>

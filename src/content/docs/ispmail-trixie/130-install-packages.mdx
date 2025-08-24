@@ -3,7 +3,7 @@ title: Install software packages
 lastUpdated: 2025-08-14
 slug: ispmail-trixie/install-the-software-packages
 sidebar:
-  order: 140
+  order: 130
 ---
 
 import { Aside } from "@astrojs/starlight/components";
@@ -11,14 +11,14 @@ import { Aside } from "@astrojs/starlight/components";
 Let's install the necessary Debian packages. Run this command as root on your server as _root_:
 
 ```sh
+apt update
 DEBIAN_FRONTEND=noninteractive \
     apt -y install postfix-mysql dovecot-mysql \
     dovecot-imapd dovecot-lmtpd dovecot-managesieved \
-    apache python3-certbot-apache libapache2-mod-php \
-    php-intl php-mbstring php-xml unzip \
+    apache2 python3-certbot-apache libapache2-mod-php \
+    php-intl php-mbstring php-xml unzip certbot \
     roundcube-sqlite3 roundcube swaks ufw mutt \
-    crowdsec crowdsec-firewall-bouncer unattended-upgrades \
-    mariadb-server
+    unattended-upgrades mariadb-server
 
 postfix chroot off
 ```
@@ -48,16 +48,16 @@ While the server is downloading and installing the packages, let me give you a q
   to Postfix to send emails.
 - **swaks** \
   The SWiss Army Knife of Smtp. Helpful command-line tool to send test emails to a mail server.
+- **certbot** \
+  Gets a free TLS certificate from [_Let's Encrypt_](https://letsencrypt.org/) for encrypting network communication.
 - **ufw** \
-  Universal FireWall. A simple tool to manage firewall rules to limit access to your server.
+  Universal FireWall. A simple tool to manage firewall rules to limit access to your server. TODO: omit?
 - **rspamd** \
-  It reliably detects spam. Also handles adding DKIM signature to outgoing email to prevent spoofing your domains.
+  It reliably detects spam. Also handles adding DKIM signature to outgoing email to prevent spoofing your domains. TODO:
+  later/optional
 - **mutt** \
   A console-based program that can speak IMAP and also read Maildirs directly. Very helpful for testing the
   functionality of your mail server. Think of it as a text-based Thunderbird.
-- **crowdsec** \
-  Detects attacks to your mail server and blocks the IP address of the attacker. This is a more sophisticated version of
-  fail2ban.
 - **unattended-upgrades** \
   Installs security updates automatically.
 
@@ -65,8 +65,6 @@ While the server is downloading and installing the packages, let me give you a q
 
 By default, Debian enables Postfix to run in chroot mode. While this may sound like a security improvement, even
 Postfix’s author advises against it, arguing that it mostly creates a false sense of security. For this reason, we are
-disabling chroot mode—which also simplifies some configuration details for us later on.
+disabling chroot mode—which also simplifies some configuration later on.
 
 </Aside>
-
-TODO: move crowdsec into optional chapter

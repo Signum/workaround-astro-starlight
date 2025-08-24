@@ -1,0 +1,114 @@
+---
+title: TLS certificate
+lastUpdated: 2025-08-24
+slug: ispmail-trixie/tls-certificate
+sidebar:
+  order: 140
+---
+
+Your mail server can't work properly without a valid TLS certificate. It will be used in three places:
+
+1. the **webmail** interface (driven by the Apache web server)
+2. **Postfix** (to encrypt SMTP communication with other mail servers on the internet where possible)
+3. **Dovecot** (to encrypt IMAP/POP3 communication)
+
+Your mail server will be able to host email addresses for many domains. But a TLS certificate is usually issued for a
+single [FQDN](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) like “mail.example.org”. That _common name_ is
+an important part of the certificate. It must match the name you use to talk to the server.
+
+**Correct**: Your mail server is addressed as `mail.example.org`. The TLS certificate was also issued to
+`mail.example.org`.
+
+**Wrong**: Your mail server is addressed as `smtp01.example.com`. But the TLS certificate was issued to
+`mail.example.org`.
+
+So choose an FQDN for your mail server. For example I use `webmail.workaround.org` for my personal server.
+
+## Certbot
+
+You already have the `certbot` software and the `apache2` web server installed. Requesting a certificate from Let's
+Encrypt is as simple as running the next command. Please replace `mail.example.org` by the FQDN you chose.
+
+```sh
+certbot --apache --register-unsafely-without-email --agree-tos -d mail.example.org
+```
+
+<details>
+  <summary>Click here to learn what the options mean…</summary>
+
+- **--apache**: Use the [HTTP challenge](https://letsencrypt.org/docs/challenge-types/) to verify that you are actually
+  in control of the FQDN. The certbot plugin will add some configuration to intercept HTTP requests to
+  `/.well-known/acme-challenge/…` on your web server. This is a fully automatic process that does not even have to stop
+  your web server.
+- **--register-unsafely-without-email**: Do not ask for an email address to send to Let's Encrypt. Before June 2025
+  Let's Encrypt used that address to inform you if your certificate is about to expire and the automatic renewal failed.
+  Nowadays they do not need an email any more. But for historical reasons they still ask for it by default.
+- **--agree-tos**: Confirm that you have read Let's Encrypt's terms and conditions. Let's be honest – nobody reads that.
+- **-d**: The domain that the certificate will be issued to. This has to be the exact FQDN of your server.
+
+</details>
+
+The output should look like:
+
+```
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for mail.example.org
+
+Successfully received certificate.
+Certificate is saved at: /etc/letsencrypt/live/mail.example.org/fullchain.pem
+Key is saved at:         /etc/letsencrypt/live/mail.example.org/privkey.pem
+This certificate expires on 2025-11-22.
+These files will be updated when the certificate renews.
+Certbot has set up a scheduled task to automatically renew this certificate in the background.
+
+Deploying certificate
+Successfully deployed certificate for mail.example.org to /etc/apache2/sites-available/000-default-le-ssl.conf
+Congratulations! You have successfully enabled HTTPS on https://mail.example.org
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If you like Certbot, please consider supporting our work by:
+ * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+ * Donating to EFF:                    https://eff.org/donate-le
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+```
+
+<details>
+  <summary>Click here to learn which files have been created…</summary>
+
+In /etc/letsencrypt/live/**mail.example.org** you will find a couple of files now:
+
+- cert.pem: the certificate file
+- chain.pem: the _chaining_ or _intermediate_ certificate. This certificate provides information how the LetsEncrypt
+  certificates are linked to other known certificate authorities. It is generally a good idea to always send this
+  certificate along with your own for clients who may not know LetsEncrypt properly yet.
+- fullchain.pem: this file contains a concatenation of the _cert.pem_ and the _chain.pem_. This is the preferred file to
+  use when a piece of software asks where to find the _certificate_.
+- privkey.pem: the private key file. Keep it secret.
+
+</details>
+
+## Renewal
+
+Your new certificate is only valid for 3 months. Fortunately the renewal is happening automatically. A _systemd timer_
+checks your certificate frequently and triggers a renewal one month before it expires.
+
+These commands will show you the definition and status of the timer and the renewal service:
+
+```sh
+systemctl status certbot.timer
+systemctl cat certbot.timer
+systemctl status certbot.service
+systemctl cat certbot.service
+```
+
+_Systemd timers_ are similar to cron jobs. They require more work to set up but have some nice features and make you
+look cooler.
+
+It is important that services that use the certificate load the new certificate after an automatic renewal. This shell
+command will create a file `/etc/letsencrypt/cli.ini` that handles it:
+
+```sh
+echo > /etc/letsencrypt/cli.ini "post-hook = systemctl reload postfix dovecot apache2"
+```
+
+Perfect. You won't have to worry about the certificate again.
