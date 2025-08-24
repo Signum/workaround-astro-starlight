@@ -1,0 +1,24 @@
+---
+title: Big picture
+lastUpdated: 2025-08-24
+slug: ispmail-trixie/big-picture
+sidebar:
+  order: 156
+---
+
+import "@splidejs/splide/css";
+import { Splide, SplideSlide } from "astro-splide";
+
+I have created a slideshow to help you understand the process of receiving an email from a remote mail server. Hopefully
+it helps to get a better understanding of the steps involved in receiving email. We will prepare the necessary
+configuration in the next chapters.
+
+Use the arrows to navigate between slides:
+
+<Splide>
+  {Array.from({ length: 24 }, (_, i) => i + 1).map((i) => (
+    <SplideSlide key={i}>
+      <img src={`/big-picture-receive/${String(i).padStart(2, "0")}.svg`} alt={`Slide ${i}`} />
+    </SplideSlide>
+  ))}
+</Splide>

@@ -1,7 +1,7 @@
 ---
-title: "Deliver emails: Dovecot"
-lastUpdated: 2025-08-22
-slug: ispmail-trixie/deliver-emails-dovecot
+title: "Dovecot"
+lastUpdated: 2025-08-24
+slug: ispmail-trixie/dovecot
 sidebar:
   order: 165
 ---
@@ -9,19 +9,7 @@ sidebar:
 import { Aside } from "@astrojs/starlight/components";
 import StepListReceive from "../../../components/StepListReceive.astro";
 
-## About LMTP
-
-<StepListReceive currentStep={3} />
-
-As explained in the previous section, Postfix speaks SMTP and receives the email from the internet. Postfix could even
-save the email to a mailbox on disk. But instead we will use Dovecot for the final delivery. Actually Dovecot's main
-purpose is to let users fetch their email using the IMAP protocol. But it provides additional features we can use as
-well.
-
-So we need tell Postfix to hand over the incoming email to Dovecot. The communication between Postfix and Dovecot will
-happen using LMTP – the [local mail transfer protocol](https://en.wikipedia.org/wiki/Local_Mail_Transfer_Protocol).
-LMTP is a variant of SMTP with fewer features. It is meant for email communication between internal services that trust
-each other.
+<StepListReceive currentStep={4} />
 
 In this chapter we will mainly configure Dovecot so that it knows how to deliver incoming emails.
 
@@ -75,6 +63,8 @@ located, who owns them and what is their layout? Set this:
 mail_driver = maildir
 mail_home = /var/vmail/%{user | domain}/%{user | username}
 mail_path = ~/Maildir
+mail_uid = vmail
+mail_gid = vmail
 ```
 
 This looks more sophisticated than with versions of Dovecot before 2.4. What it means:
@@ -87,8 +77,11 @@ This looks more sophisticated than with versions of Dovecot before 2.4. What it 
 - **mail_path**: Within the _home_ directory the actual mailbox will live in a subdirectory called `Maildir`. The reason
   is that we will store other data in the user's _home_ directory as well that should not conflict with the mailbox
   directory.
+- **mail_uid**/**mail_gid**/: All mailboxes are stored on disk under the owner _vmail_.
 
 ### 10-master.conf
+
+TODO: not needed. /var/run/dovecot/auth-userdb is created automatically.
 
 This configuration file at `/etc/dovecot/conf.d/10-master.conf` deals with Dovecot's services.
 
@@ -120,7 +113,17 @@ ssl_server_cert_file = /etc/letsencrypt/live/mail.example.org/fullchain.pem
 ssl_server_key_file = /etc/letsencrypt/live/mail.example.org/privkey.pem
 ```
 
-Next let’s take a look at how Dovecot knows about users and their passwords:
+### 20-lmtp.conf
+
+There is one setting in the `/etc/dovecot/conf.d/20-lmtp.conf` that will mess up the recipient's email address in our
+setup. So please edit this file and comment out the `auth_username_format` line:
+
+```
+protocol lmtp {
+  #auth_username_format = %{user | username}
+}
+
+```
 
 ### auth-sql.conf.ext
 
@@ -142,7 +145,7 @@ userdb sql {
 }
 
 passdb sql {
-  query = SELECT password FROM virtual_usrs where email='%{user}'
+  query = SELECT password FROM virtual_users where email='%{user}'
 }
 ```
 
@@ -220,8 +223,8 @@ That should give you:
 
 ```
 field	value
-uid
-gid
+uid vmail
+gid vmail
 home	/var/vmail/example.org/john
 mail_path	/var/vmail/example.org/john/Maildir
 ```

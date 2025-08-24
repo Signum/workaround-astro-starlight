@@ -1,0 +1,155 @@
+---
+title: LMTP
+lastUpdated: 2025-08-24
+slug: ispmail-trixie/lmtp
+sidebar:
+  order: 167
+---
+
+import { Aside } from "@astrojs/starlight/components";
+import StepListReceive from "../../../components/StepListReceive.astro";
+
+<StepListReceive currentStep={5} />
+
+Glad to see that you are still with me. We are very close to receiving our first email. If you feel lost, please review
+the [slideshow](/ispmail-trixie/big-picture/) from earlier in this guide.
+
+As explained in the previous section, Postfix speaks SMTP and receives the email from the internet. Postfix could even
+save the email to a mailbox on disk. But instead we will use Dovecot for the final delivery. Actually Dovecot's main
+purpose is to let users fetch their email using the IMAP protocol. But it provides additional features we can use as
+well.
+
+So we need tell Postfix to hand over the incoming email to Dovecot. The communication between Postfix and Dovecot will
+happen using LMTP – the [local mail transfer protocol](https://en.wikipedia.org/wiki/Local_Mail_Transfer_Protocol).
+LMTP is a variant of SMTP with fewer features. It is meant for email communication between internal services that trust
+each other.
+
+## Dovecot listens to LMTP
+
+There's nothing to do for you here. I just want to tell you how it works. By default Dovecot has this section in its
+`/etc/dovecot/conf.d/10-master.conf` file:
+
+```
+service lmtp {
+  unix_listener lmtp {
+  }
+}
+```
+
+So Dovecot has already put a socket into `/var/run/dovecot/lmtp` where it is ready to receive LMTP connections. A socket
+is similar to a TCP port but it's only available for other processes running on same system. So nothing to do.
+
+## Postfix talks to Dovecot using LMTP
+
+The “_virtual_transport_” in Postfix defines the service to use for delivering emails to the local system. Dovecot has
+created a socket file and is ready to listen to incoming LMTP connections. We just need to tell Postfix to send emails
+there. So please run:
+
+```sh
+postconf virtual_transport=lmtp:unix:/var/run/dovecot/lmtp
+```
+
+The syntax looks crazy, but it’s actually simple. You just told Postfix to use the LMTP protocol. And that we want to
+use a UNIX socket on the same system (instead of a TCP connection). And the socket file is located at
+`/var/run/dovecot/lmtp`.
+
+## Enable server-side mail rules
+
+TODO: move to optional chapter
+
+## Send a test mail locally
+
+Finally we are ready for our first email. Using the `swaks` command you can create a test email to `john@example.org`
+and send it to Postfix:
+
+```sh
+swaks --server localhost --to john@example.org
+```
+
+If all goes as planned, you will see an SMTP dialog like this:
+
+```
+=== Trying localhost:25...
+=== Connected to localhost.
+<-  220 mail ESMTP Postfix (Debian)
+ -> EHLO mail
+<-  250-mail
+<-  250-PIPELINING
+<-  250-SIZE 10240000
+<-  250-VRFY
+<-  250-ETRN
+<-  250-STARTTLS
+<-  250-ENHANCEDSTATUSCODES
+<-  250-8BITMIME
+<-  250-DSN
+<-  250-SMTPUTF8
+<-  250 CHUNKING
+ -> MAIL FROM:<root@mail>
+<-  250 2.1.0 Ok
+ -> RCPT TO:<john@example.org>
+<-  250 2.1.5 Ok
+ -> DATA
+<-  354 End data with <CR><LF>.<CR><LF>
+ -> Date: Sun, 24 Aug 2025 21:08:59 +0000
+ -> To: john@example.org
+ -> From: root@mail
+ -> Subject: test Sun, 24 Aug 2025 21:08:59 +0000
+ -> Message-Id: <20250824210859.021444@mail>
+ -> X-Mailer: swaks v20240103.0 jetmore.org/john/code/swaks/
+ ->
+ -> This is a test mailing
+ ->
+ ->
+ -> .
+<-  250 2.0.0 Ok: queued as 2742B221FA
+ -> QUIT
+<-  221 2.0.0 Bye
+=== Connection closed with remote host.
+```
+
+If you see a `250 2.0.0 Ok: queued as…" near the end of this dialog, then Postfix has received the email successfully.
+
+Check if Postfix managed to pass the email to Dovecot:
+
+```sh
+journalctl -n 10 -u dovecot
+```
+
+The line you are looking for looks like:
+
+```
+Aug 24 21:36:22 mail dovecot[23214]: lmtp(john@example.org)<…><…>: msgid=<20250824213622.023221@mail>: saved mail to INBOX
+```
+
+Does it say `saved mail to INBOX`? Awesome. The email should be visible in John's home directory. Check it:
+
+```sh
+find /var/vmail/example.org/john
+```
+
+Does it look like this?
+
+```
+/var/vmail/
+/var/vmail/example.org
+/var/vmail/example.org/john
+/var/vmail/example.org/john/Maildir
+/var/vmail/example.org/john/Maildir/maildirfolder
+/var/vmail/example.org/john/Maildir/new
+/var/vmail/example.org/john/Maildir/new/1756071382.M198387P23222.mail,S=635,W=655
+/var/vmail/example.org/john/Maildir/cur
+/var/vmail/example.org/john/Maildir/tmp
+/var/vmail/example.org/john/Maildir/dovecot-uidvalidity.68ab85d6
+/var/vmail/example.org/john/Maildir/dovecot.index.log
+/var/vmail/example.org/john/Maildir/dovecot-uidvalidity
+/var/vmail/example.org/john/Maildir/dovecot.index.cache
+/var/vmail/example.org/john/Maildir/dovecot-uidlist
+/var/vmail/example.org/john/Maildir/dovecot.list.index.log
+```
+
+The important file here is `…/Maildir/new/1756071382.M198387P23222.mail,S=635,W=655`. The numbers will look differently
+on your system. But this is the actual mail that got delivered. You can view it with `cat` and will find the test email
+you just sent using `swaks`.
+
+Don't worry about the other files like `maildirfolder` or the files that sound like `dovecot…`. Those help Dovecot keep
+track of the mailbox. You can safely ignore them.

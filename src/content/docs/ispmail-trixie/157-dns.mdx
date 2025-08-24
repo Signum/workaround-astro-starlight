@@ -8,31 +8,11 @@ sidebar:
 
 import { Aside } from "@astrojs/starlight/components";
 
-import "@splidejs/splide/css";
-import { Splide, SplideSlide } from "astro-splide";
-
 import { Steps } from "@astrojs/starlight/components";
 
 import Box from "../../../components/Box.astro";
 
 import StepListReceive from "../../../components/StepListReceive.astro";
-
-I have created a slideshow to help you understand the process of receiving an email from a remote mail server. Use the
-arrows to navigate between slides:
-
-<Splide>
-  {Array.from({ length: 24 }, (_, i) => i + 1).map((i) => (
-    <SplideSlide key={i}>
-      <img src={`/big-picture-receive/${String(i).padStart(2, "0")}.svg`} alt={`Slide ${i}`} />
-    </SplideSlide>
-  ))}
-</Splide>
-
----
-
-Let's tackle the receiving of emails step by step:
-
-## DNS
 
 <StepListReceive currentStep={1} />
 

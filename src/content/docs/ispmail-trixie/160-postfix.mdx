@@ -1,7 +1,7 @@
 ---
-title: "Receive emails: Postfix"
+title: "Postfix"
 lastUpdated: 2025-08-20
-slug: ispmail-trixie/receive-emails-postfix
+slug: ispmail-trixie/postfix
 sidebar:
   order: 160
 ---
@@ -48,7 +48,7 @@ SELECT "yes" FROM virtual_domains WHERE name='example.net'
 Run the following code in your shell to create a configuration file creating that mapping:
 
 ```sh
-cat > /etc/postfix/virtual-mailbox-domains.cf << EOF
+cat > /etc/postfix/mariadb-virtual-mailbox-domains.cf << EOF
 user = mailserver
 password = SECOND-PASSWORD-HERE
 hosts = 127.0.0.1
@@ -82,7 +82,7 @@ Apparently, there aren't any more. So the email will go to `john@example.org`.
 Run this code to create the appropriate mapping file:
 
 ```sh
-cat > /etc/postfix/virtual-alias-maps.cf << EOF
+cat > /etc/postfix/mariadb-virtual-alias-maps.cf << EOF
 user = mailserver
 password = SECOND-PASSWORD-HERE
 hosts = 127.0.0.1
@@ -98,7 +98,7 @@ The query now gets all the `destination` email addresses from the database for a
 The last mapping we need is a query to find valid mailboxes. Without further ado:
 
 ```sh
-cat > /etc/postfix/virtual-mailbox-maps.cf << EOF
+cat > /etc/postfix/mariadb-virtual-mailbox-maps.cf << EOF
 user = mailserver
 password = SECOND-PASSWORD-HERE
 hosts = 127.0.0.1
@@ -120,12 +120,12 @@ sufficient here.
 You have created the config files for the three mappings. Now you just need to tell Postfix to use them:
 
 ```sh
-postconf virtual_mailbox_domains=mysql:/etc/postfix/mysql-virtual-mailbox-domains.cf
-postconf virtual_mailbox_maps=mysql:/etc/postfix/mysql-virtual-mailbox-maps.cf
-postconf virtual_alias_maps=mysql:/etc/postfix/mysql-virtual-alias-maps.cf
+postconf virtual_mailbox_domains=mysql:/etc/postfix/mariadb-virtual-mailbox-domains.cf
+postconf virtual_mailbox_maps=mysql:/etc/postfix/mariadb-virtual-mailbox-maps.cf
+postconf virtual_alias_maps=mysql:/etc/postfix/mariadb-virtual-alias-maps.cf
 
-chown root:postfix /etc/postfix/*.cf
-chmod o= /etc/postfix/*.cf
+chown root:postfix /etc/postfix/mariadb-*.cf
+chmod o= /etc/postfix/mariadb-*.cf
 ```
 
 `postconf` is a command that changes configuration in `/etc/postfix/main.cf` and applies them instantly. You don't have
@@ -139,9 +139,9 @@ access. After all a database password is found in these files.
 Give the mappings a quick test using the `postmap -q` command (_q_ stands for _query_):
 
 ```sh
-postmap -q example.org mysql:/etc/postfix/mysql-virtual-mailbox-domains.cf
-postmap -q jack@example.org mysql:/etc/postfix/mysql-virtual-alias-maps.cf
-postmap -q john@example.org mysql:/etc/postfix/mysql-virtual-mailbox-maps.cf
+postmap -q example.org mysql:/etc/postfix/mariadb-virtual-mailbox-domains.cf
+postmap -q jack@example.org mysql:/etc/postfix/mariadb-virtual-alias-maps.cf
+postmap -q john@example.org mysql:/etc/postfix/mariadb-virtual-mailbox-maps.cf
 ```
 
 These three commands use the three mapping files (`*.cf`) to query your three database tables. The result should show:
