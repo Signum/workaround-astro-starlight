@@ -3,6 +3,7 @@ import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import sitemap from "@astrojs/sitemap";
 import matomo from "astro-matomo";
+import remarkSmartypants from "remark-smartypants";
 
 // https://astro.build/config
 export default defineConfig({
@@ -56,4 +57,11 @@ export default defineConfig({
     }),
     sitemap(),
   ],
+
+  markdown: {
+    remarkPlugins: [
+      // remove the substitution of -- to –
+      [remarkSmartypants, { dashes: false }],
+    ],
+  },
 });
