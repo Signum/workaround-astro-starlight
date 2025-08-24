@@ -3,13 +3,15 @@ interface Step {
   title: string;
 }
 
-const { steps, currentStep } = Astro.props as {
+const { steps, currentStep, title } = Astro.props as {
   steps: Step[];
   currentStep: number;
+  title: String;
 };
 ---
 
 <div class="step-box">
+  <h2>{title}</h2>
   <ol class="steps">
     {
       steps.map((step, i) => (
@@ -31,6 +33,11 @@ const { steps, currentStep } = Astro.props as {
     border-radius: 0.75rem; /* rounded corners */
     padding: 1rem;
     max-width: 400px; /* optional, keeps it compact */
+  }
+
+  .step-box h2 {
+    font-size: 1em;
+    padding-bottom: 1em;
   }
 
   .steps {

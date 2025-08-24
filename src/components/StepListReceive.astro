@@ -1,12 +1,14 @@
 ---
 import StepList from "./StepList.astro";
 
-const { currentStep } = Astro.props;
+const { currentStep, title } = Astro.props;
 ---
 
 <StepList
+  title="Todo list for receiving emails"
   steps={[
     { title: "DNS records point to your server" },
+    { title: "Get a certificate from Let's Encrypt" },
     { title: "Postfix fetches information from MariaDB" },
     { title: "Postfix hands over emails to Dovecot" },
     { title: "Dovecot saves the email to disk" },
