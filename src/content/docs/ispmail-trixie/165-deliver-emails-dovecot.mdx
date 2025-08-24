@@ -109,127 +109,101 @@ authenticate your users which is relevant later when we set up _relaying_.
 
 ### 10-ssl.conf
 
-TODO: verify
-
-Earlier in this guide you created both a key and a certificate file to encrypt the communication with POP3, IMAPs and
-HTTPS between the users and your mail server. You need to tell Dovecot where to find these files:
-
-```
-ssl\_cert = \</etc/letsencrypt/live/webmail.example.org/fullchain.pem
-ssl\_key = \</etc/letsencrypt/live/webmail.example.org/privkey.pem
-```
-
-And enforce TLS encryption by setting:
+Earlier in this guide you created both a key and a certificate file to encrypt the communication with IMAPS and HTTPS
+between the users and your mail server. You need to tell Dovecot where to find these files. Also set
+[ssl=required](https://doc.dovecot.org/2.4.1/core/config/ssl.html#how-to-specify-when-ssl-tls-is-required) to prevent
+that someone sends their password without encryption.
 
 ```
 ssl = required
+ssl_server_cert_file = /etc/letsencrypt/live/mail.example.org/fullchain.pem
+ssl_server_key_file = /etc/letsencrypt/live/mail.example.org/privkey.pem
 ```
-
-See the [Dovecot documentation on SSL encryption](https://doc.dovecot.org/admin_manual/ssl/) for more information.
 
 Next let’s take a look at how Dovecot knows about users and their passwords:
 
 ### auth-sql.conf.ext
 
-Dovecot reads the `auth-sql.conf.ext` which defines how to find user information in your database. Open the file. There
-are two sections:
-
-- userdb: where to find a user’s mailbox in the file system
-- passdb: where to find the user’s hashed password
-
-By default Dovecot will run two queries at your database. One for the _userdb_ that gets information like the user ID,
-group ID, home directory and quota. And another for the _passdb_ that gets the hashed password.
-
-The “userdb” section already reads:
+Let's tell Dovecot where to find information on an valid users (_userdb_) and their passwords (_passdb_). You can safely
+replace the content of the `/etc/dovecot/conf.d/auth-sql.conf.ext` file by:
 
 ```
-userdb {
-   driver = sql
-   args = /etc/dovecot/dovecot-sql.conf.ext
+sql_driver = mysql
+
+mysql /var/run/mysqld/mysqld.sock {
+  user = mailserver
+  password = 'SECOND-PASSWORD-HERE'
+  dbname = mailserver
+}
+
+userdb sql {
+  query = SELECT email as user FROM virtual_users WHERE email='%{user}'
+  iterate_query = SELECT email as user FROM virtual_users
+}
+
+passdb sql {
+  query = SELECT password FROM virtual_usrs where email='%{user}'
 }
 ```
 
-As you can see Dovecot uses an SQL database lookup to get that information. And it refers to the dovecot-sql.conf.ext
-file for more information. Let’s see…
-
-## /etc/dovecot/dovecot-sql.conf.ext
-
-(This configuration file is one level up and not in “conf.d”.)
-
-You will find this file well documented although all configuration directives are commented out. Add these lines at the
-bottom of the file:
-
-```
-driver = mysql
-
-connect = \
-  host=127.0.0.1 \
-  dbname=mailserver \
-  user=mailserver \
-  password=x893dNj4stkHy1MKQq0USWBaX4ZZdq
-
-user_query = SELECT email as user, \
-  concat('*:bytes=', quota) AS quota_rule, \
-  '/var/vmail/%d/%n' AS home, \
-  5000 AS uid, 5000 AS gid \
-  FROM virtual_users WHERE email='%u'
-
-password_query = SELECT password FROM virtual_users WHERE email='%u'
-
-iterate_query = SELECT email AS user FROM virtual_users
-```
-
-<Aside type="tip" title="Backslashes">
-  Ending a line with a backslash (\) means that it is continued on the next line. It keeps the configuration more
-  readable when it is split over multiple lines.
-</Aside>
-
-What these lines mean:
-
-- driver: the kind of database. MariaDB is the same kind as MySQL.
-- connect: where to find the MySQL database and how to access it (username, password)
-- user_query: an SQL query that returns the user name (=the email address), the quota, the home directory, user ID and
-  group ID.
-- password_query: this SQL query just gets the password hash from the database
-- iterate_query: ‘doveadm’ uses this query to get a list of all users. That allows you to use the “doveadm user ‘\*'”
-  command later.
-
-The _user_query_ gets several pieces of information from the database. Let’s look at it one by one:
-
-- email AS user  
-   It gets the the _email_ field from the database which corresponds to the user name. Dovecot expects it in the _user_
-  field so we set an alias to _“user”._
-- userdb_quota_rule  
-   This is the user’s quota in bytes. Think of it as the maximum possible space on disk that the user can occupy. As
-  [documented](https://doc.dovecot.org/configuration_manual/quota/#per-user-quota) Dovecot expects the quota in a
-  special format like “\*:bytes=10000” if the user should not be able to store more than 10,000 bytes. That’s why we
-  begin the string with ‘\*:bytes=’.
-- userdb_home  
-   This leads to the directory where all emails and various control files for this user are located. The placeholder
-  ‘%d’ replaces the domain and ‘%n’ the user part. So for John that makes it “/var/vmail/example.org/john”.
-- userdb*uid and userdb_gid  
-   Those are the user ID and group ID of \_vmail* user – 5000 for both. Dovecot uses it to set the permissions of files
-  it creates. As all users share the same system user “vmail” this is just a static number.s
-
-## Fix permissions
+Dovecot can also read the path to a user's home directory and the user-ID and group-ID from the database. Our setup has
+a fixed schema for the home directory (`/var/vmail/DOMAIN/USER`) and the user-ID and group-ID are always `vmail` and
+`vmail`.
 
 Make sure that only root can access the SQL configuration file so nobody else is reading your database access passwords:
 
+```sh
+chown root:root /etc/dovecot/conf.d/auth-sql.conf.ext
+chmod go= /etc/dovecot/conf.d/auth-sql.conf.ext
 ```
-chown root:root /etc/dovecot/dovecot-sql.conf.ext
-chmod go= /etc/dovecot/dovecot-sql.conf.ext
-```
+
+## Restart Dovecot
 
 Restart Dovecot from the shell:
 
-```
+```sh
 systemctl restart dovecot
 ```
 
-Look at your /var/log/mail.log logfile. You should see:
+Check your logs:
+
+```sh
+journalctl -fu dovecot
+```
+
+You should see:
 
 ```
-... Dovecot v2.3.13 (f79e8e7e4) starting up for imap, lmtp, sieve, pop3 (core dumps disabled)
+dovecot[13309]: master: Dovecot v2.4.1-4 (7d8c0e5759) starting up for imap, lmtp, sieve (core dumps disabled)
+systemd[1]: Started dovecot.service - Dovecot IMAP/POP3 email server.
 ```
 
 If you get any error messages please double-check your configuration files.
+
+<Aside type="tip" title="Why there is no /var/log/mail.log?">
+
+In previous guides we used to check the log output from Postfix and Dovecot in a file called `/var/log/mail.log`.
+However in the age of _systemd_ the output of the processes is written to systemd's _journal_ instead.
+
+To read the complete logs of Dovecot, run (u=unit):
+
+```sh
+journalctl -u dovecot
+```
+
+To `tail -f` the logs (f=follow):
+
+```sh
+journalctl -fu dovecot
+```
+
+However on a busy server it will show the entire journal and then follow any changes. You may want to limit the output
+to the last 10 lines:
+
+```sh
+journalctl -n 10 -fu dovecot
+```
+
+If you prefer the old way of having log files, just install the `rsyslog` package.
+
+</Aside>

@@ -3,8 +3,12 @@ title: TLS certificate
 lastUpdated: 2025-08-24
 slug: ispmail-trixie/tls-certificate
 sidebar:
-  order: 140
+  order: 158
 ---
+
+import StepListReceive from "../../../components/StepListReceive.astro";
+
+<StepListReceive currentStep={2} />
 
 Your mail server can't work properly without a valid TLS certificate. It will be used in three places:
 
@@ -13,7 +17,7 @@ Your mail server can't work properly without a valid TLS certificate. It will be
 3. **Dovecot** (to encrypt IMAP/POP3 communication)
 
 Your mail server will be able to host email addresses for many domains. But a TLS certificate is usually issued for a
-single [FQDN](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) like “mail.example.org”. That _common name_ is
+single [FQDN](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) like `mail.example.org`. That _common name_ is
 an important part of the certificate. It must match the name you use to talk to the server.
 
 **Correct**: Your mail server is addressed as `mail.example.org`. The TLS certificate was also issued to
