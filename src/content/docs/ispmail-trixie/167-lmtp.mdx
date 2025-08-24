@@ -59,6 +59,8 @@ TODO: move to optional chapter
 
 ## Send a test mail locally
 
+<StepListReceive currentStep={6} />
+
 Finally we are ready for our first email. Using the `swaks` command you can create a test email to `john@example.org`
 and send it to Postfix:
 
@@ -153,3 +155,12 @@ you just sent using `swaks`.
 
 Don't worry about the other files like `maildirfolder` or the files that sound like `dovecot…`. Those help Dovecot keep
 track of the mailbox. You can safely ignore them.
+
+## Your actual domain
+
+Obviously the previous examples dealt with the `example.org` domain which is not your actual domain. Feel free to add
+your own domain to the database and create a test user. Check the
+[section where we created this text user](/ispmail-trixie/database/#example-data-to-play-with) and use it to add your
+own account.
+
+TODO: link to "managing domains and users" later
