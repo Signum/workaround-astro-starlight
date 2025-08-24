@@ -1,0 +1,175 @@
+---
+title: Webmail using Roundcube
+lastUpdated: 2025-08-25
+slug: ispmail-trixie/webmail
+sidebar:
+  order: 170
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+I am an email power user and my go-to software is Thunderbird. But apparently most users nowadays prefer reading their
+emails in the web browser. So let's prepare [Roundcube](https://roundcube.net/) for them.
+
+## Configure Apache
+
+…
+
+Do you remember that earlier in this guide I asked you how want to name your mail server? Whether you want to use one
+common name like “webmail.example.org” for all your domains? Or if you prefer different host names for each domain like
+“webmail.domain1.com” and “webmail.domain2.com”? If you want to use just more then you will have to create one virtual
+host configuration per domain. The following instructions will just deal with one common host name.
+
+To get Apache to serve the Roundcube application you need to edit the
+
+<tt>/etc/apache2/sites-available/**webmail.example.org**-https.conf</tt> file. I suggest you change the `DocumentRoot`
+line to:
+
+```
+DocumentRoot /var/lib/roundcube/public_html
+```
+
+All URLs are relative to that directory. So if you go to `https://webmail.example.com/` then files are looked up in that
+directory.
+
+Also add this line within the same `VirtualHost` section to add a couple of prepared security settings:
+
+```
+Include /etc/roundcube/apache.conf
+```
+
+And as usual Apache needs to be restarted after the configuration change:
+
+```
+systemctl restart apache2
+```
+
+Check that Apache is running properly:
+
+```
+systemctl status apache2
+```
+
+In case of a problem run “`apache2ctl configtest`” to find the cause.
+
+## Limit access to localhost
+
+The main configuration file of Roundcube is located at `/etc/roundcube/config.inc.php`. Feel free to customize the file.
+Fortunately nowadays the basic settings are already as we need them. However these two settings need to be changed by
+you:
+
+```
+$config['imap_host'] = "tls://webmail.example.org:143";
+$config['smtp_host'] = 'tls://webmail.example.org:587';
+```
+
+So now when your users enter `https://webmail.example.org/` in their browser they should get the Roundcube login form:
+
+Keep in mind that we are using the email address as the account name of the user. So when logging in please enter the
+email address as the user name. E.g. ‘john@example.org’ and password ‘summersun’.
+
+<Aside type="tip" title="Login failed? Storage server can’t be reached?">
+  In that case please double check your Dovecot 10-ssl.conf file if you set the path to your Let’s Encrypt certificate
+  correctly. Also check the /var/lib/roundcube/logs/errors.log file for errors.
+</Aside>
+
+## Plugins
+
+Roundcube comes with various plugins that you can offer your users. I recommend at least these two:
+
+- password: Let the user change their access password.
+- managesieve: Let the user manage rules that apply to incoming email. They can move mails to specific folders
+  automatically for example.
+
+Again edit the `/etc/roundcube/config.inc.php` file and look for the _plugins_ configuration. To enable the recommended
+plugins change it to:
+
+```
+$config['plugins'] = array(
+     'managesieve',
+     'password',
+ );
+```
+
+### password plugin
+
+Plugins are configured through files located in the `/etc/roundcube/plugins` directory. Let’s begin with the password
+plugin. Edit the `/etc/roundcube/plugins/password/config.inc.php` file.
+
+Oops, that file looks pretty empty. But it refers us to an example file at
+`/usr/share/roundcube/plugins/password/config.inc.php.dist`. There are many different methods to let users change their
+passwords. As we store that information in the SQL database, that is the part we need to set up.
+
+<Aside type="tip" title="No more doveadm">
+  In previous versions of this guide I used the “doveadm pw” command to generate passwords. This is no longer needed.
+  Roundcube can now generate the passwords in the right format to be understood by Dovecot.
+</Aside>
+
+Remove the empty definition line of $config from your `config.inc.php` file. Let’s go through the required settings one
+by one:
+
+- `$config['password_driver'] = 'sql';`\
+   Simple. Use SQL as a backend.
+- `$config['password_minimum_length'] = 12;`\
+   Allow no passwords shorter than 12 characters. I consider longer passwords more secure than short passwords with
+  weird characters. You can even choose a larger minimum.
+- `$config['password_force_save'] = true;`\
+   This will overwrite the password in the database even if it hasn’t changed. It helps us improve the strength of the
+  password hash by re-encoding it with a better algorithm even if the user chooses to keep his old password.
+- `$config['password_algorithm'] = 'blowfish-crypt';`\
+   The cryptographic algorithm to encode the password. This one is considered very secure and supported by Dovecot.
+- `$config['password_algorithm_prefix'] = '{CRYPT}';`\
+   Prepend every password with this string so that Dovecot knows how we encrypted the password.
+- `$config['password_db_dsn'] = 'mysql://mailadmin:gefk6lA2brMOeb8eR5WYaMEdKDQfnF@localhost/mailserver';`\
+   Connection information for the local database. Use your own password for the _mailadmin_ (!) database user here. We
+  cannot use the restricted _mailserver_ user because we have to write to the database if the user changes his password.
+- `$config['password_query'] = "UPDATE virtual_users SET password=%P WHERE email=%u";`\
+   The SQL query that is run to write the new password hash into the database. %P is a placeholder for the new password
+  hash. And %u is the logged-in user and conveniently matches the email address.
+
+Make sure that this config file is not world-readable:
+
+```
+chown root:www-data /etc/roundcube/plugins/password/config.inc.php
+chmod u=rw,g=r,o= /etc/roundcube/plugins/password/config.inc.php
+```
+
+Try it. Log into Roundcube as `john@example.org` with password ‘summersun’. Go to the _Settings_. Choose _Password_.
+Enter a new password twice. You should get a success message at the bottom right. Now logout and login with the new
+password. Does it work? Great.
+
+### sieve plugin
+
+[Sieve](<https://en.wikipedia.org/wiki/Sieve_(mail_filtering_language)>) is a simple programming language to be used for
+server-side rules. Dovecot executes these rules every time a new email comes in. There are global rules that are
+executed for every email. And of course every user/mailbox can have its own rules. To manage sieve rules Dovecot offers
+the _managesieve_ interface that you enabled earlier. So we just need to tell Roundcube how to access it.
+
+The configuration file for Roundcube’s _managesieve_ plugin is found at
+`/etc/roundcube/plugins/managesieve/config.inc.php`. Edit the file and again remove the empty or comment the `$config`
+line. You can again find all possible configuration options in the
+`/usr/share/roundcube/plugins/managesieve/config.inc.php.dist` file.
+
+This time just one setting is required to tell Roundcube which server to talk to:
+
+```
+$config['managesieve_host'] = 'localhost';
+```
+
+Sieve rules are stored in a special syntax on the server. This is an example that moves all incoming emails to the
+_test_ folder that have “test” in the subject:
+
+```
+require ["fileinto"];
+if header :contains "subject" "test"
+{
+  fileinto "INBOX/test";
+}
+```
+
+You do not need to learn this syntax though. Roundcube’s sieve rule editor is way more user-friendly.
+
+Try adding a sieve rule for `john@example.org` in Roundcube. That feature is located in Settings/Filters. You will find
+the machine-readable sieve code at `/var/vmail/example.org/john/sieve/roundcube.sieve`.
+
+The rule editor looks like this:
