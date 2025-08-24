@@ -11,7 +11,7 @@ const { steps, currentStep, title } = Astro.props as {
 ---
 
 <div class="step-box">
-  <h2>{title}</h2>
+  <div class="step-title">{title}</div>
   <ol class="steps">
     {
       steps.map((step, i) => (
@@ -35,9 +35,10 @@ const { steps, currentStep, title } = Astro.props as {
     max-width: 400px; /* optional, keeps it compact */
   }
 
-  .step-box h2 {
-    font-size: 1em;
-    padding-bottom: 1em;
+  .step-box .step-title {
+    font-size: 1.2em;
+    padding-bottom: 0.6em;
+    font-weight: 500;
   }
 
   .steps {
