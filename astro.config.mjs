@@ -61,6 +61,7 @@ export default defineConfig({
   markdown: {
     remarkPlugins: [
       // remove the substitution of -- to –
+      // @ts-ignore
       [remarkSmartypants, { dashes: false }],
     ],
   },
