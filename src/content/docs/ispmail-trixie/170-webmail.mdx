@@ -8,17 +8,18 @@ sidebar:
 
 import { Aside } from "@astrojs/starlight/components";
 
-I am an email power user and my go-to software is Thunderbird. But apparently most users nowadays prefer reading their
-emails in the web browser. So let's prepare [Roundcube](https://roundcube.net/) for them.
-
 ## Configure Apache
 
-…
+Now that the email has arrived, our valued user surely wants to read it. Most humans nowadays seem to prefer reading
+their email in the web browser, because it's the simplest way. (Don't worry. Power users who prefer mail clients like
+Thunderbird will also get what they want.) So let's prepare [Roundcube](https://roundcube.net/) for them.
 
-Do you remember that earlier in this guide I asked you how want to name your mail server? Whether you want to use one
-common name like “webmail.example.org” for all your domains? Or if you prefer different host names for each domain like
-“webmail.domain1.com” and “webmail.domain2.com”? If you want to use just more then you will have to create one virtual
-host configuration per domain. The following instructions will just deal with one common host name.
+<details class="collapsible">
+  <summary>Click here to learn how Debian handles virtual hosts in Apache…</summary>
+
+ding dong dar
+
+</details>
 
 To get Apache to serve the Roundcube application you need to edit the
 
