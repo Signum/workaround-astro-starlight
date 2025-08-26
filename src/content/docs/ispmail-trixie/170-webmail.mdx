@@ -15,29 +15,68 @@ their email in the web browser, because it's the simplest way. (Don't worry. Pow
 Thunderbird will also get what they want.) So let's prepare [Roundcube](https://roundcube.net/) for them.
 
 <details class="collapsible">
-  <summary>Click here to learn how Debian handles virtual hosts in Apache…</summary>
+  <summary>Click here to learn more about virtual hosts…</summary>
 
-ding dong dar
+A web server like Apache has the job of answering HTTP or HTTPS requests from people’s browsers. Running just a single
+website per server (or per IP address) would be both inefficient and limiting, so the idea of _virtual hosts_ was
+introduced. With virtual hosts, one server can host many different websites. The browser helps by sending a
+`Host: mail.example.org` header with each request, which tells the server which website it should serve. This works fine
+for HTTP—though plain HTTP is rarely used anymore.
+
+With HTTPS, things get trickier. Browsers expect the server to present a TLS certificate that matches the domain being
+requested. If you try to open mail.example.org but the server responds with a certificate for shop.example.org, the
+browser will block the connection. That means the server needs to know which domain the browser is asking for before the
+encrypted connection is set up.
+
+The solution is a feature called SNI (Server Name Indication). When establishing an HTTPS connection, the browser
+includes the domain name it wants in the handshake. This allows the server to pick the correct TLS certificate right
+from the start.
+
+Fortunately you do not have to worry about it that much because Apache is doing the heavy lifting for you. A virtual
+host configuration essentially looks like:
+
+```
+<VirtualHost *:443>
+  ServerName mail.example.org
+  SSLCertificateFile /etc/letsencrypt/live/mail.example.org/fullchain.pem
+  SSLCertificateKeyFile /etc/letsencrypt/live/mail.example.org/privkey.pem
+  Include /etc/letsencrypt/options-ssl-apache.conf
+</VirtualHost>
+```
+
+There are two directories dealing with virtual hosts:
+
+- /etc/apache2/sites-available
+- /etc/apache2/sites-enabled
+
+The actual file containing the configuration lives in _sites-available_. If that configuration should be active, then a
+symbolic link (symlink) is added to the _sites-enabled_ directory pointing to the file in the _sites-available_
+directory. That way you can switch sites on and off without deleting the actual configuration file. You can enable a
+site using the `a2enconf` (apache2 enable config) command or disable it using `a2disconf`.
 
 </details>
 
-To get Apache to serve the Roundcube application you need to edit the
+Since you ran `certbot` already to create a TLS certificate for your site, the default configuration files for HTTP and
+HTTPS have been adapted already:
 
-<tt>/etc/apache2/sites-available/**webmail.example.org**-https.conf</tt> file. I suggest you change the `DocumentRoot`
-line to:
+- **000-default.conf**: This is the virtual host configuration for HTTPS requests. It uses a `RewriteRule` to redirect
+  users to the HTTPS site.
+- **000-default-le-ssl.conf**: This is the HTTPS virtual host.
+
+So to get Apache to serve the Roundcube application you need to edit the
+`/etc/apache2/sites-available/000-default-le-ssl.conf` file and add/set:
 
 ```
+ServerName mail.example.org
 DocumentRoot /var/lib/roundcube/public_html
-```
-
-All URLs are relative to that directory. So if you go to `https://webmail.example.com/` then files are looked up in that
-directory.
-
-Also add this line within the same `VirtualHost` section to add a couple of prepared security settings:
-
-```
 Include /etc/roundcube/apache.conf
 ```
+
+Meaning:
+
+- `ServerName` sets the domain name that a user's browser will request.
+- `DocumentRoot` points the entire web site to the directory where Roundcube is installed.
+- `Include` loads additional security settings that the Roundcube package provides.
 
 And as usual Apache needs to be restarted after the configuration change:
 
