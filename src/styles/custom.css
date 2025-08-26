@@ -63,7 +63,7 @@ details.collapsible summary {
 }
 
 details[open].collapsible {
-  background-image: linear-gradient(var(--sl-color-accent-low), var(--sl-color-gray-6));
+  background-color: var(--sl-color-accent-low);
   border-radius: 0.5rem;
   border-left: 1px solid var(--sl-color-gray-5);
   border-right: 1px solid var(--sl-color-gray-5);
