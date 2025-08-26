@@ -19,8 +19,6 @@ DEBIAN_FRONTEND=noninteractive \
     php-intl php-mbstring php-xml unzip certbot \
     roundcube-mysql roundcube swaks ufw mutt \
     unattended-upgrades mariadb-server
-
-postfix chroot off
 ```
 
 While the server is downloading and installing the packages, let me give you a quick explanation of each package:
@@ -60,11 +58,3 @@ While the server is downloading and installing the packages, let me give you a q
   functionality of your mail server. Think of it as a text-based Thunderbird.
 - **unattended-upgrades** \
   Installs security updates automatically.
-
-<Aside type="note" title="postfix chroot off?">
-
-By default, Debian enables Postfix to run in chroot mode. While this may sound like a security improvement, even
-Postfix’s author advises against it, arguing that it mostly creates a false sense of security. For this reason, we are
-disabling chroot mode—which also simplifies some configuration later on.
-
-</Aside>

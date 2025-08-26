@@ -67,13 +67,19 @@ Create the database users:
 
 ```sql
 grant all privileges on mailserver.* to 'mailadmin'@'localhost' identified by 'FIRST-PASSWORD-HERE';
-grant select on mailserver.* to 'mailserver'@'localhost' identified by 'SECOND-PASSWORD-HERE';
+grant select on mailserver.* to 'mailserver'@'127.0.0.1' identified by 'SECOND-PASSWORD-HERE';
 ```
 
-<Aside type="note" title="Changed since Debian Bookworm">
+<Aside type="note" title="127.0.0.1 versus localhost">
 
-In the past, we used 127.0.0.1 instead of localhost because Postfix was running in a chroot environment. Starting with
-Debian Trixie, we’ve disabled chroot mode for Postfix, which means we can now use just `localhost`.
+Wait a minute. Why is there “127.0.0.1” instead of “localhost” in the second SQL command? Is that a typo? No, it’s not.
+Well, in network terminology those two are identical. But MariaDB distinguishes between the two. If you initiate a
+database connection to "localhost" then you talk to the socket file which lives at /var/run/mysqld/mysqld.sock on your
+server. But if you connect to “127.0.0.1” it will create a network connection talking to the TCP socket on port 3306 on
+your server. The difference is that any process on your server can talk to 127.0.0.1. But the socket file has certain
+user/group/other permissions just like any other file on your file system. Postfix will be restricted to its
+/var/spool/postfix directory and cannot by default access that socket file. So by using 127.0.0.1 we circumvent that
+limitation.
 
 </Aside>
 
