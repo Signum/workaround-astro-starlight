@@ -72,10 +72,10 @@ grant select on mailserver.* to 'mailserver'@'127.0.0.1' identified by 'SECOND-P
 
 <Aside type="note" title="127.0.0.1 versus localhost">
 
-Wait a minute. Why is there “127.0.0.1” instead of “localhost” in the second SQL command? Is that a typo? No, it’s not.
+Wait a minute. Why is there “127.0.0.1" instead of “localhost" in the second SQL command? Is that a typo? No, it’s not.
 Well, in network terminology those two are identical. But MariaDB distinguishes between the two. If you initiate a
 database connection to "localhost" then you talk to the socket file which lives at /var/run/mysqld/mysqld.sock on your
-server. But if you connect to “127.0.0.1” it will create a network connection talking to the TCP socket on port 3306 on
+server. But if you connect to “127.0.0.1" it will create a network connection talking to the TCP socket on port 3306 on
 your server. The difference is that any process on your server can talk to 127.0.0.1. But the socket file has certain
 user/group/other permissions just like any other file on your file system. Postfix will be restricted to its
 /var/spool/postfix directory and cannot by default access that socket file. So by using 127.0.0.1 we circumvent that
@@ -242,7 +242,7 @@ Do you wonder how I got the long cryptic password? I ran…
 doveadm pw -s BLF-CRYPT
 ```
 
-…to create a secure hash of the simple password “summersun”. Once you have installed Dovecot you can try that yourself
+…to create a secure hash of the simple password “summersun". Once you have installed Dovecot you can try that yourself
 but you will get a different output. The reason is that the passwords are
 [salted](<https://en.wikipedia.org/wiki/Salt_(cryptography)>). Every time you will get a different hash. That prevents
 reverse-engineering the original password.
