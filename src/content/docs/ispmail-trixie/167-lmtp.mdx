@@ -26,27 +26,35 @@ each other.
 
 ## Dovecot listens to LMTP
 
-There's nothing to do for you here. I just want to tell you how it works. By default Dovecot has this section in its
-`/etc/dovecot/conf.d/10-master.conf` file:
+Edit the `/etc/dovecot/conf.d/10-master.conf` file and change the section called `service lmtp`:
 
 ```
 service lmtp {
   unix_listener lmtp {
   }
-}
+
+  unix_listener /var/spool/postfix/private/dovecot-lmtp {
+    mode = 0600
+    user = postfix
+    group = postfix
+  }
 ```
 
-So Dovecot has already put a socket into `/var/run/dovecot/lmtp` where it is ready to receive LMTP connections. A socket
-is similar to a TCP port but it's only available for other processes running on same system. So nothing to do.
+The first `unix_listener lmtp` is just used internally by Dovecot and does not concern us. The second part is what you
+will be adding. It makes Dovecot create a socket file at `/var/spool/postfix/private/dovecot-lmtp`. As Postfix has its
+home in `/var/spool/postfix` it can access that socket to speak LMTP with Dovecot.
+
+A socket is similar to a TCP port but it's only available for other processes running on same system. That's why you
+also set the access mode, user and group so that Postfix can actually use it.
 
 ## Postfix talks to Dovecot using LMTP
 
-The “_virtual_transport_” in Postfix defines the service to use for delivering emails to the local system. Dovecot has
+The “_virtual_transport_" in Postfix defines the service to use for delivering emails to the local system. Dovecot has
 created a socket file and is ready to listen to incoming LMTP connections. We just need to tell Postfix to send emails
 there. So please run:
 
 ```sh
-postconf virtual_transport=lmtp:unix:/var/run/dovecot/lmtp
+postconf virtual_transport=lmtp:unix:private/dovecot-lmtp
 ```
 
 The syntax looks crazy, but it’s actually simple. You just told Postfix to use the LMTP protocol. And that we want to
