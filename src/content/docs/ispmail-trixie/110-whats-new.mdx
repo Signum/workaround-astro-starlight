@@ -18,17 +18,16 @@ Did you follow the ISPmail guide for Debian Bookworm to install your mail server
 # Architectural changes
 
 In the past I tried to keep things similar to previous versions of this guide. Most of us are happy with their mail
-servers and want to change as little as possible when a new Debian release comes along. However this time I decided to
-change a few things because I reckon that an average mail server is used for friends and family or maybe a small
-organisation. So I replaced resource-hungry components by more lightweight software:
+servers and want to change as little as possible when a new Debian release comes along. Just a few improvements:
 
-- Apache and PHP were needed to run Roundcube as a webmail service. Apache is pretty heavy and no fun to configure. This
-  guide uses _Caddy_ instead – a very lightweight web server that also handles the job of _certbot_ to get you an
-  HTTPS/TLS certificate from Let's Encrypt automatically.
-- MySQL/MariaDB was used to store control data about your domains, the email accounts and aliases. That is quite a lot
-  of RAM wasted for this little amount of data we need to store. So this guide uses _SQLite_ instead.
-- rsyslogd was a classic choice to write log files like /var/log/mail.log. As Debian is using _systemd_ we no longer
-  need rsyslogd and logrotate. The logs can be read using _journalctl_ instead.
+- **rsyslogd** was a classic choice to write log files like /var/log/mail.log. As Debian is using _systemd_ we no longer
+  need rsyslogd and logrotate. The logs can be read using _journalctl_ instead. If you miss it, just
+  `apt install rsyslog`.
+- **smtpd_tls_security_level** is now only enabled for the `submission` service. That disables authentication for SMTP
+  connections on port 25. This emphasizes the separation of TCP 25 for server-to-server connections (without
+  authentication) and TCP 587 for human-to-server connections (with authentication – for relaying).
+- **certbot** is now using the `python3-certbot-apache` package. Getting and renewing certificates is now handled
+  magically by Apache without any downtime or additional configuration.
 
 # Version changes
 
@@ -121,7 +120,7 @@ rsync -va oldserver:/var/vmail/ /var/vmail/
 (Note the trailing slashes. Type them exactly as shown above or your files will end up in wrong places.)
 
 There is no need to shut down Dovecot on your production Bullseye server. Copying the files while Dovecot is running
-will not break anything. This is called a “hot copy”. It may not be consistent but it will save time during the final
+will not break anything. This is called a “hot copy". It may not be consistent but it will save time during the final
 synchronization.
 
 ## Copy certificates
@@ -148,12 +147,12 @@ sync. On your new server run:
 rsync -va --delete oldserver:/var/vmail/ /var/vmail/
 ```
 
-(The “`--delete`” option makes sure that files that have been removed from the old server will also be deleted from the
+(The “`--delete`" option makes sure that files that have been removed from the old server will also be deleted from the
 new server. So if a user has deleted an email it will be deleted on the new server as well.)
 
 # Switch the DNS records
 
-For all your domains you will have to change the DNS “MX” or “A” record to point to your new server.
+For all your domains you will have to change the DNS “MX" or “A" record to point to your new server.
 
 ## Enable soft_bounce
 
@@ -164,9 +163,9 @@ postconf soft_bounce=yes
 ```
 
 This makes Postfix always keep emails in the queue that it would otherwise reject. So you can fix any errors and the
-queue will empty. Start Postfix and Dovecot on the new server. Watch your /var/log/mail.log and run “mailq” from time to
+queue will empty. Start Postfix and Dovecot on the new server. Watch your /var/log/mail.log and run “mailq" from time to
 time to see what emails get stuck in the queue. If you are certain that emails can be removed from the queue then use
-“postsuper -d QUEUE-ID” (as shown in the “mailq” output).
+“postsuper -d QUEUE-ID" (as shown in the “mailq" output).
 
 Once you are certain that emails are properly received and sent you can switch off the _soft_bounce_ mode again:
 
