@@ -34,7 +34,7 @@ done by this magical line at the end of the `/etc/dovecot/dovecot.conf` file:
 !include conf.d/*.conf
 ```
 
-It loads all files in `/etc/dovecot/conf.d/` that end in “.conf” in alphanumerical order. Let's edit a couple of files
+It loads all files in `/etc/dovecot/conf.d/` that end in “.conf" in alphanumerical order. Let's edit a couple of files
 for our purpose.
 
 ### 10-auth.conf
@@ -85,20 +85,20 @@ TODO: not needed. /var/run/dovecot/auth-userdb is created automatically.
 
 This configuration file at `/etc/dovecot/conf.d/10-master.conf` deals with Dovecot's services.
 
-So most settings are sane here and do not have to be changed. However one change is required in the “service auth”
+So most settings are sane here and do not have to be changed. However one change is required in the “service auth"
 section because we want Postfix to allow Dovecot as an authentication service. Make it look like this:
 
 ```
 # Postfix smtp-auth
-unix_listener /var/spool/postfix/private/auth {
+unix_listener /var/spool/postfix/private/dovecot-auth {
   mode = 0660
   user = postfix
   group = postfix
 }
 ```
 
-That way Dovecot will put a communication socket into `/var/spool/postfix/private/auth`. It will allow Postfix to
-authenticate your users which is relevant later when we set up _relaying_.
+That way Dovecot will put a communication socket into `/var/spool/postfix/private/dovecot-auth`. It will allow Postfix
+to authenticate your users which is relevant later when we set up _relaying_.
 
 ### 10-ssl.conf
 
