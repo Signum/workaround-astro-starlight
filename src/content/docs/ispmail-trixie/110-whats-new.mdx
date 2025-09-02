@@ -63,8 +63,6 @@ options:
 You need to copy the database that contains the control data about your email domains and accounts. Log into the old
 (Bookworm) server as root and back up the *mailserver* database. That is as easy as running…
 
-(TODO: sqlite)
-
 ```
 mysqldump mailserver > mailserver.sql
 ```
@@ -79,8 +77,6 @@ Obviously any database changes on the old server from now on will have to be don
 migration is done.
 
 ## Roundcube contacts
-
-(TODO: sqlite)
 
 If your users are using Roundcube as a webmail interface then you should migrate their data like their contact lists.
 Dump the SQL from the old server:
