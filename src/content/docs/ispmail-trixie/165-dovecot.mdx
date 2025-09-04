@@ -23,6 +23,7 @@ groupadd --system vmail
 useradd --system --gid vmail vmail
 mkdir -p /var/vmail
 chown -R vmail:vmail /var/vmail
+chmod u=rwx,g=rx,o= /var/vmail
 ```
 
 ## Dovecot configuration
