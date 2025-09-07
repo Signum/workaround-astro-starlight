@@ -38,6 +38,7 @@ service lmtp {
     user = postfix
     group = postfix
   }
+}
 ```
 
 The first `unix_listener lmtp` is just used internally by Dovecot and does not concern us. The second part is what you

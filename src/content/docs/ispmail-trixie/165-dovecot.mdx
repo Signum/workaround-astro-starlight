@@ -82,8 +82,6 @@ This looks more sophisticated than with versions of Dovecot before 2.4. What it 
 
 ### 10-master.conf
 
-TODO: not needed. /var/run/dovecot/auth-userdb is created automatically.
-
 This configuration file at `/etc/dovecot/conf.d/10-master.conf` deals with Dovecot's services.
 
 So most settings are sane here and do not have to be changed. However one change is required in the “service auth"
@@ -107,6 +105,12 @@ Earlier in this guide you created both a key and a certificate file to encrypt t
 between the users and your mail server. You need to tell Dovecot where to find these files. Also set
 [ssl=required](https://doc.dovecot.org/2.4.1/core/config/ssl.html#how-to-specify-when-ssl-tls-is-required) to prevent
 that someone sends their password without encryption.
+
+<Aside type="danger" title="Important">
+
+Please replace `mail.example.org` by the FQDN you chose.
+
+</Aside>
 
 ```
 ssl = required
@@ -224,10 +228,10 @@ doveadm user john@example.org
 That should give you:
 
 ```
-field	value
-uid vmail
-gid vmail
-home	/var/vmail/example.org/john
+field     value
+uid       vmail
+gid       vmail
+home	    /var/vmail/example.org/john
 mail_path	/var/vmail/example.org/john/Maildir
 ```
 

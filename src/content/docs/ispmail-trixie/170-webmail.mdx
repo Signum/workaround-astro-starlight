@@ -64,7 +64,15 @@ HTTPS have been adapted already:
 - **000-default-le-ssl.conf**: This is the HTTPS virtual host.
 
 So to get Apache to serve the Roundcube application you need to edit the
-`/etc/apache2/sites-available/000-default-le-ssl.conf` file and add/set:
+`/etc/apache2/sites-available/000-default-le-ssl.conf` file.
+
+<Aside type="danger" title="Important">
+
+Please replace `mail.example.org` by the FQDN you chose.
+
+</Aside>
+
+Set this:
 
 ```
 ServerName mail.example.org
@@ -96,10 +104,16 @@ In case of a problem run “`apache2ctl configtest`" to find the cause.
 
 The main configuration file of Roundcube is located at `/etc/roundcube/config.inc.php`. Feel free to customize the file.
 Fortunately nowadays the basic settings are already as we need them. However these two settings need to be changed by
-you:
+you.
+
+<Aside type="danger" title="Important">
+
+Please replace `mail.example.org` by the FQDN you chose.
+
+</Aside>
 
 ```
-$config['imap_host'] = "tls://mail.example.org:143";
+$config['imap_host'] = 'tls://mail.example.org:143';
 $config['smtp_host'] = 'tls://mail.example.org:587';
 ```
 
@@ -107,6 +121,10 @@ So now when your users enter `https://webmail.example.org/` in their browser the
 
 Keep in mind that we are using the email address as the account name of the user. So when logging in please enter the
 email address as the user name. E.g. `john@example.org` and password `summersun`.
+
+TODO: show login dialog
+
+TODO: on errors, check /var/log/roundcube/errors.log
 
 ## Plugins
 
@@ -126,7 +144,7 @@ Plugins are configured through files located in the `/etc/roundcube/plugins` dir
 password plugin:
 
 ```sh
-cat > /etc/roundcube/plugins/password/config.inc.php << EOF
+cat > /etc/roundcube/plugins/password/config.inc.php << 'EOF'
 <?php
 $config['password_driver'] = 'sql';
 $config['password_minimum_length'] = 12;
@@ -170,4 +188,8 @@ Try it. Log into Roundcube as `john@example.org` with password ‘summersun’. 
 Enter a new password twice. You should get a success message at the bottom right. Now logout and login with the new
 password. Does it work? Great.
 
-Before you get overly enthusiastic: you can't send emails from Roundcube yet.
+<Aside type="tip" title="Important">
+
+Before you get overly enthusiastic: you can't send emails from Roundcube yet. We will fix that now.
+
+</Aside>

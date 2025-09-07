@@ -7,6 +7,7 @@ sidebar:
 ---
 
 import StepListReceive from "../../../components/StepListReceive.astro";
+import { Aside } from "@astrojs/starlight/components";
 
 <StepListReceive currentStep={2} />
 
@@ -31,7 +32,13 @@ So choose an FQDN for your mail server. For example I use `webmail.workaround.or
 ## Certbot
 
 You already have the `certbot` software and the `apache2` web server installed. Requesting a certificate from Let's
-Encrypt is as simple as running the next command. Please replace `mail.example.org` by the FQDN you chose.
+Encrypt is as simple as running the next command.
+
+<Aside type="danger" title="Important">
+
+Please replace `mail.example.org` by the FQDN you chose.
+
+</Aside>
 
 ```sh
 certbot --apache --register-unsafely-without-email --agree-tos -d mail.example.org
@@ -96,6 +103,9 @@ In /etc/letsencrypt/live/**mail.example.org** you will find a couple of files no
 Your new certificate is only valid for 3 months. Fortunately the renewal is happening automatically. A _systemd timer_
 checks your certificate frequently and triggers a renewal one month before it expires.
 
+<details class="collapsible">
+  <summary>Click here to learn how the renewal works…</summary>
+
 These commands will show you the definition and status of the timer and the renewal service:
 
 ```sh
@@ -116,3 +126,5 @@ echo > /etc/letsencrypt/cli.ini "post-hook = systemctl reload postfix dovecot ap
 ```
 
 Perfect. You won't have to worry about the certificate again.
+
+</details>

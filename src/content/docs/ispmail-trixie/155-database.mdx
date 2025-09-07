@@ -55,13 +55,13 @@ In this section you will create the basic database `mailserver` and two users:
 | mailserver | read        | Used by Postfix/Dovecot                                    |
 | mailadmin  | read/write  | Used by you <br/> Used by Roundcube (for password changes) |
 
-Use the _pwgen_ tool to create two random passwords for these users:
+<Aside type="note" title="About passwords">
 
-```sh
-pwgen -s1 30 2
-```
+For now, create these database users with a placeholder password such as `MAILADMIN-PASSWORD-HERE`. Leave them as they
+are—it will make copying and pasting the upcoming steps much easier. After you’ve confirmed everything is working
+correctly, I’ll show you how to update the passwords securely with a single command.
 
-Take a note of the passwords or store them somewhere safe.
+</Aside>
 
 Create the database users:
 
@@ -70,7 +70,7 @@ grant all privileges on mailserver.* to 'mailadmin'@'localhost' identified by 'M
 grant select on mailserver.* to 'mailserver'@'127.0.0.1' identified by 'MAILSERVER-PASSWORD-HERE';
 ```
 
-<Aside type="note" title="127.0.0.1 versus localhost">
+<Aside type="tip" title="127.0.0.1 versus localhost">
 
 Wait a minute. Why is there “127.0.0.1" instead of “localhost" in the second SQL command? Is that a typo? No, it’s not.
 Well, in network terminology those two are identical. But MariaDB distinguishes between the two. If you initiate a
