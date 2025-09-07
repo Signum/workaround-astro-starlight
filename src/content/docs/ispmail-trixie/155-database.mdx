@@ -66,8 +66,8 @@ Take a note of the passwords or store them somewhere safe.
 Create the database users:
 
 ```sql
-grant all privileges on mailserver.* to 'mailadmin'@'localhost' identified by 'FIRST-PASSWORD-HERE';
-grant select on mailserver.* to 'mailserver'@'127.0.0.1' identified by 'SECOND-PASSWORD-HERE';
+grant all privileges on mailserver.* to 'mailadmin'@'localhost' identified by 'MAILADMIN-PASSWORD-HERE';
+grant select on mailserver.* to 'mailserver'@'127.0.0.1' identified by 'MAILSERVER-PASSWORD-HERE';
 ```
 
 <Aside type="note" title="127.0.0.1 versus localhost">

@@ -490,7 +490,7 @@ sides. Let's create it:
 ```sh
 cat > /etc/postfix/mariadb-email2email.cf << EOF
 user = mailserver
-password = SECOND-PASSWORD-HERE
+password = MAILSERVER-PASSWORD-HERE
 hosts = 127.0.0.1
 dbname = mailserver
 query = SELECT email FROM virtual_users WHERE email='%s'

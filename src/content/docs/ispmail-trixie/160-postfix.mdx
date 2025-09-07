@@ -50,7 +50,7 @@ Run the following code in your shell to create a configuration file creating tha
 ```sh
 cat > /etc/postfix/mariadb-virtual-mailbox-domains.cf << EOF
 user = mailserver
-password = SECOND-PASSWORD-HERE
+password = MAILSERVER-PASSWORD-HERE
 hosts = 127.0.0.1
 dbname = mailserver
 query = SELECT 1 FROM virtual_domains WHERE name='%s'
@@ -62,7 +62,7 @@ and `dbname` definitions tell Postfix how to connect to the database. And the `q
 domain is present in the database table `virtual_domains`. Using `SELECT 1` we return just the number 1 if such an entry
 was found. In fact it does not matter what we return. Any _answer_ is fine.
 
-Don't forget to replace the `SECOND-PASSWORD-HERE` by your own password for the `mailserver` user.
+Don't forget to replace the `MAILSERVER-PASSWORD-HERE` by your own password for the `mailserver` user.
 
 ### Virtual Aliases
 
@@ -84,7 +84,7 @@ Run this code to create the appropriate mapping file:
 ```sh
 cat > /etc/postfix/mariadb-virtual-alias-maps.cf << EOF
 user = mailserver
-password = SECOND-PASSWORD-HERE
+password = MAILSERVER-PASSWORD-HERE
 hosts = 127.0.0.1
 dbname = mailserver
 query = SELECT destination FROM virtual_aliases WHERE source='%s'
@@ -100,7 +100,7 @@ The last mapping we need is a query to find valid mailboxes. Without further ado
 ```sh
 cat > /etc/postfix/mariadb-virtual-mailbox-maps.cf << EOF
 user = mailserver
-password = SECOND-PASSWORD-HERE
+password = MAILSERVER-PASSWORD-HERE
 hosts = 127.0.0.1
 dbname = mailserver
 query = SELECT 1 FROM virtual_users WHERE email='%s'
