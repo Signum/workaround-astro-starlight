@@ -17,22 +17,22 @@ DEBIAN_FRONTEND=noninteractive \
     dovecot-imapd dovecot-lmtpd dovecot-managesieved \
     apache2 python3-certbot-apache libapache2-mod-php \
     php-intl php-mbstring php-xml unzip certbot \
-    roundcube-mysql roundcube roundcube-plugins swaks ufw mutt \
-    unattended-upgrades mariadb-server
+    roundcube-mysql roundcube roundcube-plugins swaks libnet-ssleay-perl \
+    ufw mutt unattended-upgrades mariadb-server
 ```
 
 While the server is downloading and installing the packages, let me give you a quick explanation of each package:
 
 - **postfix** / **postfix-mysql** \
-  Postfix is the MTA (mail transport agent) that speaks SMTP to send and receive emails. This package installs Postfix
-  with support for MariaDB databases.
+  Postfix is the MTA (mail transport agent) that speaks SMTP to send and receive emails. This package installs Postfix with
+  support for MariaDB databases.
 - **dovecot** \
   Dovecot manages the emsrc/content/docs/ispmail-trixie/140-install-packages.mdx emails using IMAP.
   - **-lmtpd** \
     LMTP (Local Mail Transfer Protocol) provides the glue between Postfix and Dovecot.
   - **-managesieved** \
-    Lets you configure automatic processing rules on the server. Like out-of-office emails or filtering incoming emails
-    to folders.
+    Lets you configure automatic processing rules on the server. Like out-of-office emails or filtering incoming emails to
+    folders.
   - **-mysql** \
     Makes Dovecot able to query MariaDB databases.
 - **apache** \
@@ -44,8 +44,9 @@ While the server is downloading and installing the packages, let me give you a q
 - **roundcube** / **roundcube-mysql** \
   Webmail software that lets you access your emails in any web browser. Roundcube speaks to Dovecot to fetch emails. And
   to Postfix to send emails.
-- **swaks** \
-  The SWiss Army Knife of Smtp. Helpful command-line tool to send test emails to a mail server.
+- **swaks** / **libnet-ssleay-perl** \
+  The SWiss Army Knife of Smtp. Helpful command-line tool to send test emails to a mail server. The additional SSL package
+  is needed to test encrypted connections.
 - **certbot** \
   Gets a free TLS certificate from [_Let's Encrypt_](https://letsencrypt.org/) for encrypting network communication.
 - **ufw** \
@@ -54,7 +55,7 @@ While the server is downloading and installing the packages, let me give you a q
   It reliably detects spam. Also handles adding DKIM signature to outgoing email to prevent spoofing your domains. TODO:
   later/optional
 - **mutt** \
-  A console-based program that can speak IMAP and also read Maildirs directly. Very helpful for testing the
-  functionality of your mail server. Think of it as a text-based Thunderbird.
+  A console-based program that can speak IMAP and also read Maildirs directly. Very helpful for testing the functionality
+  of your mail server. Think of it as a text-based Thunderbird.
 - **unattended-upgrades** \
   Installs security updates automatically.
