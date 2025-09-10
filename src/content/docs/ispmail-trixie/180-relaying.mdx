@@ -10,34 +10,41 @@ import { Aside } from "@astrojs/starlight/components";
 
 Your mail server is almost ready for use. But one puzzle piece is missing. Your users can receive emails but they cannot
 send them yet. This part of the guide is a bit longer than others because forwarding emails has security implications.
-This is important to understand so don't skip it.
 
-Let's begin with the difference of how **users** send emails versus how **mail servers** send emails. For comparison:
+Let's begin with the difference of how **users** send emails versus how **mail servers** send emails.
 
 - A **mail server** fetches the _MX_ record for the destination domain of the recipient’s email address from DNS. That
-  tells it which mail server to talk to. Then it opens an SMTP connection (TCP port 25) and sends the email.
-- An **end user** with a mail client such as Thunderbird or Roundcube does not work that way. Mail clients do not
-  include any functionality for fetching MX records. In addition, the user is usually on a dynamic IP address that other
-  mail servers will not trust and will likely reject. Instead, end users are expected to send their emails through their
+  tells it which mail server to talk to. Then it opens an SMTP connection (TCP port 25) and sends the email. A mail
+  server will not relay an email. It will only accept it for its own users.
+- An **end user** with a mail client such as Thunderbird or Roundcube cannot do that. Mail clients do not include any
+  functionality for fetching MX records. In addition, the user is usually on a dynamic IP address that other mail
+  servers will not trust and will likely reject. Instead, end users are expected to send their emails through their
   provider’s (your) mail server: they authenticate with their login credentials and then send the message. This process
   is called relaying, because your mail server acts as an intermediary between the user and other mail servers on the
   internet. For security reasons, authentication is required before the user is allowed to send emails. Users are also
   expected to use the TCP port 587 which is called the _submission_ port. More on that later.
 
+Postfix must only accept an email from a user, if…
+
+- The user uses the **submission** port (and not the standard **SMTP** port)
+- The user **authenticates** with the username (in our setup: the email address) and the password
+- The connection is **encrypted** so that the password can be safely transmitted
+- The **sender address** of the email matches the user's account
+
 ## SMTP versus Submission
 
 Let's compare those services and ports side-by-side:
 
-| Service name         | SMTP                        | Submission                   | Submissions           |
-| -------------------- | --------------------------- | ---------------------------- | --------------------- |
-| TCP Port             | 25                          | 587                          | 465                   |
-| Transport encryption | **Off**. STARTTLS optional. | **Off**. STARTTLS mandatory. | TLS all the time      |
-| Authentication       | Optional [^1]               | Mandatory                    | Mandatory             |
-| Accepted sender      | Anyone                      | Our own users                | Our own users         |
-| Accepted receivers   | Our own users               | Anyone                       | Anyone                |
-| Meant for            | Servers                     | Our users                    | Our users             |
-| Used by              | Mail transport agent (MTA)  | Mail user agent (MUA)        | Mail user agent (MUA) |
-| Your home ISP        | may block this port         | will allow this port         | will allow this port  |
+| Service name         | SMTP                        | Submission                   | SubmissionS (S=secure) |
+| -------------------- | --------------------------- | ---------------------------- | ---------------------- |
+| TCP Port             | 25                          | 587                          | 465                    |
+| Meant for            | Other mail servers          | Our users                    | Our users              |
+| Used by              | Mail transport agent (MTA)  | Mail user agent (MUA)        | Mail user agent (MUA)  |
+| Transport encryption | **Off**. STARTTLS optional. | **Off**. STARTTLS mandatory. | TLS all the time       |
+| Authentication       | Optional [^1]               | Mandatory                    | Mandatory              |
+| Accepted sender      | Anyone                      | Our own users                | Our own users          |
+| Accepted receivers   | Our own users               | Anyone                       | Anyone                 |
+| Your home ISP        | may block this port         | will allow this port         | will allow this port   |
 
 [^1]:
     In previous guides I recommended to set `smtpd_sasl_auth_enable=yes` globally in the `main.cf`. That would indeed
@@ -54,61 +61,79 @@ communication.
 ## Configure the submission[s] services
 
 All Postfix services are declared in the `/etc/postfix/master.cf` file. Most of them are used by Postfix internally,
-like `pickup`, `cleanup`, `rewrite` or `bounce`. Let's add a new service for `submission` by running:
+like `pickup`, `cleanup`, `rewrite` or `bounce`. But `submission` is not configured by default. Let's fix that.
 
-```sh
+```sh title="Run this on your server" title="Run this on your server"
 postconf -M submission/inet="submission inet n - y - - smtpd"
 postconf -P "submission/inet/syslog_name=postfix/submission"
 postconf -P "submission/inet/smtpd_tls_security_level=encrypt"
 postconf -P "submission/inet/smtpd_sasl_auth_enable=yes"
+postconf -P "submission/inet/smtpd_sasl_type=dovecot"
+postconf -P "submission/inet/smtpd_sasl_path=private/auth"
 postconf -P "submission/inet/smtpd_recipient_restrictions=permit_sasl_authenticated,reject"
 postconf -P "submission/inet/smtpd_sender_restrictions=reject_sender_login_mismatch,permit_sasl_authenticated,reject"
+
+postfix reload
 ```
 
-That looked confusing, right? What it did was define the `submission` service in the `/etc/postfix/master.cf` service
-for you using the `postconf` command. You could have achieved the same thing by editing that file and adding this
-section:
+These commands added a `submission` service to the `/etc/postfix/master.cf` file. You could have achieved the same thing
+by editing that file and adding the following section, but I wanted to make it simpler for you to just copy/paste the
+commands into your shell.
 
 ```
 submission inet  n       -       y       -       -       smtpd
   -o syslog_name=postfix/submission
   -o smtpd_tls_security_level=encrypt
   -o smtpd_sasl_auth_enable=yes
+  -o smtpd_sasl_type=dovecot
+  -o smtpd_sasl_path=private/auth
   -o smtpd_recipient_restrictions=permit_sasl_authenticated,reject
 ```
 
 Some notes on that:
 
-- Lines with options (`-o`) need to be indented so that Postfix understands that they belong to the same service.
-- The word `submission` refers to the definition of the service in the `/etc/services` file. So it translates to TCP
+- Lines with **options** (`-o`) need to be indented so that Postfix understands that they belong to the same service.
+- The word **submission** refers to the definition of the service in the `/etc/services` file. So it translates to TCP
   port 587.
-- The `smtpd` at the end tells Postfix that connections should be handled as incoming SMTP connections.
+- The **smtpd** in the last column of the first row tells Postfix that connections should be handled as incoming SMTP
+  connections.
 - **syslog_name** is adding `postfix/submission` to log files so that you can distinguish it from other connections.
+- **smtpd_tls_security_level** enabled and enforces the use of STARTTLS. The connection starts without encryption but
+  the remote party is required to send the `STARTTLS` command to switch to an encrypted connection.
 - **smtpd_sasl_auth_enable** enables authentication on this port. SASL is short for _Simple Authentication and Security
-  Layer_.
+  Layer_. That way only our own users can use this service.
+- **smtpd_sasl_type** tells Postfix to use Dovecot's service to authentication a uaser.
+- **smtpd_sasl_path** tells Postfix that it should talk to Dovecot through the socket file
+  `/var/spool/postfix/private/auth`. Earlier in this guide you told Dovecot to create that socket at that location.
 - **smtpd_recipient_restrictions** define that only authenticated connections are permitted. Without a username and a
   password your connection will be rejected. The **recipient** keyword tells us that this restricts who the recipient
   can be.
-- **smtpd_sender_restrictions** deals with the **sender**. I will explain that in the next section.
+- **smtpd_sender_restrictions** restricts who the **sender** may be. I will explain that
+  [later](#protecting-against-forged-sender-addresses).
 
 While you are at it, create the `submissions` (with an "s" at the end) service as well:
 
-```sh
+```sh title="Run this on your server"
 postconf -M submissions/inet="submissions inet n - y - - smtpd"
 postconf -P "submissions/inet/syslog_name=postfix/submissions"
 postconf -P "submissions/inet/smtpd_tls_wrappermode=yes"
 postconf -P "submissions/inet/smtpd_sasl_auth_enable=yes"
+postconf -P "submissions/inet/smtpd_sasl_type=dovecot"
+postconf -P "submissions/inet/smtpd_sasl_path=private/auth"
 postconf -P "submissions/inet/smtpd_recipient_restrictions=permit_sasl_authenticated,reject"
 postconf -P "submissions/inet/smtpd_sender_restrictions=reject_sender_login_mismatch,permit_sasl_authenticated,reject"
+postfix reload
 ```
 
 The only difference to the `submission` (without the "s" at the end) is the `smtpd_tls_wrappermode` that switches on TLS
 encryption right from the start of a connection.
 
-## Enable encryption
+## Set up encryption
 
-We certainly do not want our users to send their password over the wire without encryption. So the following commands
-enable encryption, set the key and certificate paths for Postfix. Just run these commands
+Whenever possible we should encrypt our traffic. For our users' passwords we make it mandatory. But even for
+server-to-server connections we should encourage it. Do not confuse it with end-to-end encryption of emails. That
+required using PGP or S/MIME. What we are dealing here is _transport encryption_. It encrypts the communication between
+a peer server and your mail server. What the peer server does with our email is beyond our control.
 
 <Aside type="danger" title="Important">
 
@@ -116,7 +141,7 @@ Please replace `mail.example.org` by the FQDN you chose.
 
 </Aside>
 
-```sh
+```sh title="Run this on your server"
 postconf smtp_tls_security_level=may
 postconf smtpd_tls_security_level=may
 postconf smtpd_tls_cert_file=/etc/letsencrypt/live/mail.example.org/fullchain.pem
@@ -143,153 +168,12 @@ be set for the `submission` service to enable authentication there.[^1]
   either from a remote mail server or one of your users.
 </Aside>
 
-## Relaying
-
-Feel free to send a test mail using the `submission` port and encryption (using STARTTLS):
-
-```
-swaks --server localhost:587 \
-    --from john@example.org \
-    --to lisa@example.com \
-    -tls \
-    --auth-user john@example.org \
-    --auth-password summersun
-```
-
-Also give the `submissions` service a try:
-
-```
-swaks --server localhost:465 \
-    --from john@example.org \
-    --to lisa@example.com \
-    --tls-on-connect \
-    --auth-user john@example.org \
-    --auth-password summersun
-```
-
-Did you notice the difference? This time we used port **465** and instead of the `-tls` option (which uses STARTTLS to
-switch to encryption) we use `--tls-on-connect` that uses TLS right from from the start.
-
-TODO: try sending from roundcube
-
-Put simply, a mail server will accept an email if…
-
-- it is responsible for handling mail for the recipient’s domain (the domain is listed as a virtual domain), or
-- the sender has authenticated successfully with a valid username and password.
-
-I have created two illustrations to explain it.
-
-### Without authentication = denied
-
-`john@example.org` is on the internet somewhere and wants to send an email to `lisa@example.com` (which is another
-domain). Your mail server is not responsible for the _example.com_ domain so it receives John’s email and would have to
-forward (relay) it to the actual mail server that is responsible for …@example.com email addresses. This may seem like a
-harmless scenario but your mail server must deny that:
-
-![Diagram that shows an outgoing unauthenticated email getting rejected](images/relaying-unauthenticated-relaying-denied.png)
-
-Why? Because anyone can claim to be John and make your mail server forward mail. If an attacker (like a spammer) would
-send millions of spam emails in John’s name through your server then other organisations will accuse *you* as the
-operator of the mail server of spamming. Your mail server would be what people call an
-_[open relay](https://en.wikipedia.org/wiki/Open_mail_relay)_. That is not what you want because your mail server would
-get blacklisted and you will not be able to send out mail to most other servers. So without any proof that the sender is
-indeed John, your server must reject the email.
-
-Try for yourself:
-
-```sh
-swaks --server localhost:587 \
-      --from john@example.org \
-      --to list@example.com \
-      -tls
-```
-
-TODO: submissions does not work yet
-
-Towards the end of the output you will find:
-
-```
- ~> MAIL FROM:<john@example.org>
-<~  250 2.1.0 Ok
- ~> RCPT TO:<list@example.com>
-<~* 554 5.7.1 <list@example.com>: Recipient address rejected: Access denied
-```
-
-### With authentication = accepted
-
-So how does John prove his identity? He needs to use _authenticated_ SMTP. This is similar to the previous case but
-John’s email program will also send his username and password.
-
-![Diagram that shows an outgoing authenticated email getting relayed](images/relaying-authenticated-relaying.png)
-
-We are making sure that his authentication happens over an encrypted connection so John’s password is safe.
-
-Try for yourself and provide a valid user name and password:
-
-```sh
-swaks --server localhost:587 \
-      --from john@example.org \
-      --to list@example.com \
-      -tls \
-      --auth-user john@example.org \
-      --auth-password summersun
-```
-
-Towards the end of the output you will find:
-
-```
-<~  250 2.0.0 Ok: queued as 7513F1F54B
-```
-
-You can even try a wrong password or a non-existing user. That should lead to…
-
-```
-<~* 535 5.7.8 Error: authentication failed: (reason unavailable)
-```
-
-TODO: a word on $mynetworks. Perhaps in the troubleshooting section later.
-
-## Make Postfix use Dovecot for authentication
-
-Enabling SMTP authentication in Postfix is surprisingly easy. You already configured Dovecot so it knows all about your
-users from the SQL database. So let’s just make Postfix use that by telling it to ask the Dovecot server to verify the
-username and password. Postfix just needs some extra configuration. Run these commands on the shell:
-
-```
-postconf smtpd_sasl_type=dovecot
-postconf smtpd_sasl_path=private/dovecot-auth
-```
-
-This enables SMTP authentication and tells Postfix that it can talk to Dovecot through a socket file located at
-`/var/spool/postfix/private/auth`. Do you remember that Postfix runs in a sandboxed *chroot* directory? That’s at
-/var/spool/postfix. It cannot access any files outside of that directory. But fortunately in a previous section you
-edited the /etc/dovecot/conf.d/10-master.conf file and made Dovecot place a socket file into
-`/var/spool/postfix/private/auth` to allow communication from Postfix.
-
-TODO: collapsible on anti-spoofing
-
 ## Protecting against forged sender addresses
 
-At this stage, a security issue remains. While Postfix is configured to relay emails only after a successful login with
-a valid username and password, it does not prevent an authenticated user from impersonating another sender. For example,
-someone could log in as `john@example.org` but send an email appearing to come from `brunhilde@example.net`.
-
-You want to see that this work? Let's pretend to be _brunhilde_ while authenticating as _john_:
-
-```sh
-swaks --server localhost:587 \
-      --from brunhilde@example.org \
-      --to list@example.com \
-      -tls \
-      --auth-user john@example.org \
-      --auth-password summersun
-```
-
-That should not be allowed. But Postfix does not know better and responds with:
-
-```
-<~  250 2.0.0 Ok: queued as EEEB420F51
-```
+Before we can actually test the setup, there is another security issue we need to address. While Postfix is configured
+to relay emails only after a successful login with a valid username and password, it does not prevent an authenticated
+user from impersonating another sender. For example, someone could log in as `john@example.org` but send an email
+appearing to come from `brunhilde@example.net`.
 
 We should fix that. For that purpose Postfix provides a setting called
 [smtpd_sender_login_maps](http://www.postfix.org/postconf.5.html#smtpd_sender_login_maps). From the "maps" part you can
@@ -304,7 +188,7 @@ sender, he must also authenticate as `john@example.org`.
 As we use the email address also as a user name we simply need a mapping where the email address is listed on both
 sides. Let's create it:
 
-```sh
+```sh title="Run this on your server"
 cat > /etc/postfix/mariadb-email2email.cf << EOF
 user = mailserver
 password = MAILSERVER-PASSWORD-HERE
@@ -315,24 +199,20 @@ EOF
 
 chown root:postfix /etc/postfix/mariadb-email2email.cf
 chmod u=rw,g=r,o= /etc/postfix/mariadb-email2email.cf
-```
 
-Tell Postfix to use this mapping for our purpose:
-
-```
 postconf smtpd_sender_login_maps=mysql:/etc/postfix/mariadb-email2email.cf
 ```
 
-You have already added `smtpd_sender_restrictions=reject_sender_login_mismatch` earlier in the master.cf for the
-`submission` and `submissions` services. So you have achieved these three steps to prevent sender impersonation:
+What you accomplished:
 
-1. Create a mapping that matches an email address to itself.
-2. Tell Postfix to use that mapping for `smtpd_sender_login_maps` which controls who can be a sender.
-3. Enforce that restriction for the `submission` and `submissions` services.
+1. Create the _mapping_ file
+1. Fix the permissions of it so that only Postfix can read it (there is a password in it)
+1. Make Postfix use that mapping for its `smtpd_sender_login_maps` setting
+1. Add `smtpd_sender_restrictions=reject_sender_login_mismatch` to the `submission` and `submissions` services
 
 You can now try to send email as a different user than you are logged in. Let’s us swaks again to send a spoofed email:
 
-```sh
+```sh title="Run this on your server"
 swaks --server localhost:587 \
      --from brunhilde@example.org \
      --to list@example.com \
@@ -350,33 +230,113 @@ The server should rightfully reject that wrong sender:
 <~ * 553 5.7.1 john@example.com: Sender address rejected: not owned by user john@example.org
 ```
 
-You can also see that restriction in action by adding a fake persona in Roundcube and try to use it. In
-Settings/Identities you can create another sender email address as in:
+Now let's send a proper email from John:
 
-![Selecting another identity in Roundcube](images/relaying-roundcube-selecting-identity.png)
+```sh title="Run this on your server"
+swaks --server localhost:587 \
+     --from john@example.org \
+     --to list@example.com \
+     --tls \
+     --auth-user john@example.org \
+     --auth-password summersun
+```
 
-With this wrong sender address any email should get rejected. Roundcube will show you an error that is generated by
-Postfix:
+That will work:
 
 ```
-553 5.7.1 <someoneelse@example.com>:
-Sender address rejected:
-not owned by user john@example.org
+<~  250 2.0.0 Ok: queued as AFFF12292A
 ```
 
 <Aside type="tip" title="Allow aliases?">
-  If you want to allow users to send as one of their aliases you could create a new \*.cf file with a mapping query like
-  this: `SELECT email FROM virtual_users WHERE email='%s' UNION SELECT destination FROM virtual_aliases WHERE
-  source='%s'`
+
+The setup so far works for personal mails from John. But if John would be a member of a distribution list
+`pizza@example.org` then would not be able to use `pizza@example.org` as a sender address.
+
+If you want to allow that, create a new \*.cf file with a mapping query like this:
+`SELECT email FROM virtual_users WHERE email='%s' UNION SELECT destination FROM virtual_aliases WHERE source='%s'`.
+
 </Aside>
 
-## How does authentication work?
+## Test it
 
-<details class="collapsible">
-  <summary>Click here if you want to learn how SMTP authentication works…</summary>
+### No encryption, no authentication
 
-Are you curious how SMTP authentication looks on a low level? You probably are not. But let’s do it anyway. Just once,
-so that you get the idea.
+So far you have set up the `submission` service(s), enabled encryption and connected Postfix to Dovecot for
+authentication. Let's try it. Our first test email will be sent without encryption and authentication:
+
+```sh title="Run this on your server"
+swaks --server localhost:587 \
+      --from john@example.org \
+      --to lisa@example.com
+```
+
+Postfix should tell you that it will not accept an email without encryption:
+
+```
+<** 530 5.7.0 Must issue a STARTTLS command first
+```
+
+### With encryption, no authentication
+
+Our second attempt will **enable** (STARTTLS) encryption – but still no authentication:
+
+```sh title="Run this on your server"
+swaks --server localhost:587 \
+      --from john@example.org \
+      --to lisa@example.com \
+      -tls
+```
+
+Postfix will still reject the email because we refused to authenticate:
+
+```
+ ~> MAIL FROM:<john@example.org>
+<~  250 2.1.0 Ok
+ ~> RCPT TO:<lisa@example.com>
+<~* 554 5.7.1 <john@example.org>: Sender address rejected: Access denied
+```
+
+### With encryption and authentication
+
+```sh title="Run this on your server"
+swaks --server localhost:587 \
+    --from john@example.org \
+    --to lisa@example.com \
+    -tls \
+    --auth-user john@example.org \
+    --auth-password summersun
+```
+
+Also give the `submissions` service a try:
+
+```sh title="Run this on your server"
+swaks --server localhost:465 \
+    --from john@example.org \
+    --to lisa@example.com \
+    --tls-on-connect \
+    --auth-user john@example.org \
+    --auth-password summersun
+```
+
+Did you notice the difference? This time we used port **465** and instead of the `-tls` option (which uses STARTTLS to
+switch to encryption) we use `--tls-on-connect` that uses TLS right from from the start.
+
+Put simply, a mail server will accept an email if…
+
+- it is responsible for handling mail for the recipient’s domain (the domain is listed as a virtual domain), or
+- the sender has authenticated successfully with a valid username and password.
+
+I have created two illustrations to explain it.
+
+## Gory details of authentication
+
+<Aside type="tip" title="For science">
+
+This section is just here to show you the communication that happens on the network when relaying an email. It is no
+mandatory reading matter. But relaying is a complex matter where things can go wrong. So taking a peek under hood may
+improve your understanding.
+
+</Aside>
 
 ```
 telnet localhost submission
@@ -387,7 +347,7 @@ The server will let you in:
 ```
 Trying 127.0.0.1…
 Connected to localhost.
-Escape character is '^\]'.
+Escape character is '^]'.
 220 webmail ESMTP Postfix (Debian/GNU)
 ```
 
@@ -426,8 +386,8 @@ Let me briefly explain what these lines mean:
   nowadays 40 MB or even more are more common sizes because emails have grown larger. Some mail servers even allow 100 MB.
 - VRFY  
    Allows remote servers to verify a given name or email address. For example the remote server could send "VRFY john" and
-  your server might respond `250 John Doe <john@example.org>`. It can be used to verify that a certain recipient email address
-  is deliverable
+  your server might respond `250 Jo You can skip it for now.hn Doe <john@example.org>`. It can be used to verify that a certain
+  recipient email address is deliverable
 - ETRN  
    A command that a remote system can send to flush the Postfix queue of mails for a certain domain. It can be used if the
   remote system had technical problems and failed to receive email for a while. Then it could send an ETRN command to make
@@ -551,7 +511,3 @@ printf '\0john@example.org\0summersun' | base64
 ```
 
 As a result you will get the exact same string you used above with "AUTH PLAIN".
-
-TODO: move further down
-
-</details>

@@ -54,7 +54,7 @@ The “_virtual_transport_" in Postfix defines the service to use for delivering
 created a socket file and is ready to listen to incoming LMTP connections. We just need to tell Postfix to send emails
 there. So please run:
 
-```sh
+```sh title="Run this on your server"
 postconf virtual_transport=lmtp:unix:private/dovecot-lmtp
 ```
 
@@ -73,7 +73,7 @@ TODO: move to optional chapter
 Finally we are ready for our first email. Using the `swaks` command you can create a test email to `john@example.org`
 and send it to Postfix:
 
-```sh
+```sh title="Run this on your server"
 swaks --server localhost --to john@example.org
 ```
 
@@ -122,7 +122,7 @@ If you see a `250 2.0.0 Ok: queued as…" near the end of this dialog, then Post
 
 Check if Postfix managed to pass the email to Dovecot:
 
-```sh
+```sh title="Run this on your server"
 journalctl -n 10 -u dovecot
 ```
 
@@ -134,7 +134,7 @@ Aug 24 21:36:22 mail dovecot[23214]: lmtp(john@example.org)<…><…>: msgid=<20
 
 Does it say `saved mail to INBOX`? Awesome. The email should be visible in John's home directory. Check it:
 
-```sh
+```sh title="Run this on your server"
 find /var/vmail/example.org/john
 ```
 

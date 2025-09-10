@@ -47,7 +47,7 @@ SELECT "yes" FROM virtual_domains WHERE name='example.net'
 
 Run the following code in your shell to create a configuration file creating that mapping:
 
-```sh
+```sh title="Run this on your server"
 cat > /etc/postfix/mariadb-virtual-mailbox-domains.cf << EOF
 user = mailserver
 password = MAILSERVER-PASSWORD-HERE
@@ -81,7 +81,7 @@ Apparently, there aren't any more. So the email will go to `john@example.org`.
 
 Run this code to create the appropriate mapping file:
 
-```sh
+```sh title="Run this on your server"
 cat > /etc/postfix/mariadb-virtual-alias-maps.cf << EOF
 user = mailserver
 password = MAILSERVER-PASSWORD-HERE
@@ -97,7 +97,7 @@ The query now gets all the `destination` email addresses from the database for a
 
 The last mapping we need is a query to find valid mailboxes. Without further ado:
 
-```sh
+```sh title="Run this on your server"
 cat > /etc/postfix/mariadb-virtual-mailbox-maps.cf << EOF
 user = mailserver
 password = MAILSERVER-PASSWORD-HERE
@@ -119,7 +119,7 @@ sufficient here.
 
 You have created the config files for the three mappings. Now you just need to tell Postfix to use them:
 
-```sh
+```sh title="Run this on your server"
 postconf virtual_mailbox_domains=mysql:/etc/postfix/mariadb-virtual-mailbox-domains.cf
 postconf virtual_mailbox_maps=mysql:/etc/postfix/mariadb-virtual-mailbox-maps.cf
 postconf virtual_alias_maps=mysql:/etc/postfix/mariadb-virtual-alias-maps.cf
@@ -138,7 +138,7 @@ access. After all a database password is found in these files.
 
 Give the mappings a quick test using the `postmap -q` command (_q_ stands for _query_):
 
-```sh
+```sh title="Run this on your server"
 postmap -q example.org mysql:/etc/postfix/mariadb-virtual-mailbox-domains.cf
 postmap -q jack@example.org mysql:/etc/postfix/mariadb-virtual-alias-maps.cf
 postmap -q john@example.org mysql:/etc/postfix/mariadb-virtual-mailbox-maps.cf

@@ -143,7 +143,7 @@ $config['plugins'] = array(
 Plugins are configured through files located in the `/etc/roundcube/plugins` directory. Let's quickly set up the
 password plugin:
 
-```sh
+```sh title="Run this on your server"
 cat > /etc/roundcube/plugins/password/config.inc.php << 'EOF'
 <?php
 $config['password_driver'] = 'sql';

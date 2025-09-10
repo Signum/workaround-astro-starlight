@@ -29,6 +29,7 @@ records:
 - **A / AAAA record (`smtp.example.com`)**  
   The hostname specified in the MX record (`smtp.example.com`) must resolve to an IP address so that other mail servers
   know how to reach it.
+
   - An **A record** maps the hostname to an IPv4 address.
   - An **AAAA record** maps the hostname to an IPv6 address.
 
@@ -63,14 +64,14 @@ servers may be more likely so flag your sent emails as spam if you do not have a
 
 Use the `host` command to check your domain's MX record.
 
-```sh
+```sh title="Run this on your server"
 $> host -t mx example.com
 example.com mail is handled by 10 smtp.example.com.
 ```
 
 Then check if that result resolves to an IP address:
 
-```sh
+```sh title="Run this on your server"
 $> host smtp.example.com
 smtp.example.com has address 49.13.89.249
 smtp.example.com has IPv6 address 2a01:4f8:c012:62d1::1
@@ -78,7 +79,7 @@ smtp.example.com has IPv6 address 2a01:4f8:c012:62d1::1
 
 Preferably the IP addresses should resolve back to the mail server's name:
 
-```sh
+```sh title="Run this on your server"
 $> host 49.13.89.249
 249.89.13.49.in-addr.arpa domain name pointer smtp.example.com.
 $> host 2a01:4f8:c012:62d1::1

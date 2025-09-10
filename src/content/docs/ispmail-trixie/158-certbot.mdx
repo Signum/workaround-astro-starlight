@@ -40,7 +40,7 @@ Please replace `mail.example.org` by the FQDN you chose.
 
 </Aside>
 
-```sh
+```sh title="Run this on your server"
 certbot --apache --register-unsafely-without-email --agree-tos -d mail.example.org
 ```
 
@@ -108,7 +108,7 @@ checks your certificate frequently and triggers a renewal one month before it ex
 
 These commands will show you the definition and status of the timer and the renewal service:
 
-```sh
+```sh title="Run this on your server"
 systemctl status certbot.timer
 systemctl cat certbot.timer
 systemctl status certbot.service
@@ -121,7 +121,7 @@ look cooler.
 It is important that services that use the certificate load the new certificate after an automatic renewal. This shell
 command will create a file `/etc/letsencrypt/cli.ini` that handles it:
 
-```sh
+```sh title="Run this on your server"
 echo > /etc/letsencrypt/cli.ini "post-hook = systemctl reload postfix dovecot apache2"
 ```
 

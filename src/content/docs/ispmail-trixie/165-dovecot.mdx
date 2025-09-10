@@ -18,7 +18,7 @@ In this chapter we will mainly configure Dovecot so that it knows how to deliver
 On your disk all the mailboxes will live in the directory `/var/vmail`. To separate the mailboxes from the rest of your
 system, let's create a new user and group that will own the mailboxes:
 
-```sh
+```sh title="Run this on your server"
 groupadd --system vmail
 useradd --system --gid vmail vmail
 mkdir -p /var/vmail
@@ -161,7 +161,7 @@ a fixed schema for the home directory (`/var/vmail/DOMAIN/USER`) and the user-ID
 
 Make sure that only root can access the SQL configuration file so nobody else is reading your database access passwords:
 
-```sh
+```sh title="Run this on your server"
 chown root:root /etc/dovecot/conf.d/auth-sql.conf.ext
 chmod go= /etc/dovecot/conf.d/auth-sql.conf.ext
 ```
@@ -170,13 +170,13 @@ chmod go= /etc/dovecot/conf.d/auth-sql.conf.ext
 
 Restart Dovecot from the shell:
 
-```sh
+```sh title="Run this on your server"
 systemctl restart dovecot
 ```
 
 Check your logs:
 
-```sh
+```sh title="Run this on your server"
 journalctl -fu dovecot
 ```
 
@@ -196,20 +196,20 @@ However in the age of _systemd_ the output of the processes is written to system
 
 To read the complete logs of Dovecot, run (u=unit):
 
-```sh
+```sh title="Run this on your server"
 journalctl -u dovecot
 ```
 
 To `tail -f` the logs (f=follow):
 
-```sh
+```sh title="Run this on your server"
 journalctl -fu dovecot
 ```
 
 However on a busy server it will show the entire journal and then follow any changes. You may want to limit the output
 to the last 10 lines:
 
-```sh
+```sh title="Run this on your server"
 journalctl -n 10 -fu dovecot
 ```
 
@@ -221,7 +221,7 @@ If you prefer the old way of having log files, just install the `rsyslog` packag
 
 To test the `userdb` query:
 
-```sh
+```sh title="Run this on your server"
 doveadm user john@example.org
 ```
 
@@ -237,7 +237,7 @@ mail_path	/var/vmail/example.org/john/Maildir
 
 To test the `iterate` query that gets a list of all users:
 
-```sh
+```sh title="Run this on your server"
 doveadm user '*'
 ```
 
