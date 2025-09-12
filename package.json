@@ -21,5 +21,8 @@
     "astro-splide": "^2.0.0",
     "sharp": "^0.32.6",
     "typescript": "^5.9.2"
+  },
+ "engines": {
+    "node": ">=22"
   }
 }
