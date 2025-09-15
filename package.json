@@ -6,17 +6,23 @@
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro check && astro build",
-    "deploy": "rsync -va --delete dist/ narnia.workaround.org:/srv/www/workaround.org/",
+    "deploy-prod": "rsync -va --delete dist/ narnia.workaround.org:/srv/www/workaround.org/",
+    "deploy-stage": "rsync -va --delete dist/ narnia.workaround.org:/srv/www/stage.workaround.org/",
     "preview": "astro preview",
     "astro": "astro"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",
-    "@astrojs/sitemap": "^3.4.2",
-    "@astrojs/starlight": "^0.32.6",
-    "astro": "^5.12.9",
+    "@astrojs/sitemap": "^3.5.0",
+    "@astrojs/starlight": "^0.35.2",
+    "@splidejs/splide": "^4.1.4",
+    "astro": "^5.13.2",
     "astro-matomo": "^1.9.0",
+    "astro-splide": "^2.0.0",
     "sharp": "^0.32.6",
     "typescript": "^5.9.2"
+  },
+  "engines": {
+    "node": ">=22.19"
   }
 }
