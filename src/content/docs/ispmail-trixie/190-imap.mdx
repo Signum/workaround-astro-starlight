@@ -1,7 +1,7 @@
 ---
 title: IMAP
 lastUpdated: 2025-09-14
-slug: ispmail-bookworm/imap
+slug: ispmail-trxie/imap
 sidebar:
   order: 190
 ---
@@ -13,6 +13,8 @@ of emails between servers. The other important protocol is
 Email clients such as Thunderbird, Roundcube, mutt or the mail apps on your smartphone use IMAP to retrieve and manage
 messages. The good news is that you don’t need to configure anything new on the server — it’s already set up. In fact,
 even Roundcube (your webmail application) communicates with the server via IMAP to access emails.
+
+## mutt using IMAP
 
 You may not have heard of _mutt_ before. It's like the VIM editor but for mails. Very powerful but it only has a
 text-based user interface. For testing IMAP on mail servers it's still a good way because you do not have to set up a
@@ -35,6 +37,8 @@ you used the correct server name. If the authentication has succeeded, you will 
 These are test emails that you sent earlier using `swaks`. You open an email by pressing `Enter` and get back using `q`.
 Mainly we wanted to check that IMAP access works.
 
+## mutt using the file system
+
 Mutt can not only speak IMAP – it can access an inbox (or maildir) on your disk directly as well:
 
 ```sh title="Run this on your server"
@@ -42,3 +46,9 @@ mutt -f /var/vmail/example.org/john/Maildir/
 ```
 
 That way you will not be forced to authenticate as you are working with the file system.
+
+## Thunderbird
+
+A typical account setup in Thunderbird looks like:
+
+![Thunderbird account setup](images/imap-thunderbird-account-setup.png)
