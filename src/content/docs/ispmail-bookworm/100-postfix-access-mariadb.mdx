@@ -72,7 +72,12 @@ Tell Postfix that this mapping file is supposed to be used for the virtual\_mai
 postconf virtual_mailbox_maps=mysql:/etc/postfix/mysql-virtual-mailbox-maps.cf
 </pre>
 
-Test if Postfix is happy with this mapping by asking it where the mailbox directory of our `john@example.org` user would be:
+Test if Postfix is happy with this mapping by asking it whether it recognizes our `john@example.org` user:
+<pre class="wrap">
+postmap -q john@example.org mysql:/etc/postfix/mysql-virtual-mailbox-maps.cf
+</pre>
+
+As earlier, you should get ‘1’ as a result.
 
 ## virtual\_alias\_maps
 
@@ -85,7 +90,7 @@ user = mailserver
 password = **x893dNj4stkHy1MKQq0USWBaX4ZZdq**
 hosts = 127.0.0.1
 dbname = mailserver
-query = SELECT destination FROM virtual\_aliases WHERE source='%s'
+query = SELECT destination FROM virtual_aliases WHERE source='%s'
 ```
 
 Make Postfix use this database mapping:
