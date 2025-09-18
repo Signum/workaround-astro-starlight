@@ -28,17 +28,17 @@ Imagine that Postfix receives an email for `somebody@example.org` and wants to f
 
 Now you need to make Postfix use this database mapping:
 
-<pre class="wrap">
+```sh
 postconf virtual_mailbox_domains=mysql:/etc/postfix/mysql-virtual-mailbox-domains.cf
-</pre>
+```sh
 
 The “postconf” command conveniently adds configuration lines to your `/etc/postfix/main.cf` file. It also activates the new setting instantly so you do not have to reload the Postfix process.
 
 The test data you created earlier added the domain “example.org” as one of your mailbox domains. Let’s ask Postfix if it recognizes that domain:
 
-<pre class="wrap">
+```sh
 postmap -q example.org mysql:/etc/postfix/mysql-virtual-mailbox-domains.cf
-</pre>
+```sh
 
 <Aside type="tip" title="Access denied?">
 If you get an error like “postmap: warning: connect to mysql server 127.0.0.1: Access denied for user ‘mailserver’@’localhost'” then please double check the password of the ‘mailserver’ database user. It is either wrong in the CF file or you did not create the database user correctly using the GRANT query on the previous page.
@@ -68,9 +68,9 @@ Again please use your actual password for the ‘mailserver’ database user.
 
 Tell Postfix that this mapping file is supposed to be used for the virtual\_mailbox\_maps mapping:
 
-<pre class="wrap">
+```sh
 postconf virtual_mailbox_maps=mysql:/etc/postfix/mysql-virtual-mailbox-maps.cf
-</pre>
+```
 
 Test if Postfix is happy with this mapping by asking it where the mailbox directory of our `john@example.org` user would be:
 
