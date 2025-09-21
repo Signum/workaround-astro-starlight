@@ -33,8 +33,8 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout --orphan dist
-          git --work-tree dist add --all
-          git --work-tree dist commit -m "Deploy to dist"
-          git push -f origin dist
-
+          git add dist
+          git commit -m "Deploy dist"
+          git push https://$PAT_TOKEN@github.com/Signum/workaround-astro-starlight.git HEAD:gh-pages
+        env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
