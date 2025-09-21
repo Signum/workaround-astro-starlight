@@ -24,24 +24,12 @@ jobs:
       - name: Build Astro project
         run: npm run build
 
-      # Step 5: Checkout the main-dist branch
-      - name: Checkout main-dist branch
-        run: |
-          git fetch origin main-dist
-          git checkout main-dist || git checkout --orphan main-dist
-          git rm -rf .
-      
-      # Step 6: Copy built files
-      - name: Copy built files
-        run: |
-          cp -r ../dist/* ./
-
-      # Step 7: Commit and push changes
-      - name: Commit and push
+      # Optional: Commit built files (dist/) back to the same branch
+      - name: Commit dist/
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "Update built files [skip ci]" || echo "No changes to commit"
-          git push origin main-dist --force
+          git add dist/
+          git commit -m "Update dist/ [skip ci]" || echo "No changes to commit"
+          git push
 
