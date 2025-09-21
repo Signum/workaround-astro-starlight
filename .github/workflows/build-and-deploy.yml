@@ -24,12 +24,23 @@ jobs:
       - name: Build Astro project
         run: npm run build
 
-      # Optional: Commit built files (dist/) back to the same branch
-      - name: Commit dist/
+      - name: Deploy dist to main-dist
         run: |
+          # Configure Git
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add dist/
-          git commit -m "Update dist/ [skip ci]" || echo "No changes to commit"
-          git push
+          
+          # Create temporary branch
+          git checkout --orphan main-dist
+          
+          # Clean it
+          git rm -rf .
+          
+          # Copy build output
+          cp -r dist/* ./
+          
+          # Commit and force push
+          git add .
+          git commit -m "Update dist/ [skip ci]"
+          git push origin temp-build:main-dist --force
 
