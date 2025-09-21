@@ -24,11 +24,24 @@ jobs:
       - name: Build Astro project
         run: npm run build
 
-      - name: Deploy to dist branch
+      # Step 5: Checkout the main-dist branch
+      - name: Checkout main-dist branch
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f main-dist
-          git commit -m "Deploy to main-dist"
-          git push https://${PAT}@github.com/Signum/workaround-astro-starlight.git main-dist
+          git fetch origin main-dist
+          git checkout main-dist || git checkout --orphan main-dist
+          git rm -rf .
+      
+      # Step 6: Copy built files
+      - name: Copy built files
+        run: |
+          cp -r ../dist/* ./
+
+      # Step 7: Commit and push changes
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Update built files [skip ci]" || echo "No changes to commit"
+          git push origin main-dist --force
 
