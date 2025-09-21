@@ -24,17 +24,11 @@ jobs:
       - name: Build Astro project
         run: npm run build
 
-      - name: Upload dist folder
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist
-
       - name: Deploy to dist branch
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f dist
-          git commit -m "Deploy dist"
-          git push https://${PAT}@github.com/Signum/workaround-astro-starlight.git HEAD:dist
+          git add -f main-dist
+          git commit -m "Deploy to main-dist"
+          git push https://${PAT}@github.com/Signum/workaround-astro-starlight.git main-dist
 
