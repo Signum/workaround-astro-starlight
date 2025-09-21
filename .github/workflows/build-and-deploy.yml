@@ -33,18 +33,15 @@ jobs:
           # Create temporary branch
           git checkout --orphan main-dist
 
-          ls
+          ls -al
           
           # Clean it
           git rm -rf .
 
-          ls
-          
-          # Copy build output
-          cp -r dist/* ./
+          ls -al
           
           # Commit and force push
-          git add .
+          git add dist
           git commit -m "Update dist/ [skip ci]"
           git push origin temp-build:main-dist --force
 
