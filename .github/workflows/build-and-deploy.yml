@@ -32,9 +32,13 @@ jobs:
           
           # Create temporary branch
           git checkout --orphan main-dist
+
+          ls
           
           # Clean it
           git rm -rf .
+
+          ls
           
           # Copy build output
           cp -r dist/* ./
