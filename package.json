@@ -15,6 +15,7 @@
     "@astrojs/check": "^0.9.4",
     "@astrojs/sitemap": "^3.5.0",
     "@astrojs/starlight": "^0.35.2",
+    "@ctrl/tinycolor": "^4.2.0",
     "@splidejs/splide": "^4.1.4",
     "astro": "^5.13.2",
     "astro-matomo": "^1.9.0",
