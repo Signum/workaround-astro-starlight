@@ -45,5 +45,6 @@ jobs:
 
           git branch
           git commit -m "Update dist/ [skip ci]"
-          git push origin temp-build:main-dist --force
+          #git push origin temp-build:main-dist --force
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/Signum/workaround-astro-starlight.git temp-build:dist-main --force
 
