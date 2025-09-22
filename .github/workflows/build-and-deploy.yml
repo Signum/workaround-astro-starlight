@@ -31,7 +31,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
           # Create temporary branch
-          git checkout --orphan main-dist
+          git checkout --orphan temp-build
 
           ls -al
           
@@ -44,6 +44,6 @@ jobs:
           git add dist
 
           git branch
-          #git commit -m "Update dist/ [skip ci]"
-          #git push origin temp-build:main-dist --force
+          git commit -m "Update dist/ [skip ci]"
+          git push origin temp-build:main-dist --force
 
