@@ -1,0 +1,48 @@
+name: Build Astro and deploy dist
+
+on:
+  push:
+    branches:
+      - trixie  # or your default branch
+
+permissions:
+  contents: write   # 👈 This is required for pushing branches
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22' # match your project
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Astro project
+        run: npm run build
+
+      - name: Deploy dist to dist-trixie
+        run: |
+          # Configure Git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Create temporary branch
+          git checkout --orphan temp-build
+
+          # Clean it
+          git rm -rf .
+          
+          # Commit and force push
+          git add dist
+
+          git branch
+          git commit -m "Update dist/ [skip ci]"
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/Signum/workaround-astro-starlight.git temp-build:dist-trixie --force
+
