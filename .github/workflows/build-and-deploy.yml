@@ -5,6 +5,9 @@ on:
     branches:
       - main  # or your default branch
 
+permissions:
+  contents: write   # 👈 This is required for pushing branches
+
 jobs:
   build:
     runs-on: ubuntu-latest
