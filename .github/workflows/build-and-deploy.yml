@@ -49,5 +49,5 @@ jobs:
       - name: Trigger deployment webhook
         run: |
           curl '${{ COOLIFY_DEPLOY_WEBHOOK }}' \
-          --header 'Authorization: ${{ COOLIFY_DEPLOY_TOKEN }}'
+          --header 'Authorization: Bearer ${{ COOLIFY_DEPLOY_TOKEN }}'
 
