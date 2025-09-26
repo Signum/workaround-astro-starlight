@@ -3,7 +3,7 @@ name: Build Astro and deploy dist
 on:
   push:
     branches:
-      - trixie  # or your default branch
+      - '*'
 
 permissions:
   contents: write   # 👈 This is required for pushing branches
@@ -27,7 +27,7 @@ jobs:
       - name: Build Astro project
         run: npm run build
 
-      - name: Deploy dist to dist-stage
+      - name: Deploy dist
         run: |
           # Configure Git
           git config user.name "github-actions[bot]"
@@ -36,7 +36,7 @@ jobs:
           # Create temporary branch
           git checkout --orphan temp-build
 
-          # Clean it (except for dist/ which is in .gitignore)
+          # Clean it
           git rm -rf .
           
           # Commit and force push
@@ -44,5 +44,10 @@ jobs:
 
           git branch
           git commit -m "Update dist/ [skip ci]"
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/Signum/workaround-astro-starlight.git temp-build:dist-stage --force
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/Signum/workaround-astro-starlight.git temp-build:dist-${{ github.ref_name }} --force
+
+      - name: Trigger deployment webhook
+        run: |
+          curl '${{ COOLIFY_DEPLOY_WEBHOOK }}' \
+          --header 'Authorization: ${{ COOLIFY_DEPLOY_TOKEN }}'
 
