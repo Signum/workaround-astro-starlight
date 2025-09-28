@@ -47,5 +47,4 @@ jobs:
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/Signum/workaround-astro-starlight.git temp-build:dist-trixie --force
 
       - name: Trigger deployment webhook
-        run: curl https://coolify1.workaround.org/api/v1/deploy?uuid=a4scc80gg04kk0k8444o448c&force=false --header 'Authorization: Bearer 1|RkJzUvVwmVjvegjCZWGq2j2Qb0EbR56kk0bEx6CG5ddd0030'
-
+        run: curl '${{ env.COOLIFY_DEPLOY_WEBHOOK }}' --header 'Authorization: Bearer ${{ secrets.COOLIFY_DEPLOY_TOKEN }}'
