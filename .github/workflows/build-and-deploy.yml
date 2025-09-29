@@ -58,7 +58,7 @@ jobs:
           date
           curl -v "$DEPLOY_WEBHOOK" --header "Authorization: Bearer $DEPLOY_TOKEN"
           echo ..........................
-          curl -v "https://coolify1.workaround.org/api/v1/deploy?uuid=t8o4owgkwc480gkc4oskcwwc&force=false" --header "Authorization: Bearer  11|turB1lbqKhOQpU96xrkD2UQLDvdJUVyPl9LkY5tP0ebc05d2"
+          curl -v "https://coolify1.workaround.org/api/v1/deploy?uuid=t8o4owgkwc480gkc4oskcwwc&force=false" --header "Authorization: Bearer 11|turB1lbqKhOQpU96xrkD2UQLDvdJUVyPl9LkY5tP0ebc05d2"
           
         env:
           DEPLOY_WEBHOOK: ${{ secrets.COOLIFY_DEPLOY_WEBHOOK }}
