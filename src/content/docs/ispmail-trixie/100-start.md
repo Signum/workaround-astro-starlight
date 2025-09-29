@@ -58,11 +58,12 @@ next stable release comes out in 2-3 years.
 ## What this is not about
 
 If you just want to have a working mail server and do not care how it works then this guide is not for you. Check out
-ready solutions like [mailinabox](https://mailinabox.email/) or [iRedMail](http://www.iredmail.org/). Be aware that
-running a mail server requires some technical understanding. And that’s what the ISPmail guide is for. Experience from
-giving support to other sysadmins shows that most problems appear because some detail in a complex setup goes wrong and
-they have no idea how to fix it. Email has evolved a lot over the past 40 years. Go with ready solutions if you like.
-But I have a feeling that we meet again. And you will probably not save time either taking the supposedly easy route.
+ready solutions like [mailinabox](https://mailinabox.email/) or [iRedMail](http://www.iredmail.org/) or
+[Mailcow](https://mailcow.email/). Be aware that running a mail server requires some technical understanding. And that’s
+what the ISPmail guide is for. Experience from giving support to other sysadmins shows that most problems appear because
+some detail in a complex setup goes wrong and they have no idea how to fix it. Email has evolved a lot over the past 40
+years. Go with ready solutions if you like. But I have a feeling that we meet again. And you will probably not save time
+either taking the supposedly easy route.
 
 ## Ready?
 
