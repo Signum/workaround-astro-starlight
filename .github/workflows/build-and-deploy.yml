@@ -55,7 +55,7 @@ jobs:
 
       - run: |
           env
-          curl "${{ DEPLOY_WEBHOOK }}" --header "Authorization: Bearer ${{ DEPLOY_TOKEN }}"
+          curl "$DEPLOY_WEBHOOK" --header "Authorization: Bearer $DEPLOY_TOKEN"
           
         env:
           DEPLOY_WEBHOOK: ${{ secrets.COOLIFY_DEPLOY_WEBHOOK }}
