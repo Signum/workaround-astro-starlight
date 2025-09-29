@@ -55,7 +55,7 @@ jobs:
 
       - run: |
           env
-          set +x
+          set -x
           echo curl "$DEPLOY_WEBHOOK" --header "Authorization: Bearer $DEPLOY_TOKEN"
           
         env:
