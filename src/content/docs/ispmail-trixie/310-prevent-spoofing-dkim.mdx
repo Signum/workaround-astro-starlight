@@ -1,0 +1,280 @@
+---
+title: Prevent spoofing using DKIM and SPF
+lastUpdated: 2023-10-04
+slug: ispmail-trxie/anti-spoofing-dkim-spf
+sidebar:
+  order: 310
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+Email sender spoofing means pretending to be in control of someone else’s email address. This is a common problem with
+[phishing](https://en.wikipedia.org/wiki/Phishing). Often scammers send emails with a sender address of
+something@paypal.com and hope that the recipient falls for it and trusts them. SMTP does not care which sender address
+you use. Most mail service providers enforce that you send emails only using your own email address. But some do not.
+And bad guys obviously could not care less.
+
+So in 2004 people came up with [DKIM](https://en.wikipedia.org/wiki/DomainKeys). It uses _public key cryptography_ to
+automatically insert a _cryptographic signature_ into the header of each outgoing email.
+
+If you run the _sending_ mail server, you need to:
+
+1. Create a **public key** and a **private key**.
+2. Publish the **public key** through a DNS record of your domain. Obviously only the administrator of the sending
+   domain has access to the DNS zone which makes it safe.
+3. Give your mail server the **private key** so it can **sign** all emails automatically.
+
+On the other hand the _receiving_ mail server needs to:
+
+1. Check if there is a **signature** in an incoming email.
+2. Fetch the **public key** from the DNS zone of the sending domain.
+3. Make a cryptographic check if the **signature** matches the **public key**.
+
+I don't want to dive too deep into public key cryptography. Take a look at the
+[Wikipedia article](https://en.wikipedia.org/wiki/Public-key_cryptography) for a good explanation.
+
+Obviously your mail server will both _receive_ and _send_ emails. So if you want to use DKIM (which I recommend) then
+you need to take care of both parts. But luckily that's not too hard. The _rspamd_ software on your mail server takes
+care of that.
+
+## Example
+
+Let’s take a look at such a signature in real life. I have just sent an email from GMail to my personal email account on
+my own mail server. Google uses DKIM signing so the email got this additional header from Google’s mail servers:
+
+```
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1760017775; x=1760622575; darn=christoph-haas.de;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=HmztzLfHhgZON2788h5cwCX7liAbwFqnFGISA15M18Q=;
+        b=OKu5D/Ejp7tGy3uxydb7qDccK03OxrdD9vxEKiAXk/y9T5WViCqpg3HrdeB5Izkzdq
+         MXvQ+SgGVzJmy9ZgV1A930RRqUIoR2wmlr3GDXPDyRfagJMRV/3v9J71lfSduOFE8q7t
+         AIw4oWBm91QAnC5gW+XS7h4lNmRd4pVILkoe09qkLz+7WrU5Xp/WGIKHRK0ST5+EAR25…
+```
+
+I need Google’s DKIM public key to verify that signature. It is stored in their DNS zone as a TXT record of
+"**20230601**.\_domainkey.google.com". The "**20230601**" is the key selector that is mentioned in the signature as
+"s=**20230601**". You can use any number of keys as long as you create the signatures with the matching private key. 
+The "\_domainkey" part is the standard subdomain for DKIM keys. So let’s get that TXT record:
+
+```
+dig +short 20230601._domainkey.google.com txt
+```
+
+This returns…
+
+```
+"v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4zd3nfUoLHWFbfoPZzAb8bvjsFIIFsNypweLuPe4M+vAP1YxObFxRnpvLYz7Z+bORKLber5aGmgFF9iaufsH1z0+aw8Qex7uDaafzWoJOM/6lAS5iI0JggZiUkqNpRQLL7H6E7HcvOMC61nJcO4r0PwLDZKwEaCs8gUHiqRn/SS3wqEZX29v/VOUVcI4BjaOz" "OCLaz7V8Bkwmj4Rqq4kaLQQrbfpjas1naScHTAmzULj0Rdp+L1vVyGitm+dd460PcTIG3Pn+FYrgQQo2fvnTcGiFFuMa8cpxgfH3rJztf1YFehLWwJWgeXTriuIyuxUabGdRQu7vh7GrObTsHmIHwIDAQAB"
+```
+
+That is the public key that I can use to verify the signature. An automated check can be done using the
+"opendkim-testmsg" tool as described later. I can run it and paste the entire email including headers and body into it.
+If it doesn’t complain with an error message then the signature is correct.
+
+Sounds good? Then let’s implement that for your email domains, too.
+
+## Creating a keypair
+
+As explained above you need a **private key** that your mail server will use for signing and a **public key** that gets
+added to your DNS zone. I assume that you have installed `rspamd` in the previous chapter to get rid of spam mails.
+`rspamd` also has DKIM signing and validation built-in so let's use that.
+
+If you put your key file into /var/lib/rspamd/dkim/ using a certain naming scheme, `rspamd` will pick it up
+automatically:
+
+```
+mkdir /var/lib/rspamd/dkim
+chown _rspamd:_rspamd /var/lib/rspamd/dkim
+cd /var/lib/rspamd/dkim
+rspamadm dkim_keygen -d example.org -s 2025100901
+```
+
+The **selector** (-s) I chose is **2025100901** because that’s the day I created it. The first (01) key on 2025-10-09.
+It doesn’t matter though – you can name it anything you want. If you are lazy and unconcerned you could even use "dkim"
+as the selector and later save some work by not needing DKIM maps that define which key is supposed to be used for each
+domain. "dkim" is the default selector if you do not use maps. But you will probably some day want or need to add new
+keys so I recommend you stay flexible and use a custom selector.
+
+The output will look like this:
+
+```
+-----BEGIN PRIVATE KEY-----
+MIICdwIBADANBgkqhkiG9w0BAQE…
+-----END PRIVATE KEY-----
+2019122401._domainkey IN TXT ( "v=DKIM1; k=rsa; "    "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCZ8e4RtsvuvsgXyo3Jr63twdx3Zm2RtnYPf87wba5ZnFP0sQIagjJ0R3WL+djKhM5EteBeboTeaflLR+AUKWJdQnL5jzGil+yWThH5C+ixhkdFZPdabkxBji+3r6uRxJKBsN0gy2/+Gp4sGs7lmFgioki9OLgQnzzFh2nE/MSACwIDAQAB" ) ;
+```
+
+The first part is the private key. And that includes the "…BEGIN…" and "…END…" lines. This key must be kept secret and
+will only be used by your mail server to sign outgoing emails.
+
+The second part is the DNS record you need to add to your domain’s DNS zone. Let’s start with that.
+
+## Adding the DNS record
+
+Before you start signing your emails you must make sure that the public key is properly present in your DNS zone for the
+domain you are sending emails from. Otherwise the recipient will be unable to verify the signature and may incorrectly
+assume that the email was spoofed.
+
+Take a look at the TXT record. It will look something like this:
+
+```
+2019122401._domainkey IN TXT ( "v=DKIM1; h=sha256; k=rsa; " "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCxenHupkYLPmFMbJjV9dQICKUl2xH/aexSRUwCuw7TJ9dkddqIN+6tyw4VKhnW8R0/UlbzlSFLmVgMU0uUkwTtVqyDHhtSU7LV/SkVYmUst4dTUF1r+8PvhAm7vobMYKdwvRsOq27ABtZc8P4oU2XXHqqa6LU8s4sNxs12hLW9swIDAQAB" ) ;
+```
+
+If you are running your own DNS server you should be able to copy this entire file and put it into your DNS zone.
+However if your internet provider offers you just a web interface to manage your domains then create a new TXT record
+with a host name of "**2019122401**.\_domainkey" in your domain and put the string within the double-quotes into it as
+the value. In my example:
+
+```
+2019122401._domainkey ➠p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCxenHupkYLPmFMbJjV9dQICKUl2xH/aexSRUwCuw7TJ9dkddqIN+6tyw4VKhnW8R0/UlbzlSFLmVgMU0uUkwTtVqyDHhtSU7LV/SkVYmUst4dTUF1r+8PvhAm7vobMYKdwvRsOq27ABtZc8P4oU2XXHqqa6LU8s4sNxs12hLW9swIDAQAB
+```
+
+Be aware that the string you got contains two strings "…" + "…" that must be merged into one to work. (The syntax with
+quotes is meant for a DNS zone file if you run your own name server like _bind_.) There must usually not be any _quotes_
+in the record data. Depending on your ISP it may take a while until the new record is visible on the internet. You can
+use *dig* to verify that:
+
+```
+dig +trace 2019122401._domainkey.example.org txt
+```
+
+If you get the TXT entry like as follows then you are ready to enable DKIM signing in rspamd for that domain:
+
+```
+TXT "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCxenHupkYLPmFMbJjV9dQICKUl2xH/aexSRUwCuw7TJ9dkddqIN+6tyw4VKhnW8R0/UlbzlSFLmVgMU0uUkwTtVqyDHhtSU7LV/SkVYmUst4dTUF1r+8PvhAm7vobMYKdwvRsOq27ABtZc8P4oU2XXHqqa6LU8s4sNxs12hLW9swIDAQAB" "" from server foo.bar in 24 ms.
+```
+
+## Enabling DKIM maps in rspamd
+
+As explained above it is advised to use DKIM *maps*. It’s nothing fancy. Just a simple file defining which selector you
+want to use for a certain domain. rspamd will assume that your selector is always "dkim" unless specified otherwise in a
+map. If you used "dkim" then you may get into trouble when you later want to replace your key. DNS is a sluggish system
+and propagating a new DKIM public key may take a day. Emails signed with a newer key may get rejected while the DNS
+record is not yet known everywhere in the world.
+
+Using maps is simple. First we need to change the *selector_map* setting of the dkim_signing module. To do that create a
+new file in `/etc/rspamd/local.d/dkim_signing.conf` and make it contain just these two lines:
+
+```
+path = "/var/lib/rspamd/dkim/$domain.$selector.key";
+selector_map = "/etc/rspamd/dkim_selectors.map";
+```
+
+The configuration is pretty self-explaining. rspamd will look for the domain-to-key mapping in the *dkim_selectors.map*
+file. Create that file and make it contain this line:
+
+```
+example.org 2019122401
+```
+
+That’s all really. rspamd now knows that whenever it sees an outgoing email from anyone@example.org it will get the DKIM
+private key from /var/lib/rspamd/dkim/**example.org**.**2018022301**.key and use it to sign the email.
+
+Reload the configuration:
+
+```
+systemctl restart rspamd
+```
+
+This method works well if you just have a few domains that virtually never change. If you are rather serving random
+customer domains you should consider putting the keys into a Redis database instead as
+[described in the documentation](https://rspamd.com/doc/modules/dkim_signing.html). There is not yet a way to manage
+DKIM keys in a database like MySQL.
+
+<Aside type="tip" title="Selectors?">
+  Selectors may seem unnecessary. But you will need them once you want to replace your current signing key later. In
+  that case you need to generate a new key using a different selector/name. Now that both DNS records are online you can
+  make your mail server use the new signing key. You should leave the old key in place for a while.
+</Aside>
+
+## Adding the domain key to rspamd
+
+Take the private key that was created earlier (the multi-line string including "`…BEGIN PRIVATE KEY…`" and
+"`…END PRIVATE KEY…`") and put it into a file at the location where rspamd will look for it:
+
+```
+/var/lib/rspamd/dkim/example.org.2019122401.key
+```
+
+The name of the file has to be  DOMAIN + dot + SELECTOR + ".key" like above. If you name the file incorrectly you will
+get an error in your rspamd.log file like "_lua_dkim_sign_handler: cannot load dkim key
+/var/lib/rspamd/dkim/example.org.dkim.key_".
+
+Make sure that only \_rspamd can read it:
+
+```
+chown _rspamd /var/lib/rspamd/dkim/*
+chmod u=r,go= /var/lib/rspamd/dkim/*
+```
+
+rspamd will automatically pick up the files and does not need to be restarted.
+
+## Send a test email
+
+If you have another email account at another location then you could just send a test email there via your mail server.
+If you take a look at the received email it should have a DKIM header now like:
+
+```
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=example.org; s=2019122401; t=1519400838 h=from:subject:date:message-id:to:mime-version:content-type:content-transfer-encoding; bh=kpYel1IlDvqXEUc0SyIpXbMte3XpQOCXHl+zTyHQvGc=;	b=NEUyWUoeKE…
+```
+
+![DKIM signature verification failed](images/prevent-spoofing-dkim-spoofing-dkim-validation-failed.png)
+
+To verify the signature install the _opendkim-tools_ package, copy the entire test email (including headers and body),
+run *opendkim-testmsg* in your shell and paste the email (finish with CTRL-D).
+
+If you get no output then the signature verified correctly. But if you get something like "opendkim-testmsg: dkim_eom():
+Unable to verify" then double-check your DNS record.
+
+You can also use websites like [dkimvalidator.com](http://dkimvalidator.com/), [isnotspam.com](http://isnotspam.com/) or
+[mail-tester.com](https://www.mail-tester.com/) service to verify that your signatures are working well.
+
+## SPF and DMARC
+
+Adding DKIM signatures is a good first step. But you can take it further by telling receiving mail servers that they
+should not accept any email from your domain without a valid signature or from servers that you do no operate. There are
+two concepts that aim to help. The older [SPF](https://en.wikipedia.org/wiki/Sender_Policy_Framework) and the
+newer [DMARC](https://en.wikipedia.org/wiki/DMARC). Either of them means creating a machine-readable string in a
+predefined format and adding a TXT record to your DNS zone. Receiving mail servers can check those records and take your
+advice (as the domain owner) what to do if the criteria of the email are not met. It could accept the email anyway or
+flag it as spam or reject it altogether.
+
+Let’s take a look at a typical SPF record:
+
+```
+"v=spf1 ip4:157.97.194.11 mx ~all"
+```
+
+What it means:
+
+1. this is an SPF record of version 1 of the standard (there is currently no other version)
+2. please accept emails from the IP address 157.97.194.11
+3. alternatively accept emails from any server that is mentioned in our domain’s MX record (the server(s) that receive
+   email for your domain)
+4. any other email should be considered suspicious – it might be spam or worse
+
+There are [websites](https://easydmarc.com/tools/spf-record-generator) that help you create your SPF string to add to
+your DNS domain. Keep in mind though:
+
+- You should know which mail servers send email from your domain. Do not forget to include mailing list or newsletter
+  services that send in your name.
+- Start with "~all" to mark emails as spam that do not meet the criteria. If all goes well switch to "-all" after a few
+  weeks if you like.
+- Note that forwarding emails from your domain may break SPF because suddenly the email appears to be coming from an IP
+  address that is not authorized. This has been a common problem for mailing lists and is gradually being fixed by
+  resending the email from the domain of the mailing list service.
+
+I mentioned that DMARC is the newer standard. So why use SPF anyway? Because some email providers value your effort if
+you use SPF, too. Technically it’s sufficient to specify a DMARC entry. In my opinion restricting the IP addresses
+allowed to send is a little dangerous and a little inflexible. It is far more interesting to require that emails from
+your domain have a valid DKIM signature. Such a record may look like:
+
+```
+"v=DMARC1; p=reject; adkim=s; ruf=postmaster@example.org"
+```
+
+However to create a proper DMARC entry I suggest you use [one of](http://www.kitterman.com/dmarc/assistant.html)
+[the](https://dmarcian.com/dmarc-inspector/) [web](https://www.unlocktheinbox.com/dmarcwizard/)
+[sites](https://www.agari.com/resources/tools/dmarc) that aid you there and explain the restrictions and extra features.
