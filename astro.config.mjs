@@ -10,12 +10,21 @@ export default defineConfig({
   site: "https://workaround.org",
   integrations: [
     starlight({
+      expressiveCode: {
+        frames: {
+          removeCommentsWhenCopyingTerminalFrames: false, // keep the commented lines when copying shell snippets
+        },
+      },
       lastUpdated: true,
       title: "ISPmail Guide",
       social: [
         { icon: "github", label: "GitHub", href: "https://github.com/Signum/workaround-astro-starlight" },
         { icon: "matrix", label: "Matrix", href: "https://riot.im/app/#/room/#ispmail:matrix.org" },
-        { icon: "rss", label: "Feed", href: "https://comentario.workaround.org/api/rss/comments?domain=0f111a27-fbfa-48af-8beb-ab12e612d92f" },
+        {
+          icon: "rss",
+          label: "Feed",
+          href: "https://comentario.workaround.org/api/rss/comments?domain=0f111a27-fbfa-48af-8beb-ab12e612d92f",
+        },
       ],
       // https://expressive-code.com/key-features/word-wrap/#configuration
       components: {
