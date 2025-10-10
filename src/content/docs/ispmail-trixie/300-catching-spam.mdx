@@ -131,86 +131,24 @@ learned and may try again after a few minutes thus circumventing greylisting. Yo
 greylisting is that the recipient has to wait a couple of minutes for the email to be delivered which is often bothering
 the users.
 
+## X-Spam header
+
+An email consists of **headers** and the actual **body**. Your users will usually only see common header information
+like the *subject*, the *sender*, the *recipient* and the *time* the email was sent. But there is way more information
+like the route the email travelled. Mail software can even add arbitrary **extended headers** that start with `X-`.
+There is one specific header that rspamd adds for us if it finds a spam email:
+
+```
+X-Spam: Yes
+```
+
 <details class="collapsible">
-  <summary>Click here if you rather want to keep spam and sort away</summary>
+  <summary>Click here to dive deeper into rspamd's scores…</summary>
 
-Why should you bother setting up rspamd but then keep the spam emails? It is not as useless as it sounds. The idea is to
-detect spam and deliver it to the recipient's spam folder. That way your users do not have to …
-
-If you like to change these defaults then create a new file in `/etc/rspamd/local.d/actions.conf` containing your
-desired limits:
+rspamd can add an `X-Spamd-Result` header containing the various criteria that added to the total score:
 
 ```
-reject = 150;
-add_header = 6;
-greylist = 4;
-```
-
-This would virtually never reject an email. The other two values are pretty sane defaults. I personally use this setting
-all the time so that users can find spam in their _Junk_ folder but don’t have to ask me if the mail server rejected it.
-
-</details>
-
-Please take a moment to understand how to change rspamd defaults. You can either create files in
-`/etc/rspamd/override.d/…` which will replace entire sections; or create files in `/etc/rspamd/local.d/…` which will
-change only parts of the configuration. There is a
-[helpful page in the rspamd documentation](https://rspamd.com/doc/developers/writing_rules.html) that contains examples.
-Whatever you do – never change the /etc/rspamd/\* files directly because a software update will try to replace them.
-
-Restart rspamd after any configuration changes:
-
-```
-systemctl restart rspamd
-```
-
-To check if rspamd has picked up your configuration use this command to see the current configuration:
-
-```
-rspamadm configdump
-```
-
-You may test your configuration using
-
-```
-rspamadm configtest
-```
-
-Alternatively you may check if all required rspamd processes are running…
-
-```
-pgrep -a rspam
-
-141693 rspamd: main process
-141694 rspamd: rspamd\_proxy process (localhost:11332)
-141695 rspamd: controller process (localhost:11334)
-104965 rspamd: normal process (localhost:11333)
-104966 rspamd: normal process (localhost:11333)
-```
-
-## Adding headers
-
-As you may know an email consists of the headers and the body. Your users will usually only see common header
-information like the *subject*, the *sender*, the *recipient* and the *date and time* the email was sent. But there is
-way more information like the route the email traveled or extended headers added by the various mail server on the way
-to the destination. Such extended headers begin with an "X-". rspamd can add such headers to help you filter out spam.
-For that purpose create a new configuration override file at `/etc/rspamd/override.d/milter_headers.conf` with this
-content:
-
-```
-extended_spam_headers = true;
-```
-
-Again restart rspamd:
-
-```
-systemctl restart rspamd
-```
-
-As [documented](https://rspamd.com/doc/modules/milter_headers.html) it will add these headers:
-
-```
-X-Rspamd-Server: mail
-Authentication-Results: dmarc=fail reason="No valid SPF, No valid DKIM" …
+X-Rspamd-Server: mailserver
 X-Rspamd-Queue-Id: C22E55A005B3
 X-Spamd-Result: default: False [11.55 / 15.00]
  R_PARTS_DIFFER(0.27)[63.4%]
@@ -235,76 +173,131 @@ X-Spamd-Result: default: False [11.55 / 15.00]
 X-Spam: Yes
 ```
 
-<Aside type="tip" title="No headers?">
-  Please note that rspamd only adds headers if an email is received from outside your server. So if you
-  use _swaks_ locally then you will not get anything.
-</Aside>
+Enable those additonal headers:
+
+```sh
+cat > /etc/rspamd/local.d/milter_headers.conf << EOF
+extended_spam_headers = true;
+EOF
+systemctl reload rspamd
+wget http://spamassassin.apache.org/gtube/gtube.txt
+swaks --server mailserver.example.org --to john@example.org --body @gtube.txt
+```
+
+What you just did:
+
+- create a new file at `/etc/rspamd/local.d/milter_headers.conf` that extends rspamd's milter configuration
+- restart rspamd to make it active
+- get the GTUBE anti-spam test file (if you haven't already)
+- send that spam test to John's email address. Please use your actual mail server name here instead of
+  `mailserver.example.org`. It is important not to use `localhost` because rspamd will only add those headers for emails
+  coming from the internet.
 
 Each of the uppercase symbols like *FROM_HAS_DN* means that a certain detection rule of rspamd was triggered. It does
 not necessarily mean something bad about the email. For example _R_SPF_ALLOW_ has a negative score that lowers the total
 score because it is something good about the email. There are a several symbols with a 0.00 score. These do not change
-the score but show you what rspamd has found. But if you consider certain criteria good or bad then you can define your
-own scores for them.
+the score but show you what rspamd has found. But if you consider certain criteria good or bad then you can
+[define your own scores](https://docs.rspamd.com/configuration/metrics/#configuring-scores-and-actions) for them.
 
-The last line here is especially interesting because next on our list is…
+</details>
 
 ## Sending spam to the Junk folder
 
 Your users will not realize that their spam emails have an added "X-Spam: Yes" header. It is not actively shown in their
 mail client. Nor does it move the email out of the inbox into their spam folder. Such emails just appear like normal in
-their inbox. So let’s aid them by moving spam to a separate _Junk_ folder beneath their inbox automatically. Dovecot has
-support for [Sieve](<https://en.wikipedia.org/wiki/Sieve_(mail_filtering_language)>) filters which are scripts that run
-automatically whenever an email comes in.
+their inboxes. So let’s aid them by automatically moving spam to a separate _Junk_ folder beneath their inbox. Dovecot
+has support for [Sieve](<https://en.wikipedia.org/wiki/Sieve_(mail_filtering_language)>) filtering rules that are simple
+if-then scripts that run on the server automatically whenever an email comes in.
 
 John could create a new Sieve filter (e.g. using the Roundcube webmail interface) for himself that would save any emails
 to his "Junk" folder if the header line "X-Spam: Yes" was found. This rule would be useful for all your users though so
 let’s find a more general solution.
 
-Dovecot supports _global_ Sieve filters that apply to all users. Edit the file `/etc/dovecot/conf.d/90-sieve.conf`. Look
-for the "sieve_after" lines. They are commented out. Add a new line there:
+Dovecot supports _global_ Sieve filters that apply to all users. Let's do some preparation:
 
-```
-sieve_after = /etc/dovecot/sieve-after
-```
+```sh
+# Create a new config file for spam handling
+cat > /etc/dovecot/conf.d/99-ispmail-sieve.conf << 'EOF'
+sieve_script spam-to-junk-folder {
+  driver = file
+  type = after
+  path = /etc/dovecot/sieve/spam-to-junk-folder.sieve
+}
 
-And restart Dovecot:
+# Uncomment this line to get more verbose logs on sieve handling
+# log_debug=category=sieve
 
-```
-systemctl restart dovecot
-```
+# Enable Sieve rules when Postfix sends an email to Dovecot over LMTP
+protocol lmtp {
+  mail_plugins {
+    sieve = yes
+  }
+}
 
-The "_sieve after_" filters are executed after the users’ filters. John can define his own filter rules. And after that
-Dovecot will run any filter rules it finds in files in `/etc/dovecot/sieve-after`. That is just an arbitrary directory
-that you create:
+# Make sure that the user has a Junk folder and is subscribed to it
+namespace inbox {
+  mailbox Junk {
+    special_use = \Junk
+    auto = subscribe
+  }
+}
+EOF
 
-```
-mkdir /etc/dovecot/sieve-after
-```
+# Restart Dovecot
+systemctl reload dovecot
 
-And add a new file `/etc/dovecot/sieve-after/spam-to-folder.sieve` reading:
+# Create the directory for Sieve files
+mkdir -p /etc/dovecot/sieve
 
-```
+# Create the Sieve script to move Spam mails to the user's Junk folder
+cat > /etc/dovecot/sieve/spam-to-junk-folder.sieve << 'EOF'
 require ["fileinto"];
 
 if header :contains "X-Spam" "Yes" {
  fileinto "Junk";
  stop;
 }
+EOF
+
+# Compile the .sieve file into a .svbin file
+sievec /etc/dovecot/sieve/spam-to-junk-folder.sieve
 ```
 
-The "require" lines include functionality to move emails into certain folders (fileinto) and to create folders if they
-don’t exist yet (mailbox). Then if rspamd marked an email as spam it gets moved into the INBOX.Junk folder which just
-appears as "Junk" to the user underneath their inbox.
+That was quite a lot. Let's quickly break it down:
 
-Dovecot cannot deal with such human-readable files though. So we need to compile it:
+1. You created a new config file at `/etc/dovecot/conf.d/99-ispmail-sieve.conf` to tell Dovecot that…
+   - before an email is delivered to the user, the `/etc/dovecot/sieve/spam-to-junk-folder.sieve` Sieve script is run
+   - the Sieve functionality is enabled during LMTP (when an email is sent from Postfix to Dovecot)
+   - the user get a _Junk_ folder created in his mailbox and is subscribed to it so that it appears in their mail
+     program
+2. The `/etc/dovecot/sieve` directory is created where we will put all Sieve-related files.
+3. A Sieve script is put into `/etc/dovecot/sieve/spam-to-junk-folder.sieve` that will look for `X-Spam: yes` and then
+   move the mail into the user's _Junk_ folder. The `require` line enables the `fileinto` command that would otherwise
+   not be available.
+4. The Sieve script is compiled into a binary file `spam-to-junk-folder.svbin` that Dovecot can work with.
+
+Let's give it a test using Swaks. This time we impersonate Postfix and inject an email with an `X-Spam: yes` header
+directly into Dovecot using the LMTP socket:
+
+```sh
+swaks --to john@example.org --header-X-Spam "yes" --socket /var/spool/postfix/private/dovecot-lmtp --protocol LMTP
+```
+
+Take a look at Dovecot's log:
+
+```sh
+journalctl -fu dovecot
+```
+
+It should read:
 
 ```
-sievec /etc/dovecot/sieve-after/spam-to-folder.sieve
+mailserver dovecot[1434406]: lmtp(1436598): Connect from local
+mailserver dovecot[1434406]: lmtp(john@example.org)<1436598><kh4lDNl26Wi26xUA5ANL0g>: sieve: msgid=<20251010211257.1436597@auenland>: fileinto action: stored mail into mailbox 'Junk'
+mailserver dovecot[1434406]: lmtp(1436598): Disconnect from local: Logged out (state=READY)
 ```
 
-That generated a machine-readable file /etc/dovecot/sieve-after/spam-to-folder.svbin.
-
-Now all your users will automatically get spam emails moved to their Junk folder. Nice – isn’t it?
+The alleged spam email has been moved to the _Junk_ folder. Just like we wanted.
 
 ## About Redis
 
