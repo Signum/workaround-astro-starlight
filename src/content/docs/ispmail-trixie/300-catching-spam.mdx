@@ -14,7 +14,7 @@ import { Aside } from "@astrojs/starlight/components";
 
 You have come a long way in this guide and your mail server is already fully functional. Now it’s time to deal with the
 dark side: spam. And there will be lots of it. So we need to detect spam emails and filter them out. I found that
-[rspamd](https://rspamd.com/) is a well-performing choice for that purpose both in speed and detection. rspamd keeps a
+[rspamd](https://rspamd.com/) is well-performing choice for that purpose both in speed and detection. rspamd keeps a
 permanent process running on your mail server that listens to connections from Postfix using
 the [milter](http://www.postfix.org/MILTER_README.html) (=**m**ail f**ilter**) protocol. Every time an email enters your
 system, Postfix will send it to rspamd to have its content checked. rspamd runs a lot of checks on the email and
@@ -286,16 +286,38 @@ swaks --to john@example.org --header-X-Spam "yes" --socket /var/spool/postfix/pr
 Take a look at Dovecot's log:
 
 ```sh
-journalctl -fu dovecot
+journalctl -eu dovecot
 ```
 
 It should read:
 
 ```
 mailserver dovecot[1434406]: lmtp(1436598): Connect from local
-mailserver dovecot[1434406]: lmtp(john@example.org)<1436598><kh4lDNl26Wi26xUA5ANL0g>: sieve: msgid=<20251010211257.1436597@auenland>: fileinto action: stored mail into mailbox 'Junk'
+mailserver dovecot[1434406]: lmtp(john@example.org)<1436598><kh4lDNl26Wi26xUA5ANL0g>: sieve: msgid=<20251010211257.1436597@mailserver>: fileinto action: stored mail into mailbox 'Junk'
 mailserver dovecot[1434406]: lmtp(1436598): Disconnect from local: Logged out (state=READY)
 ```
+
+<details class="collapsible">
+  <summary>Click here to get more detailed logs…</summary>
+
+If you find that the delivery to the _Junk_ folder did not work, you may want to increase the log level. Uncomment the
+line
+
+```
+log_debug=category=sieve
+```
+
+in the `99-ispmail-sieve.conf` file.
+
+That will give you a much deeper insight of what Dovecot has been doing. Restart Dovecot, send another email with
+_swaks_ and check the logs again:
+
+```sh
+systemctl reload dovecot
+journalctl -eu dovecot
+```
+
+</details>
 
 The alleged spam email has been moved to the _Junk_ folder. Just like we wanted.
 
@@ -309,99 +331,46 @@ and values. There aren’t several fields/columns like in SQL. But it is lightni
 server it handles around 50,000 requests per second. It gets it speed from its simplicity and from keeping the data in
 RAM. So it doesn’t access the disk to fetch information. (But it copies its data to disk frequently to prevent data
 loss.) People use Redis as a cache or for very fast lookups of simple data structures. And so
-[does rspamd](https://rspamd.com/doc/configuration/redis.html).
+[does rspamd](https://docs.rspamd.com/configuration/redis/).
 
-You installed the "redis-server" package earlier. And that’s all you needed to do. It started automatically and listens
-ton incoming connections on TCP port 6379 on localhost. In Rspamd the Redis backend is enabled by default. You just have
-to tell it the IP address of your Redis server. Add a file `/etc/rspamd/override.d/redis.conf` and insert:
-
-```
-servers = "127.0.0.1";
-```
-
-Restart rspamd and you are done.
-
-```
-systemctl restart rspamd
-```
-
-Feel free to use Redis for [other lookups](https://rspamd.com/doc/configuration/redis.html), too.
-
-## Training the spam detection
+## Enable auto-learning
 
 One of rspamd’s features is analyzing word patterns using probability theory. That functionality is contained in its
-"[statistical module](https://rspamd.com/doc/configuration/statistic.html)". (Yes, the name is pretty misleading.)
-Essentially you show rspamd lots of ham (good) and spam (bad) emails and its detection gets better over time.
+"[statistical module](https://rspamd.com/doc/configuration/statistic.html)". (Yes, the name is misleading.) Essentially
+you show rspamd lots of ham (good) and spam (bad) emails and its detection gets better over time.
 
-<Aside type="tip" title="Redis replaces SQLite">
-  Rspamd recommends (and defaults to) using Redis to store spam training data. That’s what we will use now.
-</Aside>
+You have installed the "redis-server" package earlier. It has started automatically and listens to incoming connections
+on TCP port 6379 on localhost. You just need to tell rspamd to use it:
 
-### (a) Auto-learning
+```sh
+# Create a config file to enable automatic spam training
+cat > /etc/rspamd/local.d/classifier-bayes.conf << 'EOF'
+# Store training data in the Redis database
+servers = "127.0.0.1:6379";
+backend = "redis";
 
-You can start with an empty training database. This is not as bad as it sounds. rspamd has way more functionality to
-determine if an email is ham or spam. Autolearning takes email that are likely ham or spam and uses them to train the
-spam filter. The [rspamd documentation](https://rspamd.com/doc/configuration/statistic.html) has further examples how to
-fine-tune auto learning. After a few hundred emails the training will contribute towards a better detection rate.
+# Enable automatic training
+autolearn = true;   # if rspamd is sure that an email is spam, it will be learned
+min_learns = 200;   # do not trust the data before at least 200 mails have been learned
+EOF
 
-If you want to use _autolearning_ just create a new file `/etc/rspamd/override.d/classifier-bayes.conf` and make it
-contain:
-
-```
-autolearn = [-5, 10];
-```
-
-That will train emails with a spam score of less than -5 as ham (good). And emails with a spam score of more than 10 as
-spam (unwanted). Feel free to chose other values.
-
-### (b) Migrating training data from previous mail server
-
-Have you used the old SQLite-based training file on the old server? Look for files like /var/lib/rspamd/\*.sqlite on the
-old server. In that case please follow these
-[simple instructions from the rspamd documentation](https://rspamd.com/doc/faq.html#which-backend-should-i-use-for-statistics)
-to convert them to data in Redis.
-
-If instead you have used Redis already then you just need to copy over the Redis database from the old server. Stop
-Redis on the new server. Copy over the /var/lib/redis/dump.rdb from the old server to the new server. Start Redis again.
-And restart rspamd. So on the new server run:
-
-```
-systemctl stop redis
-scp root@old-server:/var/lib/redis/dump.rdb /var/lib/redis
-systemctl start redis
+# Restart rspamd
 systemctl restart rspamd
 ```
 
-To check if that worked you can ask Rspamd using "rspamc stat" and look for…
+You can start with an empty training database. This is not as bad as it sounds. rspamd checks many properties of an
+email to determine if an email is ham or spam. Autolearning takes email that are likely ham or spam and uses them to
+train the spam filter. The [rspamd documentation](https://rspamd.com/doc/configuration/statistic.html) has further
+examples how to fine-tune auto learning. After a few hundred emails the training will contribute towards a better
+detection rate.
 
-```
-Statfile: BAYES_SPAM type: redis; length: 0; free blocks: 0;
-    total blocks: 0; free: 0.00%; learned: 21164; users: 214; languages: 0
-Statfile: BAYES_HAM type: redis; length: 0; free blocks: 0;
-    total blocks: 0; free: 0.00%; learned: 1411; users: 62; languages: 0
-```
+The defaults for auto-learning are:
 
-### (c) Training from your existing ham and spam emails
+- score &lt; -0.5 ➞ learn as ham/good
+- score &gt; 4.0 ➞ learn as spam/bad
 
-Have you been running a mail server with mailboxes in a _Malidir_ structure before but without rspamd? Then you probably
-have a good amount of ham and spam emails. Let’s use those to train rspamd. It is important to train both ham and spam
-emails. The *rspamc* command will allow you to feed entire directories/folders of emails to the learning process. An
-example to train spam:
-
-```
-rspamc learn\_spam /var/vmail/example.org/john/Maildir/.Junk/cur
-```
-
-And this would be an example to train ham from John’s inbox:
-
-```
-rspamc learn\_ham /var/vmail/example.org/john/Maildir/cur
-```
-
-Of course the quality of spam detection will depend on how good the source data is. If users put emails in their Junk
-folder which are not typical spam they will soil the detection.
-
-Check the number of emails you learned by running…
+See [rspamd's documentation](https://docs.rspamd.com/configuration/statistic/#statistics-configuration) if you want to
+fine-tune that.
 
 ```
 rspamc stat

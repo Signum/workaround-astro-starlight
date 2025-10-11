@@ -19,7 +19,7 @@ DEBIAN_FRONTEND=noninteractive \
     php-intl php-mbstring php-xml unzip certbot \
     roundcube-mysql roundcube roundcube-plugins swaks libnet-ssleay-perl \
     ufw mutt unattended-upgrades mariadb-server \
-    rspamd opendkim-tools bind9-dnsutils
+    rspamd redis-server opendkim-tools bind9-dnsutils
 ```
 
 While the server is downloading and installing the packages, let me give you a quick explanation of each package:
@@ -60,6 +60,9 @@ While the server is downloading and installing the packages, let me give you a q
 - **rspamd** \
   It reliably detects and blocks spam. Also handles adding DKIM signature to outgoing email to prevent spoofing your
   domains.
+- **redis-server** \
+  Rspamd requires a [Redis](https://redis.io/docs/latest/operate/oss_and_stack/) server as its storage of learned spam
+  emails.
 - **opendkim-tools** \
   Not strictly necessary. But a nice tool to verify DKIM signatures. You know, for science.
 - **bind9-dnsutils** \
