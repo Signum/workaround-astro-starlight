@@ -20,73 +20,37 @@ the [milter](http://www.postfix.org/MILTER_README.html) (=**m**ail f**ilter**)
 system, Postfix will send it to rspamd to have its content checked. rspamd runs a lot of checks on the email and
 computes a total score. The higher the score – the more likely it it spam.
 
-## How free is rspamd?
-
-rspamd is quite effective against spam thanks to its many kinds of checks that incoming emails run through. Several of
-these checks rely on services provided by the rspamd project. There are hosts like email.rspamd.com, uribl.rspamd.com
-and maps.rspamd.com that provide information used by the default rspamd installation. That data is not freely available
-and there are no public mirrors.
-
-You are only allowed to use their data under certain conditions described in rspamd’s
-[usage policy](https://docs.rspamd.com/other/usage_policy/). Spoiler: heavy or commercial usage will get you blocked.
-Your friends-and-family mail server with low volumes of email will probably be fine.
-
-rspamd is being packaged and shipped by the Debian project. However the rspamd principal developer builds and endorses
-his own packages and has a history of getting angry and offensive against anyone using the packages shipped by Debian. I
-find that attitude a bit suspicious and rather stay with the Debian packages that have been built by a process that I
-trust.
-
 ## Make Postfix use rspamd
 
-Let’s tell Postfix to send all incoming email through rspamd. Run these commands on the shell:
+Let’s tell Postfix to send all incoming email through rspamd:
 
 ```
 postconf smtpd_milters=inet:127.0.0.1:11332
-postconf non_smtpd_milters=inet:127.0.0.1:11332
-TODO: no… postconf milter_mail_macros="i {mail_addr} {client_addr} {client_name} {auth_authen}"
 ```
-
-Postfix will connect to rspamd that is listening to TCP port 11332 on localhost (127.0.0.1) and send the email through
-that connection. The _smtpd_milters_ setting defines that connection for emails that came into the system from the
-internet via the SMTP protocol. The *non_smtpd_milters* setting is optional – it makes Postfix have all emails checked
-that originate from the system itself. Finally the *milter_mail_macros* setting defines several variables that rspamd
-expects for better spam detection. rspamd then runs its checks and tells Postfix whether the email should pass or get
-rejected.
-
-## Testing spam detection
 
 For testing we can use a sample spam email that comes with SpamAssassin. It is called GTUBE (Generic Test
 for Unsolicited Bulk Email). It contains a certain artificial pattern that is recognized as spam by SpamAssassin. Do you
 know EICAR.COM to test virus scanners? This is the same thing for spam.
 
-I suggest that you download the file on the server and send it to John:
+Get the GTUBE file, send it to John and let's see what happens:
 
 ```sh
 wget http://spamassassin.apache.org/gtube/gtube.txt
 sendmail john@example.org < gtube.txt
+journalctl -fu postfix
 ```
 
-Let's see what happened. Check your mail log:
-
-```sh
-journalctl -eu postfix
-```
-
-You will find something like this at the end:
+You will find something like this at the end of the log file:
 
 ```
-postfix/pickup[1384784]: 2B72320126: uid=0 from=<root>
 postfix/cleanup[1386519]: 2B72320126: message-id=<GTUBE1.1010101@example.net>
 postfix/cleanup[1386519]: 2B72320126: milter-reject: END-OF-MESSAGE from localhost[127.0.0.1]: 5.7.1 Gtube pattern; from=<root@mailserver> to=<john@example.org>
 postfix/cleanup[1386519]: 2B72320126: to=<john@example.org>, relay=none, delay=0.16, delays=0.16/0/0/0, dsn=5.7.1, status=bounced (Gtube pattern)
-postfix/cleanup[1386525]: 4F0B720128: message-id=<20251009174553.4F0B720128@mailserver>
-postfix/bounce[1386524]: 2B72320126: sender non-delivery notification: 4F0B720128
-postfix/cleanup[1386519]: 2B72320126: removed (discarded)
 ```
 
-**milter-reject** tells that the milter (rspamd) recommended to Postfix to reject the email. It gave the reason
-`5.7.1 Gtube pattern`. In mail communication you often find these three digit codes. They are defined in
-[RFC 3463](https://tools.ietf.org/html/rfc3463). The first digit is most important:
+**milter-reject** tells that the rspamd recommended to reject the email. It gave the reason `5.7.1 Gtube pattern`.
+SMTP/LMTP always uses such three digit codes. They are defined in [RFC 3463](https://tools.ietf.org/html/rfc3463). The
+first digit is most important:
 
 - 2 = Success
 - 4 = Temporary failure (come back later)
@@ -97,20 +61,19 @@ that the 7 stands for an issue regarding the security policy. So it’s not a te
 security-relevant component on the system has rejected the email. That’s what rspamd did. It even told us the reason:
 `Gtube pattern`. So you see that rspamd knows about the Gtube spam test pattern and reacts as expected.
 
-Accordingly you won’t see this email in John’s inbox. This is a great advantage of using milters. Imagine Postfix
-receiving a spam email and confirm its reception. What should it do when it finds out that it’s unwanted email?
-According to the SMTP protocol it must not throw away any emails. Would you create a bounce message telling the sender
-that you did not accept the email? That would be a bad idea because the sender address in spam emails is very likely
-forged. You would send the bounce to an innocent person thus creating so called *backscatter* and make it even worse. So
-the better approach is to check the email while the sending server is still connected to your Postfix. This allows
-Postfix to reject the email with a 5.x.x error code and let the other side figure out what to do.
+That email will not be delivered to John. Instead Postfix will reject it at the doorstep – while it is still in the SMTP
+communication with the sending server. It just hung up the phone and now it's the sending server's problem to deal with.
+
+It is important to either reject an email right away or to deliver it to a user. Never accept an email and later decide
+to complain about it to the alleged sender. Trust me: the sender you see on a spam email is never the bad guy who sent
+it. You would complain to the wrong person which is called
+[backscatter](<https://en.wikipedia.org/wiki/Backscatter_(email)>).
 
 ## Score metrics
 
 rspamd will however not reject all spam email. It computes a score that tells how likely a certain email is spam. You
-can tell it which scores you would accept, flag as spam or make the incoming email get rejected. Rspamd has a large
-ruleset that checks incoming emails in various ways and adds to the score. Take a look at the `/etc/rspamd/actions.conf`
-file:
+can tell it which scores you would accept, flag as spam or make the incoming email get rejected. Rspamd checks incoming
+emails in various ways. Take a look at the `/etc/rspamd/actions.conf` file:
 
 ```
 actions {
@@ -123,13 +86,13 @@ actions {
 These are the default actions. If rspamd computes a score of at least 15 then the email will get rejected at the
 doorstep just like the _Gtube pattern_ in the previous test. Any other score above 6 will add a line "X-Spam: Yes" so
 that your mail software can detect them and maybe file the email to a different folder. And any other score above 4 will
-trigger _greylisting_ which is a mechanism that temporarily rejects the email with a 4.x.x code and waits if the sending
-server will try again. After a waiting time of a few minutes greylisting will accept the email. The idea is to reject
-email from systems that do not have a sending queue. Malware like on infected Wind\*ws computers used to try sending an
-email just once which triggered greylisting and successfully rejected the spammer. But even malware programmers have
-learned and may try again after a few minutes thus circumventing greylisting. Your mileage may vary. The problem with
-greylisting is that the recipient has to wait a couple of minutes for the email to be delivered which is often bothering
-the users.
+trigger [greylisting](<https://en.wikipedia.org/wiki/Greylisting_(email)>) which is a mechanism that temporarily rejects
+the email with a 4.x.x code and waits if the sending server will try again. After a waiting time of a few minutes
+greylisting will accept the email. The idea is to reject email from systems that do not have a sending queue. Malware
+like on infected Wind\*ws computers used to try sending an email just once which triggered greylisting and successfully
+rejected the spammer. But even malware programmers have learned and may try again after a few minutes thus circumventing
+greylisting. Your mileage may vary. The problem with greylisting is that the recipient has to wait a couple of minutes
+for the email to be delivered which may be bothering the users.
 
 ## X-Spam header
 
@@ -203,17 +166,16 @@ the score but show you what rspamd has found. But if you consider certain criter
 
 ## Sending spam to the Junk folder
 
-Your users will not realize that their spam emails have an added "X-Spam: Yes" header. It is not actively shown in their
-mail client. Nor does it move the email out of the inbox into their spam folder. Such emails just appear like normal in
-their inboxes. So let’s aid them by automatically moving spam to a separate _Junk_ folder beneath their inbox. Dovecot
-has support for [Sieve](<https://en.wikipedia.org/wiki/Sieve_(mail_filtering_language)>) filtering rules that are simple
-if-then scripts that run on the server automatically whenever an email comes in.
+Your users will not realize that their spam emails have an added `X-Spam: Yes` header. It is not shown in their mail
+client. Nor does it move the email out of the inbox into their spam folder. Such emails just appear in their inbox. So
+let’s be nice and move spam emails to the user's _Junk_ folder automatically. Dovecot has support
+for [Sieve](<https://en.wikipedia.org/wiki/Sieve_(mail_filtering_language)>) filtering rules that are if-then scripts
+that get run whenever an email arrives.
 
-John could create a new Sieve filter (e.g. using the Roundcube webmail interface) for himself that would save any emails
-to his "Junk" folder if the header line "X-Spam: Yes" was found. This rule would be useful for all your users though so
-let’s find a more general solution.
+John could create such a Sieve script for himself (using the Roundcube webmail interface). But let's find a solution
+that applies to all your users.
 
-Dovecot supports _global_ Sieve filters that apply to all users. Let's do some preparation:
+Let's do some magic:
 
 ```sh
 # Create a new config file for spam handling
@@ -281,20 +243,13 @@ directly into Dovecot using the LMTP socket:
 
 ```sh
 swaks --to john@example.org --header-X-Spam "yes" --socket /var/spool/postfix/private/dovecot-lmtp --protocol LMTP
-```
-
-Take a look at Dovecot's log:
-
-```sh
-journalctl -eu dovecot
+journalctl -fu dovecot
 ```
 
 It should read:
 
 ```
-mailserver dovecot[1434406]: lmtp(1436598): Connect from local
-mailserver dovecot[1434406]: lmtp(john@example.org)<1436598><kh4lDNl26Wi26xUA5ANL0g>: sieve: msgid=<20251010211257.1436597@mailserver>: fileinto action: stored mail into mailbox 'Junk'
-mailserver dovecot[1434406]: lmtp(1436598): Disconnect from local: Logged out (state=READY)
+dovecot[1434406]: lmtp(john@example.org)<1436598><kh4lDNl26Wi26xUA5ANL0g>: sieve: msgid=<20251010211257.1436597@mailserver>: fileinto action: stored mail into mailbox 'Junk'
 ```
 
 <details class="collapsible">
@@ -319,7 +274,7 @@ journalctl -eu dovecot
 
 </details>
 
-The alleged spam email has been moved to the _Junk_ folder. Just like we wanted.
+The alleged spam email has been moved to the _Junk_ folder just like we wanted.
 
 ## About Redis
 
