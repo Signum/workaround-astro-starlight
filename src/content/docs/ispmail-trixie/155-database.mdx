@@ -101,7 +101,8 @@ USE mailserver;
 CREATE TABLE IF NOT EXISTS `virtual_domains` (
   `id` int(11) NOT NULL auto_increment,
   `name` varchar(50) NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY (`name`)
 );
 
 CREATE TABLE IF NOT EXISTS `virtual_aliases` (
