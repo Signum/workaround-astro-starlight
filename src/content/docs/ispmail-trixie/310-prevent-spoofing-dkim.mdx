@@ -8,6 +8,13 @@ sidebar:
 
 import { Aside } from "@astrojs/starlight/components";
 
+TODO:
+
+```
+postconf smtpd_milters=inet:127.0.0.1:11332
+postconf non_smtpd_milters=inet:127.0.0.1:11332
+```
+
 Email sender spoofing means pretending to be in control of someone else’s email address. This is a common problem with
 [phishing](https://en.wikipedia.org/wiki/Phishing). Often scammers send emails with a sender address of
 something@paypal.com and hope that the recipient falls for it and trusts them. SMTP does not care which sender address
