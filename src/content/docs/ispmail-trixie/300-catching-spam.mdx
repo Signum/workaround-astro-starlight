@@ -12,13 +12,12 @@ import { Aside } from "@astrojs/starlight/components";
   This feature is completely optional. Just skip this page if you don't care about filtering out spam emails.
 </Aside>
 
-You have come a long way in this guide and your mail server is already fully functional. Now it’s time to deal with the
-dark side: spam. And there will be lots of it. So we need to detect spam emails and filter them out. I found that
-[rspamd](https://rspamd.com/) is well-performing choice for that purpose both in speed and detection. rspamd keeps a
-permanent process running on your mail server that listens to connections from Postfix using
-the [milter](http://www.postfix.org/MILTER_README.html) (=**m**ail f**ilter**) protocol. Every time an email enters your
-system, Postfix will send it to rspamd to have its content checked. rspamd runs a lot of checks on the email and
-computes a total score. The higher the score – the more likely it it spam.
+You have come a long way in this guide and your mail server is already fully functional. Now it’s time to deal with
+filtering out incoming spam emails. I found that [rspamd](https://rspamd.com/) is well-performing choice for that
+purpose both in speed and detection. rspamd keeps a permanent process running on your mail server that listens to
+connections from Postfix using the [milter](http://www.postfix.org/MILTER_README.html) (=**m**ail f**ilter**) protocol.
+Every time an email enters your system, Postfix will send it to rspamd to have its content checked. rspamd runs a lot of
+checks on the email and computes a total score. The higher the score – the more likely it it spam.
 
 ## Make Postfix use rspamd
 
@@ -173,13 +172,17 @@ for [Sieve](<https://en.wikipedia.org/wiki/Sieve_(mail_filtering_language)>) fi
 that get run whenever an email arrives.
 
 John could create such a Sieve script for himself (using the Roundcube webmail interface). But let's find a solution
-that applies to all your users.
+that applies to all your users. Create a new config file (`/etc/dovecot/conf.d/99-ispmail-sieve.conf`) that tells
+Dovecot:
 
-Let's do some magic:
+- whenever an email is delivered to our users, run an additional Sieve script
+  (`/etc/dovecot/sieve/spam-to-junk-folder.sieve`)
+- the Sieve functionality is enabled during LMTP (when an email is passed on from Postfix to Dovecot)
+- the user gets a _Junk_ folder created in his mailbox and is subscribed to it so that it appears in their mail program
 
 ```sh
 # Create a new config file for spam handling
-cat > /etc/dovecot/conf.d/99-ispmail-sieve.conf << 'EOF'
+cat > /etc/dovecot/conf.d/99-ispmail-sieve-movetojunk.conf << 'EOF'
 sieve_script spam-to-junk-folder {
   driver = file
   type = after
@@ -189,14 +192,14 @@ sieve_script spam-to-junk-folder {
 # Uncomment this line to get more verbose logs on sieve handling
 # log_debug=category=sieve
 
-# Enable Sieve rules when Postfix sends an email to Dovecot over LMTP
+# Enable the execution of Sieve rules when Postfix sends an email to Dovecot over LMTP
 protocol lmtp {
   mail_plugins {
     sieve = yes
   }
 }
 
-# Make sure that the user has a Junk folder and is subscribed to it
+# Make sure that every user has a Junk folder and is subscribed to it
 namespace inbox {
   mailbox Junk {
     special_use = \Junk
@@ -207,7 +210,13 @@ EOF
 
 # Restart Dovecot
 systemctl reload dovecot
+```
 
+Now we need to create that Sieve script (`/etc/dovecot/sieve/spam-to-junk-folder.sieve`) that is run on each delivery.
+Its job is to check if the `X-Spam: yes` header is present. If it is, the email is filed into the user's `Junk` folder.
+Dovecot can only understand _compiled_ Sieve files so we call `sievec` to make it machine-readable.
+
+```sh
 # Create the directory for Sieve files
 mkdir -p /etc/dovecot/sieve
 
@@ -224,19 +233,6 @@ EOF
 # Compile the .sieve file into a .svbin file
 sievec /etc/dovecot/sieve/spam-to-junk-folder.sieve
 ```
-
-That was quite a lot. Let's quickly break it down:
-
-1. You created a new config file at `/etc/dovecot/conf.d/99-ispmail-sieve.conf` to tell Dovecot that…
-   - before an email is delivered to the user, the `/etc/dovecot/sieve/spam-to-junk-folder.sieve` Sieve script is run
-   - the Sieve functionality is enabled during LMTP (when an email is sent from Postfix to Dovecot)
-   - the user get a _Junk_ folder created in his mailbox and is subscribed to it so that it appears in their mail
-     program
-2. The `/etc/dovecot/sieve` directory is created where we will put all Sieve-related files.
-3. A Sieve script is put into `/etc/dovecot/sieve/spam-to-junk-folder.sieve` that will look for `X-Spam: yes` and then
-   move the mail into the user's _Junk_ folder. The `require` line enables the `fileinto` command that would otherwise
-   not be available.
-4. The Sieve script is compiled into a binary file `spam-to-junk-folder.svbin` that Dovecot can work with.
 
 Let's give it a test using Swaks. This time we impersonate Postfix and inject an email with an `X-Spam: yes` header
 directly into Dovecot using the LMTP socket:
@@ -276,10 +272,16 @@ journalctl -eu dovecot
 
 The alleged spam email has been moved to the _Junk_ folder just like we wanted.
 
-## About Redis
+## Enable auto-learning
 
-Many features in Rspamd use [Redis](https://redis.io/) to persist their data. Let me give you a quick explanation what
-Redis is.
+One of rspamd’s features is analyzing word patterns using probability theory. That functionality is contained in its
+[statistical module](https://rspamd.com/doc/configuration/statistic.html). (Yes, the name is misleading.) Essentially
+you show rspamd lots of **ham** (good) and **spam** (bad) emails and its detection gets better over time.
+
+Rspamd stores that training data (among other information) in a local [Redis](https://redis.io/) database.
+
+<details class="collapsible">
+  <summary>Click here to learn more about Redis…</summary>
 
 Redis is a kind of database system. It is way more limited than a traditional SQL database because it just stores keys
 and values. There aren’t several fields/columns like in SQL. But it is lightning fast the way it works. On my aged
@@ -288,14 +290,10 @@ RAM. So it doesn’t access the disk to fetch information. (But it copies its da
 loss.) People use Redis as a cache or for very fast lookups of simple data structures. And so
 [does rspamd](https://docs.rspamd.com/configuration/redis/).
 
-## Enable auto-learning
+</details>
 
-One of rspamd’s features is analyzing word patterns using probability theory. That functionality is contained in its
-"[statistical module](https://rspamd.com/doc/configuration/statistic.html)". (Yes, the name is misleading.) Essentially
-you show rspamd lots of ham (good) and spam (bad) emails and its detection gets better over time.
-
-You have installed the "redis-server" package earlier. It has started automatically and listens to incoming connections
-on TCP port 6379 on localhost. You just need to tell rspamd to use it:
+You have already installed the "redis-server" package earlier. It has started automatically and listens to incoming
+connections on TCP port 6379 on localhost. You just need to tell rspamd to use it:
 
 ```sh
 # Create a config file to enable automatic spam training
@@ -313,11 +311,11 @@ EOF
 systemctl restart rspamd
 ```
 
-You can start with an empty training database. This is not as bad as it sounds. rspamd checks many properties of an
-email to determine if an email is ham or spam. Autolearning takes email that are likely ham or spam and uses them to
-train the spam filter. The [rspamd documentation](https://rspamd.com/doc/configuration/statistic.html) has further
-examples how to fine-tune auto learning. After a few hundred emails the training will contribute towards a better
-detection rate.
+You will start with an empty training database. But that is not as bad as it sounds, because rspamd checks many
+properties of an email to determine if an email is ham or spam. If there is enough evidence that an email is likely ham
+or spam, then autolearning adds it to its training database.
+The [rspamd documentation](https://rspamd.com/doc/configuration/statistic.html) has further examples how to fine-tune
+auto learning. After a few hundred emails the training will contribute towards a better detection rate.
 
 The defaults for auto-learning are:
 
@@ -346,22 +344,21 @@ Statfile: BAYES_HAM type: redis; length: 0; free blocks: 0;
     users: 62; languages: 0
 ```
 
-This is what you usually start with. The more emails you feed into the training process the better the detection rate
-will be. Some emails however may not be long enough or too similar to previously trained emails. So don’t worry if you
-are training 1000 emails but just get a count of 500 emails here.
+(Don't worry about the `length: 0`. That seems to be a [bug](https://github.com/rspamd/rspamd/issues/3105) that has been
+ignored since 2019. Checking the actual contents of the Redis database reveals that there is actually data stored.)
 
 ## Per-user spam training
 
-rspamd allows you to train the spam detection per user. It would not keep a global training database that applies to all
-users. Instead each user gets their own training.
+Usually the training database applies to all incoming emails for **all** users. But you split it up so that each
+recipient gets their own training.
 
-Advantage: users work differently. Some have subscribed to a sales newsletter and now believe that marking it as spam
-gets them unsubscribed. Yes, that’s stupid but can thoroughly confuse the spam detection. Also you might be very
-interested in viagr\* product information while others do not.
+**Advantage:** users work differently. Some have subscribed to a sales newsletter and now believe that marking it as
+spam gets them unsubscribed. Yes, that’s stupid but can thoroughly confuse the spam detection. Also you might not be
+very interested in "blue pills" while others are.
 
-Disadvantage: training still requires many ham and spam mails before it has any effect. So unless a user gets 200
-samples of good and evil emails the spam detection cannot work. Many users will not get that many emails so due to the
-lack of spam training the detection will not be improved.
+**Disadvantage:** training still requires many ham and spam mails before it has any effect. So unless a user gets 200
+samples of good and bad emails, spam detection cannot work. Many users will not get that many emails so due to the lack
+of spam training the detection will not be improved. For a friends-and-family server I would suggest not to use it.
 
 If you decide you want to use per-user spam training then add/edit the file `/etc/rspamd/local.d/classifier-bayes.conf`
 and insert:
@@ -370,123 +367,87 @@ and insert:
 users_enabled = true;
 ```
 
-## Autoexpunge
-
-Andi Olsen pointed out that Dovecot has introduced a [feature](https://wiki.dovecot.org/MailboxSettings) to
-automatically delete emails in a folder that reach a certain age. This is especially useful for the "Trash" and "Junk"
-folders. To enable this feature just edit the `/etc/dovecot/conf.d/15-mailboxes.conf` file and add the *autoexpunge*
-parameter where desired. Example:
-
-```
-mailbox Junk {
-  special_use = \Junk
-  auto = subscribe
-  autoexpunge = 30d
-}
-mailbox Trash {
-  special_use = \Trash
-  auto = subscribe
-  autoexpunge = 30d
-}
-```
-
-The "auto = subscribe" makes sure that the "Junk" and "Trash" folders are automatically created for every user.
-Otherwise spam emails cannot be moved to the "Junk" folder later.
-
 ## Learning from user actions
 
-Now we are getting to something really cool. Let’s tell Dovecot that moving emails into the Junk folder teaches rspamd
-instantly that the email is spam. And train an email as ham if it is moved out of the Junk folder. We will add triggers
-(actually "_sieve scripts_") to the action of moving emails via IMAP.
+Now we are getting to something really cool. Imagine that you receive a spam email into your inbox that rspamd did not
+detect properly. Sure, you can move it to your _Junk_ folder. But that will not improve the detection rate for that kind
+of spam. But we can fix that.
 
-The currently recommended way is to use the
-"[IMAPSieve](https://doc.dovecot.org/2.3/settings/pigeonhole-ext/imapsieve/)" plugin instead. There is nothing to
-install – it comes with the Dovecot packages. We just need to configure it.
+Let’s tell Dovecot that moving emails into the Junk folder teaches rspamd instantly that the email is **spam**. And if
+the email is moved out of the _Junk_ folder, then learn it as **ham**. That can be done using another _sieve_ script.
+Sieve script not only apply when an email is delivered. Thanks to Dovecot's
+[IMAPSieve](https://doc.dovecot.org/2.4.1/core/plugins/imap_sieve.html#imapsieve-plugin-imap-sieve/) plugin, such
+scripts can also be triggered if a user moves a mail between folders.
 
-First order of business is enabling the IMAPSieve plugin for the IMAP protocol/service in Dovecot. Edit the
-`/etc/dovecot/conf.d/20-imap.conf` file and look for the line reading "mail_plugins". Turn it into:
+Add another new configuration file to enable and configure that plugin:
 
+```sh
+cat > /etc/dovecot/conf.d/99-ispmail-imapsieve.conf << 'EOF'
+# Enable the imap_sieve plugin
+protocol imap {
+  mail_plugins {
+    imap_sieve = yes
+  }
+}
+
+# Allow the use of the pipe plugin to send mails to shell scripts
+sieve_plugins {
+  sieve_extprograms = yes
+  sieve_imapsieve = yes
+}
+
+sieve_global_extensions {
+  vnd.dovecot.pipe = yes
+}
+
+# Moved into Junk? -> Learn as spam.
+mailbox Junk {
+  sieve_script spam {
+    type = before
+    cause = copy
+    path = /etc/dovecot/sieve/learn-spam.sieve
+  }
+}
+
+# Moved out of Junk? -> Learn as ham.
+imapsieve_from Junk {
+  sieve_script ham {
+    type = before
+    cause = copy
+    path = /etc/dovecot/sieve/learn-ham.sieve
+  }
+}
+EOF
+
+systemctl reload dovecot
 ```
-mail_plugins = $mail_plugins quota imap_sieve
-```
 
-We also need to edit Dovecot’s Sieve configuration to enable two plugins that are required for our task. Sieve is a
-scripting language that automates things in conjunction with emails and folders. Edit the
-file `/etc/dovecot/conf.d/90-sieve.conf` and put these lines into the `plugin {…}` section:
+The first rule tells Dovecot to run a Sieve script at `/etc/dovecot/sieve/learn-spam.sieve` whenever an email is moved
+**into** a user’s "Junk" folder. We will create that Sieve script in a minute.
 
-```
-# From elsewhere to Junk folder
-imapsieve_mailbox1_name = Junk
-imapsieve_mailbox1_causes = COPY
-imapsieve_mailbox1_before = file:/etc/dovecot/sieve/learn-spam.sieve
-
-# From Junk folder to elsewhere
-imapsieve_mailbox2_name = *
-imapsieve_mailbox2_from = Junk
-imapsieve_mailbox2_causes = COPY
-imapsieve_mailbox2_before = file:/etc/dovecot/sieve/learn-ham.sieve
-
-sieve_pipe_bin_dir = /etc/dovecot/sieve
-sieve_global_extensions = +vnd.dovecot.pipe
-sieve_plugins = sieve_imapsieve sieve_extprograms
-```
-
-The first rule tells Dovecot to run the Sieve rules as defined in the `/etc/dovecot/sieve/learn-spam.sieve` file
-whenever an email is moved into a user’s "Junk" folder. We will create that Sieve script in a minute.
-
-The second rule sets the other way. Whenever an email is moved from the "Junk" folder to any (\*) folder then
+The second rule sets the other way. Whenever an email is moved **out** of the "Junk" folder to any other folder, then
 the `/etc/dovecot/sieve/learn-ham.sieve` Sieve script is called.
 
-The "sieve_pipe_bin_dir" setting defines where executable scripts are allowed to reside. We will put our simple learning
-scripts there. And finally the "sieve_global_extensions" setting enables the pipe plugin that allows sending email to
-external commands.
+Let's create both scripts:
 
-Next up let’s create the Sieve scripts that we told Dovecot about. Create a new directory /etc/dovecot/sieve to put our
-new files in:
-
-```
-mkdir /etc/dovecot/sieve
-```
-
-Then create the file `/etc/dovecot/sieve/learn-spam.sieve` and let it contain:
-
-```
+```sh
+# Create spam learning script
+cat > /etc/dovecot/sieve/learn-spam.sieve << 'EOF'
 require ["vnd.dovecot.pipe", "copy", "imapsieve"];
 pipe :copy "rspamd-learn-spam.sh";
-```
+EOF
 
-Let’s do the same for `/etc/dovecot/sieve/learn-ham.sieve`
-
-```
+# Create ham learning script
+cat > /etc/dovecot/sieve/learn-ham.sieve << 'EOF'
 require ["vnd.dovecot.pipe", "copy", "imapsieve", "variables"];
-if string "${mailbox}" "Trash" {
-  stop;
-}
 pipe :copy "rspamd-learn-ham.sh";
-```
+EOF
 
-The above Sieve script avoids training an email as _ham_ if the user moves it to the _Trash_ folder. After all if you
-clear your _Junk_ folder you do not want to train your spam as regular emails.
-
-Restart Dovecot:
-
-```
-systemctl restart dovecot
-```
-
-These two scripts need to be compiled – that is turning them into machine-readable code:
-
-```
+# Compile both script into machine-readable format
 sievec /etc/dovecot/sieve/learn-spam.sieve
 sievec /etc/dovecot/sieve/learn-ham.sieve
-```
 
-This creates two new files "learn-ham.svbin" and "learn-spam.svbin" that look like gibberish inside but are now in a
-format that Dovecot’s Sieve plugin can understand.
-
-Let’s fix the permissions of these files, too, while we are at it:
-
-```
+# Fix permissions
 chmod u=rw,go= /etc/dovecot/sieve/learn-{spam,ham}.{sieve,svbin}
 chown vmail:vmail /etc/dovecot/sieve/learn-{spam,ham}.{sieve,svbin}
 ```
@@ -593,6 +554,29 @@ found in the rspamd.log, too:
 ```
 <40985d>; task; rspamd_task_write_log: id: <undef>, qid: <**95CE05A00547**>,  ip: 12.13.51.194, from: <…>, (default: F (no action):  [3.40/15.00]  [MISSING_MID(2.50){},MISSING_DATE(1.00){},MIME_GOOD(-0.10){text/plain;},ARC_NA(0.00){},ASN(0.00){asn:8220,  ipnet:212.123.192.0/18,  country:GB;},FROM_EQ_ENVFROM(0.00){},FROM_NO_DN(0.00){},RCPT_COUNT_ONE(0.00){1;},RCVD_COUNT_ZERO(0.00){0;},RCVD_TLS_ALL(0.00){},TO_DN_NONE(0.00){},TO_DOM_EQ_FROM_DOM(0.00){},TO_MATCH_ENVRCPT_ALL(0.00){}]),  len: 181, time: 16.000ms real, 6.385ms virtual, dns req: 0, digest:  <69b289a82827c11f759837c033cd800a>, rcpts: <…>, mime_rcpt:  <…>
 ```
+
+## Autoexpunge
+
+Andi Olsen pointed out that Dovecot has introduced a [feature](https://wiki.dovecot.org/MailboxSettings) to
+automatically delete emails in a folder that reach a certain age. This is especially useful for the "Trash" and "Junk"
+folders. To enable this feature just edit the `/etc/dovecot/conf.d/15-mailboxes.conf` file and add the *autoexpunge*
+parameter where desired. Example:
+
+```
+mailbox Junk {
+  special_use = \Junk
+  auto = subscribe
+  autoexpunge = 30d
+}
+mailbox Trash {
+  special_use = \Trash
+  auto = subscribe
+  autoexpunge = 30d
+}
+```
+
+The "auto = subscribe" makes sure that the "Junk" and "Trash" folders are automatically created for every user.
+Otherwise spam emails cannot be moved to the "Junk" folder later.
 
 ## The web interface
 
