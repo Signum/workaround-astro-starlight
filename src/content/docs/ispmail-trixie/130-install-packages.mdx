@@ -19,7 +19,7 @@ DEBIAN_FRONTEND=noninteractive \
     php-intl php-mbstring php-xml unzip certbot \
     roundcube-mysql roundcube roundcube-plugins swaks libnet-ssleay-perl \
     ufw mutt unattended-upgrades mariadb-server \
-    rspamd redis-server opendkim-tools bind9-dnsutils
+    rspamd redis-server opendkim-tools bind9-dnsutils pwgen
 ```
 
 While the server is downloading and installing the packages, let me give you a quick explanation of each package:
@@ -67,3 +67,5 @@ While the server is downloading and installing the packages, let me give you a q
   Not strictly necessary. But a nice tool to verify DKIM signatures. You know, for science.
 - **bind9-dnsutils** \
   Provides the infamous `dig` command for an easy way to do DNS lookups.
+- **pwgen** \
+  A password generator.
