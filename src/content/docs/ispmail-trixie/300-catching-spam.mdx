@@ -68,7 +68,7 @@ to complain about it to the alleged sender. Trust me: the sender you see on a sp
 it. You would complain to the wrong person which is called
 [backscatter](<https://en.wikipedia.org/wiki/Backscatter_(email)>).
 
-## Score metrics
+## Spam scores
 
 rspamd will however not reject all spam email. It computes a score that tells how likely a certain email is spam. You
 can tell it which scores you would accept, flag as spam or make the incoming email get rejected. Rspamd checks incoming
@@ -189,9 +189,6 @@ sieve_script spam-to-junk-folder {
   path = /etc/dovecot/sieve/spam-to-junk-folder.sieve
 }
 
-# Uncomment this line to get more verbose logs on sieve handling
-# log_debug=category=sieve
-
 # Enable the execution of Sieve rules when Postfix sends an email to Dovecot over LMTP
 protocol lmtp {
   mail_plugins {
@@ -214,7 +211,6 @@ systemctl reload dovecot
 
 Now we need to create that Sieve script (`/etc/dovecot/sieve/spam-to-junk-folder.sieve`) that is run on each delivery.
 Its job is to check if the `X-Spam: yes` header is present. If it is, the email is filed into the user's `Junk` folder.
-Dovecot can only understand _compiled_ Sieve files so we call `sievec` to make it machine-readable.
 
 ```sh
 # Create the directory for Sieve files
@@ -229,9 +225,6 @@ if header :contains "X-Spam" "Yes" {
  stop;
 }
 EOF
-
-# Compile the .sieve file into a .svbin file
-sievec /etc/dovecot/sieve/spam-to-junk-folder.sieve
 ```
 
 Let's give it a test using Swaks. This time we impersonate Postfix and inject an email with an `X-Spam: yes` header
@@ -272,7 +265,7 @@ journalctl -eu dovecot
 
 The alleged spam email has been moved to the _Junk_ folder just like we wanted.
 
-## Enable auto-learning
+## Automatic spam training
 
 One of rspamd’s features is analyzing word patterns using probability theory. That functionality is contained in its
 [statistical module](https://rspamd.com/doc/configuration/statistic.html). (Yes, the name is misleading.) Essentially
@@ -325,7 +318,7 @@ The defaults for auto-learning are:
 See [rspamd's documentation](https://docs.rspamd.com/configuration/statistic/#statistics-configuration) if you want to
 fine-tune that.
 
-```
+```sh
 rspamc stat
 ```
 
@@ -369,17 +362,32 @@ users_enabled = true;
 
 ## Learning from user actions
 
-Now we are getting to something really cool. Imagine that you receive a spam email into your inbox that rspamd did not
-detect properly. Sure, you can move it to your _Junk_ folder. But that will not improve the detection rate for that kind
-of spam. But we can fix that.
+Now we are getting to something really cool. Imagine you receive a spam email in your inbox that Rspamd didn’t catch.
+You could just move it to your Junk folder — but that wouldn’t help Rspamd learn to recognize that kind of spam in the
+future. Luckily, we can change that.
 
-Let’s tell Dovecot that moving emails into the Junk folder teaches rspamd instantly that the email is **spam**. And if
-the email is moved out of the _Junk_ folder, then learn it as **ham**. That can be done using another _sieve_ script.
-Sieve script not only apply when an email is delivered. Thanks to Dovecot's
+Let’s tell Dovecot that moving emails **into** the Junk folder teaches rspamd instantly that the email is **spam**. And
+if the email is moved **out of** the Junk folder, then learn it as **ham**. That can be done using another _sieve_
+script. Sieve scripts not only apply when an email is delivered. Thanks to Dovecot's
 [IMAPSieve](https://doc.dovecot.org/2.4.1/core/plugins/imap_sieve.html#imapsieve-plugin-imap-sieve/) plugin, such
 scripts can also be triggered if a user moves a mail between folders.
 
-Add another new configuration file to enable and configure that plugin:
+The setup requires three parts:
+
+1. Tap into the IMAP connection to know when an email is moved out of or into the Junk folder.
+2. Create Sieve scripts that call Shell scripts.
+3. Create Shell scripts that actually call `rspamd learn_ham` or `rspamd learn_spam`.
+
+Or as a diagram:
+
+<img
+  alt="Diagram showing how to learn ham/spam when moving mails"
+  src="/imapsieve/imapsieve-learn-spam.svg"
+  width="100%"
+/>
+
+Create a new Dovecot configuration file (`99-ispmail-imapsieve.conf`) to enable the required functionality and add
+triggers on the Junk folder:
 
 ```sh
 cat > /etc/dovecot/conf.d/99-ispmail-imapsieve.conf << 'EOF'
@@ -399,6 +407,9 @@ sieve_plugins {
 sieve_global_extensions {
   vnd.dovecot.pipe = yes
 }
+
+# Where to look for Sieve scripts that use the Pipe functionality
+sieve_pipe_bin_dir = /etc/dovecot/sieve
 
 # Moved into Junk? -> Learn as spam.
 mailbox Junk {
@@ -428,7 +439,7 @@ The first rule tells Dovecot to run a Sieve script at `/etc/dovecot/sieve/learn
 The second rule sets the other way. Whenever an email is moved **out** of the "Junk" folder to any other folder, then
 the `/etc/dovecot/sieve/learn-ham.sieve` Sieve script is called.
 
-Let's create both scripts:
+Let's create both Sieve scripts:
 
 ```sh
 # Create spam learning script
@@ -443,7 +454,7 @@ require ["vnd.dovecot.pipe", "copy", "imapsieve", "variables"];
 pipe :copy "rspamd-learn-ham.sh";
 EOF
 
-# Compile both script into machine-readable format
+# Compile the Sieve scripts
 sievec /etc/dovecot/sieve/learn-spam.sieve
 sievec /etc/dovecot/sieve/learn-ham.sieve
 
@@ -452,97 +463,67 @@ chmod u=rw,go= /etc/dovecot/sieve/learn-{spam,ham}.{sieve,svbin}
 chown vmail:vmail /etc/dovecot/sieve/learn-{spam,ham}.{sieve,svbin}
 ```
 
-And the last step is to create the simple shell scripts that do the actual spam/ham training. The first file is
-`/etc/dovecot/sieve/rspamd-learn-spam.sh` which contains:
+By the way: the `sievec` comment compiles the `*.sieve` file into `*.svbin` files that Dovecot can work with. If you are
+not doing this step, Dovecot will do that during runtime. However then you need to make sure that Dovecot has proper
+write permissions to the target directory. The `sievec` command is also useful because it scans a `*.sieve` file for
+errors. So if your changes do not seem to work it might be worth compiling them and looking for errors.
 
-```
+And the last step is to create the simple shell scripts that do the actual spam/ham training:
+
+```sh
+# Create the shell script for learning spam
+cat > /etc/dovecot/sieve/rspamd-learn-spam.sh << 'EOF'
 #!/bin/sh
+# Receives an email from Dovecot's Sieve script and pipe it into rspamc
 exec /usr/bin/rspamc learn_spam
-```
+EOF
 
-That looks simple, doesn’t it? Nothing more is actually needed. The spam email is piped to this script and rspamd learns
-it as a spam email and adjusts its spam detection database accordingly.
-
-The second script teaches ham and is called `/etc/dovecot/sieve/rspamd-learn-ham.sh`. Make it contain:
-
-```
+# Create the shell script for learning ham
+cat > /etc/dovecot/sieve/rspamd-learn-ham.sh << 'EOF'
 #!/bin/sh
+# Receives an email from Dovecot's Sieve script and pipe it into rspamc
 exec /usr/bin/rspamc learn_ham
-```
+EOF
 
-These two shell scripts must be made executable:
-
-```
+# Fix permissions of the shell scripts
 chmod u=rwx,go= /etc/dovecot/sieve/rspamd-learn-{spam,ham}.sh
 chown vmail:vmail /etc/dovecot/sieve/rspamd-learn-{spam,ham}.sh
 ```
 
-I hope you haven’t lost your mind yet. It’s really just a chain of things to happen. Let’s reiterate how this process
-works:
+I am sure you are eager to try it out. Of course we don't blindly believe that it works. We want to see it do its job.
+Usually you will not see much unless you increase the log level to _debug_. Let's do that:
 
-1. a user moves a spam email into their "Junk" folder
-2. Dovecot realizes that this triggers the Sieve rule "imapsieve_mailbox1" so it calls the Sieve
-   script /etc/dovecot/sieve/learn-spam.sieve (in fact the \*.svbin version of the script)
-3. Sieve will take the email and send ("pipe") it to the executable rspamd-learn-spam.sh shell script
-4. the script in turn runs the email through the "/usr/bin/rspamc learn_spam" command
+```sh
+cat > /etc/dovecot/conf.d/99-ispmail-sieve-debug.conf << 'EOF'
+# Enable detailed logging of Sieve scripts
+log_debug=category=sieve
+EOF
 
-This works equally for the other way or learning ham emails of course.
+# Restart Dovecot
+systemctl reload dovecot
 
-I am sure you are eager to try it out. However to see that it actually works I suggest you edit
-the /etc/dovecot/conf.d/10-logging.conf file and set "mail_debug=yes". That will add a lot more detail to the
-/var/log/mail.log file but on a busy server may also lead to headaches. 🙂
-
-Restart Dovecot…
-
-```
-systemctl restart dovecot
+# Follow Dovecot's logs
+journalctl -fu dovecot
 ```
 
-…and watch the /var/log/mail.log file…
+Now open your IMAP client (Thunderbird, Evolution, Roundcube, mutt or whatever you prefer) and drag an email to John's
+Junk folder. The mail log will show a lot of things that are going on. You will see a whole screen full of things that
+are going on. Some relevant lines:
 
 ```
-tail -f /var/log/mail.log
+imap(john@example.org)<1737478><FnGIR2BBA/5bar5M>: Debug: Mailbox Junk: imapsieve: storage spam: file: Using Sieve script path: /etc/dovecot/sieve/learn-spam.sieve
+imap(john@example.org)<1737478><FnGIR2BBA/5bar5M>: Debug: Mailbox Junk: imapsieve: storage spam: file: script 'learn-spam': Opened from 'spam'
+imap(john@example.org)<1737478><FnGIR2BBA/5bar5M>: Debug: sieve: Opening script 1 of 1 from 'spam/learn-spam'
+imap(john@example.org)<1737478><FnGIR2BBA/5bar5M>: Debug: sieve: Executing script from '/etc/dovecot/sieve/learn-spam.svbin'
+imap(john@example.org)<1737478><FnGIR2BBA/5bar5M>: Debug: sieve: action pipe: running program: rspamd-learn-spam.sh
+imap(john@example.org)<1737478><FnGIR2BBA/5bar5M>: Debug: sieve: uid=19: Finalize pipe action (status=ok, action_status=ok, commit_status=ok, pre-commit=yes)
+imap(john@example.org)<1737478><FnGIR2BBA/5bar5M>: Debug: sieve: execute exec:/etc/dovecot/sieve/rspamd-learn-spam.sh (1737484): Connected to program
+imap(john@example.org)<1737478><FnGIR2BBA/5bar5M>: Debug: sieve: uid=19: pipe action: piped message to program 'rspamd-learn-spam.sh'
 ```
 
-Now open your IMAP client (Thunderbird, Evolution, Roundcube, mutt or whatever you prefer) and drag an email to your
-Junk folder. The mail log will show a lot of things that are going on. I tried to compact the output so that you better
-understand that it worked:
+Something similar should happen when you drag the email back from the Junk folder to the Inbox.
 
-```
-imapsieve: Static mailbox rule [1]: mailbox=`Junk' from=`*' causes=(COPY) => before=`file:/etc/dovecot/sieve/learn-spam.sieve' after=(none)
-imapsieve: Static mailbox rule [2]: mailbox=`*' from=`Junk'
-    causes=(COPY) => before=`file:/etc/dovecot/sieve/learn-ham.sieve'
-    after=(none)
-
-imapsieve: Matched static mailbox rule [1]
-
-sieve: file storage: script: Opened script `learn-spam'
-    from `/etc/dovecot/sieve/learn-spam.sieve'
-
-sieve: action pipe: running program: rspamd-learn-spam.sh
-
-program exec:/etc/dovecot/sieve/rspamd-learn-spam.sh:
-    Pass environment: USER=john@example.org
-
-program exec:/etc/dovecot/sieve/rspamd-learn-spam.sh:
-    Pass environment: HOME=/var/vmail/example.org/john
-
-program exec:/etc/dovecot/sieve/rspamd-learn-spam.sh:
-    Pass environment: HOST=narnia
-
-Mailbox Junk: UID 1: Opened mail because: mail stream
-
-sieve: uid=1: Execute storing into mailbox 'Junk'
-```
-
-Dovecot finds two Sieve rules: \[1\] and \[2\]. And it finds that rule \[1\] matches your current action and runs it.
-That in turn calls the "rspamd-learn-spam.sh" script to train that email as spam. And at the very end the email is
-actually moved to the "Junk" folder.
-
-And if you pull an email out of the "Junk" folder you should see mailbox rule \[2\] be called and the email being
-learned as ham.
-
-Don’t forget to switch off "mail_debug" again or your users’ actions will quickly fill your log file.
+If you are happy and see no errors (they are highlighted in red), then switch off the debugging again.
 
 ## Logging
 
@@ -559,43 +540,42 @@ found in the rspamd.log, too:
 
 Andi Olsen pointed out that Dovecot has introduced a [feature](https://wiki.dovecot.org/MailboxSettings) to
 automatically delete emails in a folder that reach a certain age. This is especially useful for the "Trash" and "Junk"
-folders. To enable this feature just edit the `/etc/dovecot/conf.d/15-mailboxes.conf` file and add the *autoexpunge*
-parameter where desired. Example:
+folders. To enable this feature, create yet another configuration file:
 
-```
+```sh
+cat > /etc/dovecot/conf.d/99-ispmail-autoexpunge.conf << 'EOF'
+# Remove mails from the Junk and Trash folders after 30 days
 mailbox Junk {
   special_use = \Junk
   auto = subscribe
-  autoexpunge = 30d
+  mailbox_autoexpunge = 30d
 }
 mailbox Trash {
   special_use = \Trash
   auto = subscribe
-  autoexpunge = 30d
+  mailbox_autoexpunge = 30d
 }
+
+# Make expunging more efficient
+mailbox_list_index = yes
+mail_always_cache_fields = date.save
+EOF
+
+# Restart Dovecot
+systemctl reload dovecot
 ```
 
-The "auto = subscribe" makes sure that the "Junk" and "Trash" folders are automatically created for every user.
-Otherwise spam emails cannot be moved to the "Junk" folder later.
-
-## The web interface
+## rspamd's web interface
 
 rspamd comes with a neat bonus feature: a web interface. It allows you to check emails for spam, get statistics and
-fine-tune scores. It is already installed and enabled by default and expects HTTP requests on port 11334 on the
-localhost interface. I suggest you add a simple proxy configuration to your already working HTTPS-enabled web mail
+fine-tune scores. It is already installed and enabled by default and expects HTTP (not HTTPS!) requests on port 11334 on
+the localhost interface. I suggest you add a simple proxy configuration to your already working HTTPS-enabled web mail
 configuration to get access.
 
 ![rspamd dashboard](images/catching-spam-rspamd-dashboard.png)
 
-First you need to enable Apache’s modules for HTTP proxying and rewriting:
-
-```
-a2enmod proxy_http
-a2enmod rewrite
-```
-
 You can either create a new virtual host configuration or just edit the
-/etc/apache2/sites-available/webmail.**example.org**-https.conf file. Anywhere within the *VirtualHost* tags add:
+/etc/apache2/sites-enabled/000-default-le-ssl.conf file. Anywhere within the *VirtualHost* tags add:
 
 ```
 <Location /rspamd>
@@ -603,43 +583,43 @@ You can either create a new virtual host configuration or just edit the
 </Location>
 
 RewriteEngine On
-RewriteRule ^/rspamd$ /rspamd/ \[R,L\]
-RewriteRule ^/rspamd/(.\*) http://localhost:11334/$1 \[P,L\]
+RewriteRule ^/rspamd$ /rspamd/ [R,L]
+RewriteRule ^/rspamd/(.*) http://localhost:11334/$1 [P,L]
+```
+
+You also need to enable Apache’s modules for HTTP proxying and rewriting:
+
+```sh
+# Enable the required Apache modules
+a2enmod proxy_http
+a2enmod rewrite
+
+# Restart Apache
+systemctl restart apache2
 ```
 
 This piece of configuration will forward any requests to `https://webmail.example.org/rspamd` to localhost:11334 and
 thus give you access to the rspamd web interface.
 
-The interface is password protected. Let’s generate a new access password:
+The web interface is password protected. Let’s generate a new access password, hash it and add it to rspamd's
+configuration:
 
-```
-pwgen 15 1
-```
+```sh
+# Generate a random password that is 15 characters long
+PW=$(pwgen 15 1)
 
-This gives you a password like "eiLi1lueTh9mia4". You could put that password in an rspamd configuration file. But
-cleartext passwords in configuration files are not quite elegant. Let’s create a hash of the password:
+# Create a hash of that password
+HASH=$(rspamadm pw -p $PW)
 
-```
-rspamadm pw
-Enter passphrase: …
-$2$icoahes75e7g9wxapnrbmqnpuzjoq7z…
-```
+# Add the hashed password to rspamd's configuration
+echo "password = \"$HASH\"" > /etc/rspamd/local.d/worker-controller.inc
 
-Feed it the password that pwgen created for you and you will get a long hashed password. This procedure by the way is
-also documented on the [rspamd pages](https://rspamd.com/doc/tutorials/quickstart.html#setting-the-controller-password).
-
-Create a new configuration file `/etc/rspamd/local.d/worker-controller.inc` and put your hashed password in there:
-
-```
-password = "$2$icoahes75e7g9wxapnrbmqnpuzjoq7z…"
-```
-
-That’s it for the configuration. Finally restart both rspamd and Apache to load your changed configuration:
-
-```
+# Restart rspamd
 systemctl restart rspamd
-systemctl restart apache2
+
+# Show the password
+echo "Please note the password for the web interface: $PW"
 ```
 
-If everything went as expected you should now be able to access the rspamd web interface at
-`https://webmail.example.org/rspamd`
+This gives you a password like "sae8thaoTaengeo". If everything went as expected you should now be able to access the
+rspamd web interface at `https://mail.example.org/rspamd` (of course you will use your own server name here).
