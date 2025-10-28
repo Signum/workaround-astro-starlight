@@ -388,10 +388,9 @@ domain that only consists of the rightmost two parts. For `mails.hawkeye.example
 
 ## DMARC
 
-DMARC wants to make sure that the _visible sender_ (what the user sees in the mail program) **matches** the _envelope
-sender_. SPF and DKIM only verify the _envelope sender_. But that does not provide any value to the user.
+### Example
 
-Let's take a simplified example header **without** DMARC:
+Let's take an example header of a spoofed mail:
 
 ```
 Return-Path: <noreply@evil-spammer.com>
@@ -401,26 +400,53 @@ From: <service@paypal.com>
 
 In this example a bad guy just sent you this email. The SPF check for the `evil-spammer.com` domain was successful. (You
 can't see that from these headers though.) He even added a DKIM signature from his domain. So everything looks right.
-But you just see a properly verified email from `service@paypal.com`. This is bad.
+But in your mail program you see `service@paypal.com`. So nobody checks that the _envelop sender_ and the _visible
+sender_ "align".
 
----
+### How it works
 
-DMARC is a mess. Most explanations (including my own from earlier guides) are wrong or incomplete. The Wikipedia page is
-useless. Its acronym _Domain-based Message Authentication, Reporting and Conformance_ sounds like it was invented by a
-random word generator.
+That's what DMARC is supposed to solve. It works like this:
 
-But what if someone sends an email in your name but does not add a DKIM signature? Would it be rejected? No, it would
-not. With DKIM you can prove that you sent the email. And other people cannot fake it without access to your DNS zone.
+- (A) SPF
+  - Run a normal **SPF** check (on the _envelope sender_'s domain as usual)
+  - Make sure that the domain of this _envelope sender_ **aligns** with (matches) the domain of the _visible sender_
+- (B) DKIM
+  - Look for a valid **DKIM** signature (also of the _envelope sender_'s domain)
+  - Make sure that the domain of the _envelope sender_ **aligns** with (matches) the domain of the _visible sender_
+- Make sure that **at least one** of (A) or (B) are true
 
-I mentioned that DMARC is the newer standard. So why use SPF anyway? Because some email providers value your effort if
-you use SPF, too. Technically it’s sufficient to specify a DMARC entry. In my opinion restricting the IP addresses
-allowed to send is a little dangerous and a little inflexible. It is far more interesting to require that emails from
-your domain have a valid DKIM signature. Such a record may look like:
+There are also two flavors of that _alignment_:
 
-```
-"v=DMARC1; p=reject; adkim=s; ruf=postmaster@example.org"
-```
+- **strict** means that the domains need to match exactly
+- **relaxed** means that it can be a subdomain
 
-However to create a proper DMARC entry I suggest you use [one of](http://www.kitterman.com/dmarc/assistant.html)
-[the](https://dmarcian.com/dmarc-inspector/) [web](https://www.unlocktheinbox.com/dmarcwizard/)
-[sites](https://www.agari.com/resources/tools/dmarc) that aid you there and explain the restrictions and extra features.
+You can find more examples about the _alignment_ in the [RFC 7489](https://www.ietf.org/rfc/rfc7489.txt) in Appendix
+B.1.
+
+### Reporting
+
+Another feature of DMARC is reporting. You may want to know whether your emails had delivery problems. DMARC has two
+tags for that purpose:
+
+- **ruf** stands for "**R**eporting **U**RI for **F**ailure data". The email address you use in the "ruf" tag will get
+  machine-readable information on every mail that failed the DMARC test. If the receiving mail server supports DMARC, it
+  **may** automatically generate and send that email to this address. However most internet providers just ignore "ruf"
+  because it contains sensible information on email addresses.
+- **rua** stands for "**R**eporting **U**RI for **A**ggregated data". The email address you use in the "rua" tag will
+  get statistical data usually once a day. If you want to know if your emails deliver properly, you can use this.
+
+There are commercial offers that allow you to point your "rua" record to their service and show you human-readable
+information. Or you can use the tools `dmarc-cat` or `dmarcts-report-parser` that can be installed as Debian packages on
+your system.
+
+### Creating a record
+
+If you want to use DMARC (and I suggest that you do), just add a DNS record to your domain. These web sites help you
+craft a valid record:
+
+- http://www.kitterman.com/dmarc/assistant.html
+- https://dmarcian.com/dmarc-inspector/
+- https://www.unlocktheinbox.com/dmarcwizard/
+- https://www.agari.com/resources/tools/dmarc
+
+Please note that the DMARC record is a TXT record like `_dmarc.example.com`. That `_dmarc` host name is important.
