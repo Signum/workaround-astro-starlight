@@ -50,7 +50,7 @@ This is important to understand the three mechanisms described here:
 
 ## SPF
 
-**"Which IP addresses are allowed to send emails from your domain?"**
+SPF defines which servers (IP addresses) are allowed to send emails on behalf of a specific domain.
 
 Essentially SPF is a TXT record in your DNS zone. It contains machine-readable information for other mail server on A
 receiving mail server can (and usually does) check if there is an SPF record for your domain. which IP addresses are
@@ -86,7 +86,7 @@ too.
 
 ## DKIM
 
-**"Can you prove that your mail server is in charge or your domain?"**
+DKIM can prove that an email has not been tampered with on its journey from the sender to the recipient.
 
 DKIM uses _public key cryptography_ to automatically add a _cryptographic signature_ into the header of each outgoing
 email. It also uses a TXT record in your domain's DNS zone to publish the public key.
@@ -146,6 +146,21 @@ That is the public key that I can use to verify the signature. An automated chec
 `opendkim-testmsg` tool as described later. I can run it and paste the entire email including headers and body into it.
 If it doesn’t complain with an error message then the signature is correct.
 
+<Aside type="note">
+
+The signature does **not** certify the domain of the sender. In this example the signature is for `d=gmail.com`. But it
+could also have been `d=abc.xyz`. A DKIM signature just says:
+
+_This email has been sent by a mail server that has the key for the `gmail.com` domain. And it has not been tampered
+with on its way to you._
+
+So it is **not** about the authenticity of the person who sent it to you. Of course it makes sense that the signature
+matches the domain of the sending user. Enforcing that will be a job for DMARC which is explained later on this page.
+
+</Aside>
+
+### Creating a keypair
+
 Sounds good? Then let’s implement that for your email domains, too.
 
 If you have skipped the previous section on detecting and filtering out spam emails, then just run these two commands to
@@ -155,8 +170,6 @@ tell Postfix to send all emails through rspamd:
 postconf smtpd_milters=inet:127.0.0.1:11332
 postconf non_smtpd_milters=inet:127.0.0.1:11332
 ```
-
-### Creating a keypair
 
 As explained above you need a **private key** that your mail server will use for signing and a **public key** that gets
 added to your DNS zone.
@@ -375,7 +388,26 @@ domain that only consists of the rightmost two parts. For `mails.hawkeye.example
 
 ## DMARC
 
-**"Does the sender on the envelope match the sender of the visible email?"**
+DMARC wants to make sure that the _visible sender_ (what the user sees in the mail program) **matches** the _envelope
+sender_. SPF and DKIM only verify the _envelope sender_. But that does not provide any value to the user.
+
+Let's take a simplified example header **without** DMARC:
+
+```
+Return-Path: <noreply@evil-spammer.com>
+DKIM-Signature: d=evil-spammer.com
+From: <service@paypal.com>
+```
+
+In this example a bad guy just sent you this email. The SPF check for the `evil-spammer.com` domain was successful. (You
+can't see that from these headers though.) He even added a DKIM signature from his domain. So everything looks right.
+But you just see a properly verified email from `service@paypal.com`. This is bad.
+
+---
+
+DMARC is a mess. Most explanations (including my own from earlier guides) are wrong or incomplete. The Wikipedia page is
+useless. Its acronym _Domain-based Message Authentication, Reporting and Conformance_ sounds like it was invented by a
+random word generator.
 
 But what if someone sends an email in your name but does not add a DKIM signature? Would it be rejected? No, it would
 not. With DKIM you can prove that you sent the email. And other people cannot fake it without access to your DNS zone.
