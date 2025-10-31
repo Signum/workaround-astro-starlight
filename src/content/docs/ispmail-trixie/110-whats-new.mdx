@@ -15,13 +15,14 @@ import { Aside } from "@astrojs/starlight/components";
 
 Did you follow the ISPmail guide for Debian Bookworm to install your mail server? Then let's take it to Debian Trixie.
 
-# Architectural changes
+## Architectural changes
 
-In the past I tried to keep things similar to previous versions of this guide. Most of us are happy with their mail
-servers and want to change as little as possible when a new Debian release comes along. Just a few improvements:
+I always try to keep things similar to previous versions of this guide. Most of us are happy with their mail servers and
+want to change as little as possible when a new Debian release comes along. Just a few changes that come with the newer
+software versions:
 
 - **rsyslogd** was a classic choice to write log files like /var/log/mail.log. As Debian is using _systemd_ we no longer
-  need rsyslogd and logrotate. The logs can be read using _journalctl_ instead. If you miss it, just
+  need rsyslogd and logrotate. The logs can be read using _journalctl_ instead. If you miss log files, just
   `apt install rsyslog`.
 - **smtpd_tls_security_level** is now only enabled for the `submission` service. That disables authentication for SMTP
   connections on port 25. This emphasizes the separation of TCP 25 for server-to-server connections (without
@@ -29,7 +30,7 @@ servers and want to change as little as possible when a new Debian release comes
 - **certbot** is now using the `python3-certbot-apache` package. Getting and renewing certificates is now handled
   magically by Apache without any downtime or additional configuration.
 
-# Version changes
+## Version changes
 
 A new Debian stable release comes with newer software versions. So I checked the changelogs to determine what we will
 have to change:
@@ -40,10 +41,10 @@ have to change:
 - rspamd 3.4.1 -&gt; 3.12.1. No breaking changes.
 - Roundcube 1.6.1 -&gt; 1.6.11. No breaking changes.
 
-# Fresh installation
+## Fresh installation
 
-Please do not try to upgrade your previous server using `apt-get dist-upgrade`. It is very hard to do the upgrade
-without losing mails. Set up a new server instead. Once you are ready, come back here.
+Do not try to upgrade your existing server using `apt-get dist-upgrade`. There are too many changes especially with
+Dovecot. Start with a fresh installation on another server and then migrate.
 
 ## Preparing the DNS/IP switch
 
@@ -106,8 +107,9 @@ Details are found in the rspamd chapter.
 
 ## Migrate the Maildirs hot
 
-Fortunately Dovecot uses the maildir format that stores emails as plain files on disk. Login to the new (Bookworm)
-server and use *rsync* to copy over the mails from the old (Bullseye) mail server:
+(**Hot** means: copy the files why they are still in use and potentially change while you do that.) Fortunately Dovecot
+uses the maildir format that stores emails as plain files on disk. Login to the new (Trixie) server and use *rsync* to
+copy over the mails from the old (Bullseye) mail server:
 
 ```
 rsync -va oldserver:/var/vmail/ /var/vmail/
@@ -119,9 +121,11 @@ There is no need to shut down Dovecot on your production Bullseye server. Copyin
 will not break anything. This is called a “hot copy". It may not be consistent but it will save time during the final
 synchronization.
 
-## Copy certificates
+Another way to copy over the emails is using Dovecot's
+[doveadm-sync](https://doc.dovecot.org/main/core/man/doveadm-sync.1.html) command. It may be especially handy if you
+need to copy emails from another server where you only have IMAP access but cannot access the files directly.
 
-(TODO: ignore with Caddy)
+## Copy certificates
 
 Copy over everything in /etc/letsencrypt and /var/lib/rspamd/dkim from your old to the new server.
 
@@ -136,8 +140,9 @@ You told your users about the downtime, right? The time has come? Okay. Shut dow
 
 ## Migrate the emails cold
 
-Let’s synchronize again. *rsync* will only copy those files that have changed which makes it much faster than the first
-sync. On your new server run:
+(**Cold** means: the processes have stopped or you made sure that there is no user activity so that the files can be
+copied consistently.) Let’s synchronize again. *rsync* will only copy those files that have changed which makes it much
+faster than the first sync. On your new server run:
 
 ```
 rsync -va --delete oldserver:/var/vmail/ /var/vmail/
@@ -146,7 +151,7 @@ rsync -va --delete oldserver:/var/vmail/ /var/vmail/
 (The “`--delete`" option makes sure that files that have been removed from the old server will also be deleted from the
 new server. So if a user has deleted an email it will be deleted on the new server as well.)
 
-# Switch the DNS records
+## Switch the DNS records
 
 For all your domains you will have to change the DNS “MX" or “A" record to point to your new server.
 

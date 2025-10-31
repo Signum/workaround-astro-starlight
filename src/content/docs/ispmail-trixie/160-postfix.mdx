@@ -42,7 +42,7 @@ If the information is **not** available you just get no answer:
 In SQL language Postfix has to ask MariaDB the question:
 
 ```sql
-SELECT "yes" FROM virtual_domains WHERE name='example.net'
+SELECT "yes" FROM virtual_domains WHERE name='example.net';
 ```
 
 Run the following code in your shell to create a configuration file creating that mapping:
@@ -61,8 +61,6 @@ This has created a configuration file called `/etc/postfix/virtual-mailbox-domai
 and `dbname` definitions tell Postfix how to connect to the database. And the `query` asks the _question_ if a certain
 domain is present in the database table `virtual_domains`. Using `SELECT 1` we return just the number 1 if such an entry
 was found. In fact it does not matter what we return. Any _answer_ is fine.
-
-Don't forget to replace the `MAILSERVER-PASSWORD-HERE` by your own password for the `mailserver` user.
 
 ### Virtual Aliases
 
@@ -112,7 +110,7 @@ specific email address.
 
 Actually the _answer_ is usually not `1` but the path to the mailbox on disk. But that applies only if Postfix would be
 saving the email to disk on its own. In our setup the email will be passed on to Dovecot in a later step. Dovecot will
-then handle the files on disk. Postfix just has to know is whether a mailbox exists. And that's why **any** _answer_ is
+then handle the files on disk. Postfix just has to know is whether a mailbox exists. And that's why _any_ answer is
 sufficient here.
 
 ### Tell Postfix
@@ -152,6 +150,6 @@ john@example.org
 1
 ```
 
-If you get anything else, please check those three config files. Perhaps the database password is wrong?
+If you get anything else, please check those three config files again.
 
 </Aside>

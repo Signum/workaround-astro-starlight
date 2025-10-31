@@ -10,7 +10,7 @@ Your mail server will have one fully qualified domain name — for example, `pos
 domain is `example.com`. If someone visits `https://example.com/`, they might be greeted by the Roundcube webmail login
 page.
 
-But your server doesn’t have to handle only one domain. You might have mailboxes like:
+But your server doesn’t have to handle only one domain. You can have mailboxes on multiple domains like:
 
 - `jack@example.com`
 - `lucy@example.com`

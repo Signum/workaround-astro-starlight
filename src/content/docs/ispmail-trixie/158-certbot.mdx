@@ -19,7 +19,7 @@ Your mail server can't work properly without a valid TLS certificate. It will be
 
 Your mail server will be able to host email addresses for many domains. But a TLS certificate is usually issued for a
 single [FQDN](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) like `mail.example.org`. That _common name_ is
-an important part of the certificate. It must match the name you use to talk to the server.
+an important part of the certificate. It must match the name your users use to talk to the server.
 
 **Correct**: Your mail server is addressed as `mail.example.org`. The TLS certificate was also issued to
 `mail.example.org`.
@@ -88,13 +88,15 @@ If you like Certbot, please consider supporting our work by:
 
 In /etc/letsencrypt/live/**mail.example.org** you will find a couple of files now:
 
-- cert.pem: the certificate file
-- chain.pem: the _chaining_ or _intermediate_ certificate. This certificate provides information how the LetsEncrypt
+- **cert.pem**: the certificate file
+- **chain.pem**: the _chaining_ or _intermediate_ certificate. This certificate provides information how the LetsEncrypt
   certificates are linked to other known certificate authorities. It is generally a good idea to always send this
   certificate along with your own for clients who may not know LetsEncrypt properly yet.
-- fullchain.pem: this file contains a concatenation of the _cert.pem_ and the _chain.pem_. This is the preferred file to
-  use when a piece of software asks where to find the _certificate_.
-- privkey.pem: the private key file. Keep it secret.
+- **fullchain.pem**: this file contains a concatenation of the _cert.pem_ and the _chain.pem_. This is the preferred
+  file to use when a piece of software asks where to find the _certificate_.
+- **privkey.pem**: the private key file. Keep it secret.
+
+Well, actually those are not files but _symbolic links_ pointing to the "archive" directory. But don't worry about that.
 
 </details>
 
@@ -102,6 +104,15 @@ In /etc/letsencrypt/live/**mail.example.org** you will find a couple of files no
 
 Your new certificate is only valid for 3 months. Fortunately the renewal is happening automatically. A _systemd timer_
 checks your certificate frequently and triggers a renewal one month before it expires.
+
+It is important that services that use the certificate load the new certificate after an automatic renewal. This shell
+command will create a file `/etc/letsencrypt/cli.ini` that handles it:
+
+```sh title="Run this on your server"
+echo > /etc/letsencrypt/cli.ini "post-hook = systemctl reload postfix dovecot apache2"
+```
+
+Perfect. You won't have to worry about the certificate again.
 
 <details class="collapsible">
   <summary>Click here to learn how the renewal works…</summary>
@@ -117,14 +128,5 @@ systemctl cat certbot.service
 
 _Systemd timers_ are similar to cron jobs. They require more work to set up but have some nice features and make you
 look cooler.
-
-It is important that services that use the certificate load the new certificate after an automatic renewal. This shell
-command will create a file `/etc/letsencrypt/cli.ini` that handles it:
-
-```sh title="Run this on your server"
-echo > /etc/letsencrypt/cli.ini "post-hook = systemctl reload postfix dovecot apache2"
-```
-
-Perfect. You won't have to worry about the certificate again.
 
 </details>

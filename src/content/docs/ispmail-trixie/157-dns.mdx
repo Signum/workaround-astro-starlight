@@ -29,7 +29,6 @@ records:
 - **A / AAAA record (`smtp.example.com`)**  
   The hostname specified in the MX record (`smtp.example.com`) must resolve to an IP address so that other mail servers
   know how to reach it.
-
   - An **A record** maps the hostname to an IPv4 address.
   - An **AAAA record** maps the hostname to an IPv6 address.
 
@@ -53,7 +52,7 @@ In zone syntax you would create something like:
 ```
 @ IN MX 10 smtp
 smtp IN A 100.64.17.3
-smtp IN A fd7a:115c:a1e0::17
+smtp IN AAAA fd7a:115c:a1e0::17
 ```
 
 If possible, also add a PTR record that makes the IP addresses point back to the name `smtp.example.com`. Other mail
@@ -64,26 +63,27 @@ servers may be more likely so flag your sent emails as spam if you do not have a
 
 Use the `host` command to check your domain's MX record.
 
-```sh title="Run this on your server"
-$> host -t mx example.com
-example.com mail is handled by 10 smtp.example.com.
+```sh title="Example"
+dig +short example.com mx
+# 10 smtp.example.com.
 ```
 
 Then check if that result resolves to an IP address:
 
-```sh title="Run this on your server"
-$> host smtp.example.com
-smtp.example.com has address 49.13.89.249
-smtp.example.com has IPv6 address 2a01:4f8:c012:62d1::1
+```sh title="Example"
+dig +short smtp.example.com a
+# 49.13.89.249
+dig +short smtp.example.com aaaa
+# 2a01:4f8:c012:62d1::1
 ```
 
 Preferably the IP addresses should resolve back to the mail server's name:
 
-```sh title="Run this on your server"
-$> host 49.13.89.249
-249.89.13.49.in-addr.arpa domain name pointer smtp.example.com.
-$> host 2a01:4f8:c012:62d1::1
-1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.1.d.2.6.2.1.0.c.8.f.4.0.1.0.a.2.ip6.arpa domain name pointer smtp.example.com.
+```sh title="Example"
+dig +short -x 49.13.89.249
+# smtp.example.com.
+dig +short -x 2a01:4f8:c012:62d1::1
+# smtp.example.com.
 ```
 
 </Aside>

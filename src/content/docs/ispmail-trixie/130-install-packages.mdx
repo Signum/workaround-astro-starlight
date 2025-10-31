@@ -18,7 +18,7 @@ DEBIAN_FRONTEND=noninteractive \
     apache2 python3-certbot-apache libapache2-mod-php \
     php-intl php-mbstring php-xml unzip certbot \
     roundcube-mysql roundcube roundcube-plugins swaks libnet-ssleay-perl \
-    ufw mutt unattended-upgrades mariadb-server \
+    mutt unattended-upgrades mariadb-server \
     rspamd redis-server opendkim-tools bind9-dnsutils pwgen
 ```
 
@@ -28,7 +28,7 @@ While the server is downloading and installing the packages, let me give you a q
   Postfix is the MTA (mail transport agent) that speaks SMTP to send and receive emails. This package installs Postfix
   with support for MariaDB databases.
 - **dovecot** \
-  Dovecot manages the emsrc/content/docs/ispmail-trixie/140-install-packages.mdx emails using IMAP.
+  Dovecot manages the emails on disk and lets users access them via IMAP.
   - **-lmtpd** \
     LMTP (Local Mail Transfer Protocol) provides the glue between Postfix and Dovecot.
   - **-managesieved** \
@@ -50,8 +50,6 @@ While the server is downloading and installing the packages, let me give you a q
   package is needed to test encrypted connections.
 - **certbot** \
   Gets a free TLS certificate from [_Let's Encrypt_](https://letsencrypt.org/) for encrypting network communication.
-- **ufw** \
-  Universal FireWall. A simple tool to manage firewall rules to limit access to your server. TODO: omit?
 - **mutt** \
   A console-based program that can speak IMAP and also read Maildirs directly. Very helpful for testing the
   functionality of your mail server. Think of it as a text-based Thunderbird.

@@ -11,7 +11,7 @@ import StepListReceive from "../../../components/StepListReceive.astro";
 
 <StepListReceive currentStep={4} />
 
-In this chapter we will mainly configure Dovecot so that it knows how to deliver incoming emails.
+In this chapter we will configure Dovecot so that it knows how to deliver incoming emails.
 
 ## Setting up the vmail directory
 
@@ -42,7 +42,7 @@ for our purpose.
 
 The `/etc/dovecot/conf.d/10-auth.conf` file is dealing with authentication. At the end of this file you will find a list
 of authentication backends that Dovecot ships with. By default it will use system users (those from /etc/passwd). But we
-want to use the MariaDB database backend so go ahead and change this block to:
+want to use the MariaDB database backend so go ahead and **change this block** to:
 
 ```
 #!include auth-system.conf.ext

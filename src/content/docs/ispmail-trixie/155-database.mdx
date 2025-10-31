@@ -11,9 +11,7 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 Now it’s time to prepare the MariaDB database that stores the information that controls your mail server. In the process
 you will have to enter [SQL](http://en.wikipedia.org/wiki/SQL) queries – the language of relational database servers.
-You may enter them in a terminal window using the ‘mariadb’ command. But if you are less experienced with SQL you may
-prefer using a web interface. That’s what you installed _[Adminer](https://www.adminer.org/)_ for. TODO: link to Adminer
-setup in a later section
+You may enter them in a terminal window using the ‘mariadb’ command.
 
 <Aside title="MariaDB versus MySQL">
 
@@ -58,8 +56,8 @@ In this section you will create the basic database `mailserver` and two users:
 <Aside type="note" title="About passwords">
 
 For now, create these database users with a placeholder password such as `MAILADMIN-PASSWORD-HERE`. Leave them as they
-are—it will make copying and pasting the upcoming steps much easier. After you’ve confirmed everything is working
-correctly, I’ll show you how to update the passwords securely with a single command.
+are—it will make copying and pasting the upcoming steps much easier. At the end of the tutorial I will help you change
+the passwords securely with a single command.
 
 </Aside>
 
@@ -147,21 +145,22 @@ represents a domain.
 
 ### virtual_users
 
-The second table contains information about your users. Each mail account requires one row in this table.
+The second table contains information about your users – or rather: your mailboxes. Each mail account requires one row
+in this table.
 
 - **id**: A unique number identifying each row. It is set automatically.
 - **domain_id**: A [reference](https://en.wikipedia.org/wiki/Foreign_key) to the domain in the `virtual_domains` table.
   So each domain can have many mailboxes.
 - **email**: The email address of the mailbox.
 - **password**: The hashed password of the mail account. It is prepended by the
-  [password scheme](https://doc.dovecot.org/main/core/config/auth/schemes.html). By default it is `{BLF-CRYPT}` also
-  known as _bcrypt_ which is considered very secure. Older ISPmail guides used `{SHA256-CRYPT}` or even older crypt
-  schemes. Prepending the password field the hashing algorithm in curly brackets allows you to have different kinds of
-  hashes. So you can easily migrate your old passwords without locking out users. Users with older schemes should get a
-  new password if possible to increase security.
+  [password scheme](https://doc.dovecot.org/2.4.2/core/config/auth/schemes.html#password-schemes). By default it is
+  `{BLF-CRYPT}` also known as _bcrypt_ which is considered very secure. Older ISPmail guides used `{SHA256-CRYPT}` or
+  even older crypt schemes. Prepending the password field the hashing algorithm in curly brackets allows you to have
+  different kinds of hashes. So you can easily migrate your old passwords without locking out users. Users with older
+  schemes should get a new password if possible to increase security.
 - **quota**: The number of bytes that this mailbox can store. You can use this value to limit how much space a mailbox
   can take up. The default value is 0 which means that there is no limit. This is an optional feature that is discussed
-  later. TODO: link
+  later.
 
 <Aside type="tip" icon="right-caret" title="Example">
 
@@ -175,7 +174,7 @@ The second table contains information about your users. Each mail account requir
 
 ### virtual_aliases
 
-The third table contain optional forwardings from one email address to another – or several others.
+The third table contain optional forwardings from one email address to another – or several other – addresses.
 
 - **id**: A unique number identifying each row. It is set automatically.
 - **domain_id**: References the domain in the `virtual_domains` table.
@@ -198,8 +197,8 @@ This means:
   `info@example.com` is also listed as a destination address, it will keep a copy of the email. Multiple rows for a
   source are totally fine – Postfix will consider all matching rows.
 - (4) Email for `boris-at-home@example.com` is redirected to `bevans@external.address`.
-- (5) Email for any other address in the `example.com` domain is redirected to `joe@example.com`. TODO: link to catchall
-  section
+- (5) Email for any other address in the `example.com` domain is redirected to `joe@example.com`. This is called a
+  _catchall_ address.
 
 </Aside>
 
@@ -240,20 +239,10 @@ REPLACE INTO virtual_aliases
 Do you wonder how I got the long cryptic password? I ran…
 
 ```
-doveadm pw -s BLF-CRYPT
+doveadm pw
 ```
 
 …to create a secure hash of the simple password “summersun". Once you have installed Dovecot you can try that yourself
 but you will get a different output. The reason is that the passwords are
 [salted](<https://en.wikipedia.org/wiki/Salt_(cryptography)>). Every time you will get a different hash. That prevents
 reverse-engineering the original password.
-
-Remember to remove that sample data before you go live with your mail server. Thanks to the _delete cascade_ you just
-need to remove the virtual_domain. The alias and the mailbox will be deleted automatically. This would be the SQL query
-you should run before taking your mail server into production:
-
-```sql
-DELETE FROM mailserver.virtual_domains WHERE name='example.org';
-```
-
-TODO: move to final step
