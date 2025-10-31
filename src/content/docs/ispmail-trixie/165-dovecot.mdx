@@ -41,12 +41,12 @@ for our purpose.
 ### 10-auth.conf
 
 The `/etc/dovecot/conf.d/10-auth.conf` file is dealing with authentication. At the end of this file you will find a list
-of authentication backends that Dovecot ships with. By default it will use system users (those from /etc/passwd). But we
-want to use the MariaDB database backend so go ahead and **change this block** to:
+of authentication backends that Dovecot ships with. By default it will use _system users_ (those from /etc/passwd). But
+we want to use the MariaDB database backend. Please comment all all include statements:
 
-```
+```text title="Edit your /etc/dovecot/conf.d/10-auth.conf"
 #!include auth-system.conf.ext
-!include auth-sql.conf.ext
+#!include auth-sql.conf.ext
 #!include auth-ldap.conf.ext
 #!include auth-passwdfile.conf.ext
 #!include auth-checkpassword.conf.ext
@@ -55,17 +55,21 @@ want to use the MariaDB database backend so go ahead and **change this block** t
 
 Every line starting with `#` is disabled. Only lines starting with `!` are considered.
 
-### 10-mail.conf
+### 10-mail.conf / 99-ispmail-mail.conf
 
-Edit this file at `/etc/dovecot/conf.d/10-mail.conf`. It contains many settings regarding mailboxes, like where they are
-located, who owns them and what is their layout? Set this:
+The file at `/etc/dovecot/conf.d/10-mail.conf` contains many settings regarding mailboxes, like where they are located,
+who owns them and what is their layout? Create a new file `/etc/dovecot/conf.d/99-ispmail-mail.conf` that overrides
+these defaults:
 
-```
+```sh title="Run this on your server"
+cat > /etc/dovecot/conf.d/99-ispmail-mail.conf << EOF
 mail_driver = maildir
 mail_home = /var/vmail/%{user | domain}/%{user | username}
 mail_path = ~/Maildir
 mail_uid = vmail
 mail_gid = vmail
+mail_inbox_path =
+EOF
 ```
 
 This looks more sophisticated than with versions of Dovecot before 2.4. What it means:
@@ -78,33 +82,37 @@ This looks more sophisticated than with versions of Dovecot before 2.4. What it 
 - **mail_path**: Within the _home_ directory the actual mailbox will live in a subdirectory called `Maildir`. The reason
   is that we will store other data in the user's _home_ directory as well that should not conflict with the mailbox
   directory.
-- **mail_uid**/**mail_gid**/: All mailboxes are stored on disk under the owner _vmail_.
+- **mail_uid**/**mail_gid**: All mailboxes will be owned be the user and group `vmail`.
+- **mail_inbox_path**: We just un-set this because it would conflict with the _mail_path_ that is set in `10-mail.conf`
 
-### 10-master.conf
+### 10-master.conf / 99-ispmail-master.conf
 
-This configuration file at `/etc/dovecot/conf.d/10-master.conf` deals with Dovecot's services.
+This configuration file at `/etc/dovecot/conf.d/10-master.conf` deals with Dovecot's _services_. A _service_ is a part
+of Dovecot that listens on a TCP port or a UNIX socket so that other parts of your system can use it. We want Postfix to
+use Dovecot for authentication. So we need to change the `service auth` section:
 
-So most settings are sane here and do not have to be changed. However one change is required in the “service auth"
-section because we want Postfix to allow Dovecot as an authentication service. Make it look like this:
-
-```
-# Postfix smtp-auth
-unix_listener /var/spool/postfix/private/dovecot-auth {
-  mode = 0660
-  user = postfix
-  group = postfix
+```sh title="Run this on your server"
+cat > /etc/dovecot/conf.d/99-ispmail-master.conf << EOF
+service auth {
+  unix_listener /var/spool/postfix/private/dovecot-auth {
+    mode = 0660
+    user = postfix
+    group = postfix
+  }
 }
+EOF
 ```
 
 That way Dovecot will put a communication socket into `/var/spool/postfix/private/dovecot-auth`. It will allow Postfix
 to authenticate your users which is relevant later when we set up _relaying_.
 
-### 10-ssl.conf
+### 10-ssl.conf / 99-ispmail-ssl.conf
 
 Earlier in this guide you created both a key and a certificate file to encrypt the communication with IMAPS and HTTPS
 between the users and your mail server. You need to tell Dovecot where to find these files. Also set
 [ssl=required](https://doc.dovecot.org/2.4.1/core/config/ssl.html#how-to-specify-when-ssl-tls-is-required) to prevent
-that someone sends their password without encryption.
+that someone sends their password without encryption. Again we will create a new file `99-ispmail-master.conf` to
+override the defaults.
 
 <Aside type="danger" title="Important">
 
@@ -112,30 +120,34 @@ Please replace `mail.example.org` by the FQDN you chose.
 
 </Aside>
 
-```
+```sh title="Run this on your server"
+cat > /etc/dovecot/conf.d/99-ispmail-ssl.conf << EOF
 ssl = required
 ssl_server_cert_file = /etc/letsencrypt/live/mail.example.org/fullchain.pem
 ssl_server_key_file = /etc/letsencrypt/live/mail.example.org/privkey.pem
+EOF
 ```
 
-### 20-lmtp.conf
+### 20-lmtp.conf / 99-ispmail-lmtp.conf
 
 There is one setting in the `/etc/dovecot/conf.d/20-lmtp.conf` that will mess up the recipient's email address in our
-setup. So please edit this file and comment out the `auth_username_format` line:
+setup: `auth_username_format`. So let's override it:
 
-```
+```sh title="Run this on your server"
+cat > /etc/dovecot/conf.d/99-ispmail-lmtp-username-format.conf << EOF
 protocol lmtp {
-  #auth_username_format = %{user | username}
+  auth_username_format =
 }
-
+EOF
 ```
 
-### auth-sql.conf.ext
+### 99-ispmail-sql.conf
 
-Let's tell Dovecot where to find information on an valid users (_userdb_) and their passwords (_passdb_). You can safely
-replace the content of the `/etc/dovecot/conf.d/auth-sql.conf.ext` file by:
+Let's tell Dovecot where to find information on an valid users (_userdb_) and their passwords (_passdb_). There are
+suggestions in the `auth-sql.conf.ext` file but we will add our own file:
 
-```
+```sh title="Run this on your server"
+cat > /etc/dovecot/conf.d/99-ispmail-sql.conf << EOF
 sql_driver = mysql
 
 mysql /var/run/mysqld/mysqld.sock {
@@ -153,18 +165,16 @@ userdb sql {
 passdb sql {
   query = SELECT password FROM virtual_users where email='%{user}'
 }
+EOF
+
+# fix permissions
+chown root:root /etc/dovecot/conf.d/99-ispmail-sql.conf
+chmod go= /etc/dovecot/conf.d/99-ispmail-sql.conf
 ```
 
 Dovecot can also read the path to a user's home directory and the user-ID and group-ID from the database. Our setup has
-a fixed schema for the home directory (`/var/vmail/DOMAIN/USER`) and the user-ID and group-ID are always `vmail` and
-`vmail`.
-
-Make sure that only root can access the SQL configuration file so nobody else is reading your database access passwords:
-
-```sh title="Run this on your server"
-chown root:root /etc/dovecot/conf.d/auth-sql.conf.ext
-chmod go= /etc/dovecot/conf.d/auth-sql.conf.ext
-```
+a fixed schema for the home directory (`/var/vmail/DOMAIN/USER`) (as defined by `mail_home`) and the user and group are
+always `vmail` and `vmail`.
 
 ## Restart and test
 

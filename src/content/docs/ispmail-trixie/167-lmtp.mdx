@@ -12,7 +12,7 @@ import StepListReceive from "../../../components/StepListReceive.astro";
 <StepListReceive currentStep={5} />
 
 Glad to see that you are still with me. We are very close to receiving our first email. If you feel lost, please review
-the [slideshow](/ispmail-trixie/big-picture/) from earlier in this guide.
+the [slideshow](/ispmail-trixie/overview/) from earlier in this guide.
 
 As explained in the previous section, Postfix speaks SMTP and receives the email from the internet. Postfix could even
 save the email to a mailbox on disk. But instead we will use Dovecot for the final delivery. Actually Dovecot's main
@@ -20,25 +20,29 @@ purpose is to let users fetch their email using the IMAP protocol. But it provid
 well.
 
 So we need tell Postfix to hand over the incoming email to Dovecot. The communication between Postfix and Dovecot will
-happen using LMTP – the [local mail transfer protocol](https://en.wikipedia.org/wiki/Local_Mail_Transfer_Protocol).
-LMTP is a variant of SMTP with fewer features. It is meant for email communication between internal services that trust
-each other.
+happens using LMTP – the [local mail transfer protocol](https://en.wikipedia.org/wiki/Local_Mail_Transfer_Protocol).
+LMTP is a lightweight variant of SMTP. It is meant for email communication between internal services that trust each
+other.
 
 ## Dovecot listens to LMTP
 
-Edit the `/etc/dovecot/conf.d/10-master.conf` file and change the section called `service lmtp`:
+First we need to add a UNIX socket where Dovecot listens for incoming LMTP connections:
 
-```
+```sh title="Run this on your server"
+cat > /etc/dovecot/conf.d/99-ispmail-lmtp-listener.conf << EOF
 service lmtp {
+  # Used internally by Dovecot
   unix_listener lmtp {
   }
 
+  # Listen to LMTP connections from Postfix
   unix_listener /var/spool/postfix/private/dovecot-lmtp {
     mode = 0600
     user = postfix
     group = postfix
   }
 }
+EOF
 ```
 
 The first `unix_listener lmtp` is just used internally by Dovecot and does not concern us. The second part is what you
@@ -60,11 +64,7 @@ postconf virtual_transport=lmtp:unix:private/dovecot-lmtp
 
 The syntax looks crazy, but it’s actually simple. You just told Postfix to use the LMTP protocol. And that we want to
 use a UNIX socket on the same system (instead of a TCP connection). And the socket file is located at
-`/var/run/dovecot/lmtp`.
-
-## Enable server-side mail rules
-
-TODO: move to optional chapter
+`/var/spool/postfix/private/dovecot-lmtp` – because `/var/spool/postfix` is the Postfix's home directory.
 
 ## Send a test mail locally
 
@@ -168,8 +168,5 @@ track of the mailbox. You can safely ignore them.
 ## Your actual domain
 
 Obviously the previous examples dealt with the `example.org` domain which is not your actual domain. Feel free to add
-your own domain to the database and create a test user. Check the
-[section where we created this text user](/ispmail-trixie/database/#example-data-to-play-with) and use it to add your
-own account.
-
-TODO: link to "managing domains and users" later
+your own domain to the database and create a test user. The later
+[section on managing users](/ispmail-trixie/managing-users-aliases-and-domains/) will explain that in detail.

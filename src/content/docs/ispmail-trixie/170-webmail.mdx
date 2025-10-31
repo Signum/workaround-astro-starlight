@@ -74,7 +74,7 @@ Please replace `mail.example.org` by the FQDN you chose.
 
 Set this:
 
-```
+```text title="Edit /etc/apache2/sites-available/000-default-le-ssl.conf"
 ServerName mail.example.org
 DocumentRoot /var/lib/roundcube/public_html
 Include /etc/roundcube/apache.conf
@@ -88,17 +88,17 @@ Meaning:
 
 And as usual Apache needs to be restarted after the configuration change:
 
-```
+```sh
 systemctl restart apache2
 ```
 
 Check that Apache is running properly:
 
-```
+```sh
 systemctl status apache2
 ```
 
-In case of a problem run “`apache2ctl configtest`" to find the cause.
+In case of a problem run `apache2ctl configtest` to find the cause.
 
 ## Limit access to localhost
 
@@ -112,19 +112,19 @@ Please replace `mail.example.org` by the FQDN you chose.
 
 </Aside>
 
-```
+```text title="Edit /etc/roundcube/config.inc.php"
 $config['imap_host'] = 'tls://mail.example.org:143';
 $config['smtp_host'] = 'tls://mail.example.org:587';
 ```
 
 So now when your users enter `https://webmail.example.org/` in their browser they should get the Roundcube login form:
 
+![Roundcube login dialog](images/roundcube-login.png)
+
 Keep in mind that we are using the email address as the account name of the user. So when logging in please enter the
 email address as the user name. E.g. `john@example.org` and password `summersun`.
 
-TODO: show login dialog
-
-TODO: on errors, check /var/log/roundcube/errors.log
+If the login fails, check `/var/log/roundcube/errors.log`.
 
 ## Plugins
 
@@ -167,15 +167,15 @@ Let’s briefly cover the meaning of those lines:
 - `$config['password_minimum_length'] = 12;`\
   New passwords must be at least 12 characters long.
 - `$config['password_force_save'] = true;`\
-  This will overwrite the password in the database even if it hasn’t changed. It helps us improve the strength of the password
-  hash by re-encoding it with a better algorithm even if the user chooses to keep his old password.
+  This will overwrite the password in the database even if it hasn’t changed. It helps us improve the strength of the
+  password hash by re-encoding it with a better algorithm even if the user chooses to keep his old password.
 - `$config['password_algorithm'] = 'blowfish-crypt';`\
   The cryptographic algorithm to encode the password. This one is considered very secure and supported by Dovecot.
 - `$config['password_algorithm_prefix'] = '{CRYPT}';`\
   Prepend every password with this string so that Dovecot knows how we encrypted the password.
 - `$config['password_db_dsn'] = 'mysql://mailadmin:MAILADMIN-PASSWORD-HERER@localhost/mailserver';`\
-  Connection information for the local database. Use your own password for the _mailadmin_ (!) database user here. We cannot
-  use the restricted _mailserver_ user because we have to write the new password to the database.
+  Connection information for the local database. Use your own password for the _mailadmin_ (!) database user here. We
+  cannot use the restricted _mailserver_ user because we have to write the new password to the database.
 - `$config['password_query'] = "UPDATE virtual_users SET password=%P WHERE email=%u";`\
   The SQL query that is run to write the new password hash into the database. `%P` is a placeholder for the new password
   hash. `%u` is the logged-in user and conveniently matches the email address.
