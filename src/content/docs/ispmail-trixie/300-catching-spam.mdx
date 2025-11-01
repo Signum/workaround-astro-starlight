@@ -17,23 +17,26 @@ filtering out incoming spam emails. I found that [rspamd](https://rspamd.com/) i
 purpose both in speed and detection. rspamd keeps a permanent process running on your mail server that listens to
 connections from Postfix using the [milter](http://www.postfix.org/MILTER_README.html) (=**m**ail f**ilter**) protocol.
 Every time an email enters your system, Postfix will send it to rspamd to have its content checked. rspamd runs a lot of
-checks on the email and computes a total score. The higher the score – the more likely it it spam.
+checks on the email and computes a total score. The higher the score – the more likely it it spam. And the best thing
+about milters: the check happens in parallel while Postfix is still in the process of receiving the email. If the score
+is high enough, Postfix can still reject the email right at the doorstep.
 
 ## Make Postfix use rspamd
 
 Let’s tell Postfix to send all incoming email through rspamd:
 
-```
+```sh title="Run this on your server"
 postconf smtpd_milters=inet:127.0.0.1:11332
+postconf non_smtpd_milters=inet:127.0.0.1:11332
 ```
 
-For testing we can use a sample spam email that comes with SpamAssassin. It is called GTUBE (Generic Test
-for Unsolicited Bulk Email). It contains a certain artificial pattern that is recognized as spam by SpamAssassin. Do you
-know EICAR.COM to test virus scanners? This is the same thing for spam.
+For testing we can use a sample spam email that comes with SpamAssassin. It is called **GTUBE** (**G**eneric **T**est
+for **U**nsolicited **B**ulk **E**mail). It contains a certain artificial pattern that is recognized as spam by
+SpamAssassin. Do you know EICAR.COM to test virus scanners? This is the same thing for spam.
 
 Get the GTUBE file, send it to John and let's see what happens:
 
-```sh
+```sh title="Run this on your server"
 wget http://spamassassin.apache.org/gtube/gtube.txt
 sendmail john@example.org < gtube.txt
 journalctl -fu postfix
@@ -47,8 +50,8 @@ postfix/cleanup[1386519]: 2B72320126: milter-reject: END-OF-MESSAGE from localho
 postfix/cleanup[1386519]: 2B72320126: to=<john@example.org>, relay=none, delay=0.16, delays=0.16/0/0/0, dsn=5.7.1, status=bounced (Gtube pattern)
 ```
 
-**milter-reject** tells that the rspamd recommended to reject the email. It gave the reason `5.7.1 Gtube pattern`.
-SMTP/LMTP always uses such three digit codes. They are defined in [RFC 3463](https://tools.ietf.org/html/rfc3463). The
+**milter-reject** tells that the rspamd recommended to reject the email. It gave the reason `5.7.1 Gtube pattern`. SMTP
+and LMTP always uses such three digit codes. They are defined in [RFC 3463](https://tools.ietf.org/html/rfc3463). The
 first digit is most important:
 
 - 2 = Success
@@ -82,11 +85,11 @@ actions {
 }
 ```
 
-These are the default actions. If rspamd computes a score of at least 15 then the email will get rejected at the
-doorstep just like the _Gtube pattern_ in the previous test. Any other score above 6 will add a line "X-Spam: Yes" so
-that your mail software can detect them and maybe file the email to a different folder. And any other score above 4 will
-trigger [greylisting](<https://en.wikipedia.org/wiki/Greylisting_(email)>) which is a mechanism that temporarily rejects
-the email with a 4.x.x code and waits if the sending server will try again. After a waiting time of a few minutes
+These are the default actions. If rspamd computes a score of at least 15 then the email will get rejected right away
+just like the _Gtube pattern_ in the previous test. Any other score above 6 will add a line "X-Spam: Yes" so that your
+mail software can detect them and maybe file the email to a different folder. And any other score above 4 will trigger
+[greylisting](<https://en.wikipedia.org/wiki/Greylisting_(email)>) which is a mechanism that temporarily rejects the
+email with a 4.x.x code and waits if the sending server will try again. After a waiting time of a few minutes
 greylisting will accept the email. The idea is to reject email from systems that do not have a sending queue. Malware
 like on infected Wind\*ws computers used to try sending an email just once which triggered greylisting and successfully
 rejected the spammer. But even malware programmers have learned and may try again after a few minutes thus circumventing
@@ -138,22 +141,18 @@ X-Spam: Yes
 Enable those additonal headers:
 
 ```sh
+# Enable rspamd's extended headers
 cat > /etc/rspamd/local.d/milter_headers.conf << EOF
 extended_spam_headers = true;
 EOF
+
+# Restart rspamd
 systemctl reload rspamd
-wget http://spamassassin.apache.org/gtube/gtube.txt
-swaks --server mailserver.example.org --to john@example.org --body @gtube.txt
+
+# Send a normal (non-spam) test email. Do not use "localhost" here because rspamd
+# will only add extended headers for emails coming from the internet.
+swaks --server mailserver.example.org --to john@example.org
 ```
-
-What you just did:
-
-- create a new file at `/etc/rspamd/local.d/milter_headers.conf` that extends rspamd's milter configuration
-- restart rspamd to make it active
-- get the GTUBE anti-spam test file (if you haven't already)
-- send that spam test to John's email address. Please use your actual mail server name here instead of
-  `mailserver.example.org`. It is important not to use `localhost` because rspamd will only add those headers for emails
-  coming from the internet.
 
 Each of the uppercase symbols like *FROM_HAS_DN* means that a certain detection rule of rspamd was triggered. It does
 not necessarily mean something bad about the email. For example _R_SPF_ALLOW_ has a negative score that lowers the total
@@ -180,7 +179,7 @@ Dovecot:
 - the Sieve functionality is enabled during LMTP (when an email is passed on from Postfix to Dovecot)
 - the user gets a _Junk_ folder created in his mailbox and is subscribed to it so that it appears in their mail program
 
-```sh
+```sh title="Run this on your server"
 # Create a new config file for spam handling
 cat > /etc/dovecot/conf.d/99-ispmail-sieve-movetojunk.conf << 'EOF'
 sieve_script spam-to-junk-folder {
@@ -212,7 +211,7 @@ systemctl reload dovecot
 Now we need to create that Sieve script (`/etc/dovecot/sieve/spam-to-junk-folder.sieve`) that is run on each delivery.
 Its job is to check if the `X-Spam: yes` header is present. If it is, the email is filed into the user's `Junk` folder.
 
-```sh
+```sh title="Run this on your server"
 # Create the directory for Sieve files
 mkdir -p /etc/dovecot/sieve
 
@@ -225,12 +224,15 @@ if header :contains "X-Spam" "Yes" {
  stop;
 }
 EOF
+
+# Make the sieve script machine-readable
+sievec /etc/dovecot/sieve/spam-to-junk-folder.sieve
 ```
 
 Let's give it a test using Swaks. This time we impersonate Postfix and inject an email with an `X-Spam: yes` header
 directly into Dovecot using the LMTP socket:
 
-```sh
+```sh title="Run this on your server"
 swaks --to john@example.org --header-X-Spam "yes" --socket /var/spool/postfix/private/dovecot-lmtp --protocol LMTP
 journalctl -fu dovecot
 ```
@@ -240,6 +242,8 @@ It should read:
 ```
 dovecot[1434406]: lmtp(john@example.org)<1436598><kh4lDNl26Wi26xUA5ANL0g>: sieve: msgid=<20251010211257.1436597@mailserver>: fileinto action: stored mail into mailbox 'Junk'
 ```
+
+The alleged spam email has been moved to the _Junk_ folder just like we wanted.
 
 <details class="collapsible">
   <summary>Click here to get more detailed logs…</summary>
@@ -262,8 +266,6 @@ journalctl -eu dovecot
 ```
 
 </details>
-
-The alleged spam email has been moved to the _Junk_ folder just like we wanted.
 
 ## Automatic spam training
 
@@ -347,7 +349,7 @@ recipient gets their own training.
 
 **Advantage:** users work differently. Some have subscribed to a sales newsletter and now believe that marking it as
 spam gets them unsubscribed. Yes, that’s stupid but can thoroughly confuse the spam detection. Also you might not be
-very interested in "blue pills" while others are.
+very interested in "blue pills" while others are. So the training data of one user does not affect that of the others.
 
 **Disadvantage:** training still requires many ham and spam mails before it has any effect. So unless a user gets 200
 samples of good and bad emails, spam detection cannot work. Many users will not get that many emails so due to the lack
@@ -436,7 +438,7 @@ systemctl reload dovecot
 The first rule tells Dovecot to run a Sieve script at `/etc/dovecot/sieve/learn-spam.sieve` whenever an email is moved
 **into** a user’s "Junk" folder. We will create that Sieve script in a minute.
 
-The second rule sets the other way. Whenever an email is moved **out** of the "Junk" folder to any other folder, then
+The second rule works the other way. Whenever an email is moved **out** of the "Junk" folder to any other folder, then
 the `/etc/dovecot/sieve/learn-ham.sieve` Sieve script is called.
 
 Let's create both Sieve scripts:
@@ -523,6 +525,13 @@ imap(john@example.org)<1737478><FnGIR2BBA/5bar5M>: Debug: sieve: uid=19: pipe ac
 
 Something similar should happen when you drag the email back from the Junk folder to the Inbox.
 
+The `/var/log/rspamd/rspamd.log` file will also show that training:
+
+```
+rspamd_controller_learn_fin_task: <127.0.0.1> learned message as spam: GTUBE1.1010101@example.net
+rspamd_controller_learn_fin_task: <127.0.0.1> learned message as ham: 20251101173211.068172@mailserver
+```
+
 If you are happy and see no errors (they are highlighted in red), then switch off the debugging again.
 
 ## Logging
@@ -533,14 +542,15 @@ comparing the Postfix queue ID. Those are the 12-digit hexadecimal number like "
 found in the rspamd.log, too:
 
 ```
-<40985d>; task; rspamd_task_write_log: id: <undef>, qid: <**95CE05A00547**>,  ip: 12.13.51.194, from: <…>, (default: F (no action):  [3.40/15.00]  [MISSING_MID(2.50){},MISSING_DATE(1.00){},MIME_GOOD(-0.10){text/plain;},ARC_NA(0.00){},ASN(0.00){asn:8220,  ipnet:212.123.192.0/18,  country:GB;},FROM_EQ_ENVFROM(0.00){},FROM_NO_DN(0.00){},RCPT_COUNT_ONE(0.00){1;},RCVD_COUNT_ZERO(0.00){0;},RCVD_TLS_ALL(0.00){},TO_DN_NONE(0.00){},TO_DOM_EQ_FROM_DOM(0.00){},TO_MATCH_ENVRCPT_ALL(0.00){}]),  len: 181, time: 16.000ms real, 6.385ms virtual, dns req: 0, digest:  <69b289a82827c11f759837c033cd800a>, rcpts: <…>, mime_rcpt:  <…>
+<40985d>; task; rspamd_task_write_log: id: <undef>, qid: <95CE05A00547>,  ip: 12.13.51.194, from: <…>, (default: F (no action):  [3.40/15.00]  [MISSING_MID(2.50){},MISSING_DATE(1.00){},MIME_GOOD(-0.10){text/plain;},ARC_NA(0.00){},ASN(0.00){asn:8220,  ipnet:212.123.192.0/18,  country:GB;},FROM_EQ_ENVFROM(0.00){},FROM_NO_DN(0.00){},RCPT_COUNT_ONE(0.00){1;},RCVD_COUNT_ZERO(0.00){0;},RCVD_TLS_ALL(0.00){},TO_DN_NONE(0.00){},TO_DOM_EQ_FROM_DOM(0.00){},TO_MATCH_ENVRCPT_ALL(0.00){}]),  len: 181, time: 16.000ms real, 6.385ms virtual, dns req: 0, digest:  <69b289a82827c11f759837c033cd800a>, rcpts: <…>, mime_rcpt:  <…>
 ```
 
 ## Autoexpunge
 
-Andi Olsen pointed out that Dovecot has introduced a [feature](https://wiki.dovecot.org/MailboxSettings) to
-automatically delete emails in a folder that reach a certain age. This is especially useful for the "Trash" and "Junk"
-folders. To enable this feature, create yet another configuration file:
+Andi Olsen pointed out that Dovecot has introduced an
+[autoexpunge](https://doc.dovecot.org/2.4.2/core/config/namespaces.html#mailbox_autoexpunge) feature to automatically
+delete emails in a folder that reach a certain age. This is especially useful for the "Trash" and "Junk" folders. To
+enable this feature, create yet another configuration file:
 
 ```sh
 cat > /etc/dovecot/conf.d/99-ispmail-autoexpunge.conf << 'EOF'
@@ -575,7 +585,7 @@ configuration to get access.
 ![rspamd dashboard](images/catching-spam-rspamd-dashboard.png)
 
 You can either create a new virtual host configuration or just edit the
-/etc/apache2/sites-enabled/000-default-le-ssl.conf file. Anywhere within the *VirtualHost* tags add:
+`/etc/apache2/sites-enabled/000-default-le-ssl.conf` file. Anywhere within the *VirtualHost* tags add:
 
 ```
 <Location /rspamd>
