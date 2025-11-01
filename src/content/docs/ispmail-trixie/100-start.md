@@ -1,6 +1,6 @@
 ---
 title: Start here
-lastUpdated: 2025-08-09
+lastUpdated: 2025-11-01
 slug: ispmail-trixie
 sidebar:
   order: 100

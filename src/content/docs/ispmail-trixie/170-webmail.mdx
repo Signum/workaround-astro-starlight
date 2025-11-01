@@ -1,6 +1,6 @@
 ---
 title: Webmail using Roundcube
-lastUpdated: 2025-08-25
+lastUpdated: 2025-11-01
 slug: ispmail-trixie/webmail
 sidebar:
   order: 170
@@ -151,7 +151,7 @@ $config['password_minimum_length'] = 12;
 $config['password_force_save'] = true;
 $config['password_algorithm'] = 'blowfish-crypt';
 $config['password_algorithm_prefix'] = '{CRYPT}';
-$config['password_db_dsn'] = 'mysql://mailadmin:MAILADMIN-PASSWORD-HERER@localhost/mailserver';
+$config['password_db_dsn'] = 'mysql://mailadmin:MAILADMIN-PASSWORD-HERE@localhost/mailserver';
 $config['password_query'] = "UPDATE virtual_users SET password=%P WHERE email=%u";
 ?>
 EOF
@@ -173,7 +173,7 @@ Let’s briefly cover the meaning of those lines:
   The cryptographic algorithm to encode the password. This one is considered very secure and supported by Dovecot.
 - `$config['password_algorithm_prefix'] = '{CRYPT}';`\
   Prepend every password with this string so that Dovecot knows how we encrypted the password.
-- `$config['password_db_dsn'] = 'mysql://mailadmin:MAILADMIN-PASSWORD-HERER@localhost/mailserver';`\
+- `$config['password_db_dsn'] = 'mysql://mailadmin:MAILADMIN-PASSWORD-HERE@localhost/mailserver';`\
   Connection information for the local database. Use your own password for the _mailadmin_ (!) database user here. We
   cannot use the restricted _mailserver_ user because we have to write the new password to the database.
 - `$config['password_query'] = "UPDATE virtual_users SET password=%P WHERE email=%u";`\

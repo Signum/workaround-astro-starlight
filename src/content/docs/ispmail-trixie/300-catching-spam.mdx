@@ -1,6 +1,6 @@
 ---
 title: Catching spam with rspamd
-lastUpdated: 2025-10-09
+lastUpdated: 2025-11-01
 slug: ispmail-trixie/catching-spam-with-rspamd
 sidebar:
   order: 300
@@ -140,7 +140,7 @@ X-Spam: Yes
 
 Enable those additonal headers:
 
-```sh
+```sh title="Run this on your server"
 # Enable rspamd's extended headers
 cat > /etc/rspamd/local.d/milter_headers.conf << EOF
 extended_spam_headers = true;
@@ -260,7 +260,7 @@ in the `99-ispmail-sieve.conf` file.
 That will give you a much deeper insight of what Dovecot has been doing. Restart Dovecot, send another email with
 _swaks_ and check the logs again:
 
-```sh
+```sh title="Run this on your server"
 systemctl reload dovecot
 journalctl -eu dovecot
 ```
@@ -290,7 +290,7 @@ loss.) People use Redis as a cache or for very fast lookups of simple data struc
 You have already installed the "redis-server" package earlier. It has started automatically and listens to incoming
 connections on TCP port 6379 on localhost. You just need to tell rspamd to use it:
 
-```sh
+```sh title="Run this on your server"
 # Create a config file to enable automatic spam training
 cat > /etc/rspamd/local.d/classifier-bayes.conf << 'EOF'
 # Store training data in the Redis database
@@ -320,7 +320,7 @@ The defaults for auto-learning are:
 See [rspamd's documentation](https://docs.rspamd.com/configuration/statistic/#statistics-configuration) if you want to
 fine-tune that.
 
-```sh
+```sh title="Run this on your server"
 rspamc stat
 ```
 
@@ -391,7 +391,7 @@ Or as a diagram:
 Create a new Dovecot configuration file (`99-ispmail-imapsieve.conf`) to enable the required functionality and add
 triggers on the Junk folder:
 
-```sh
+```sh title="Run this on your server"
 cat > /etc/dovecot/conf.d/99-ispmail-imapsieve.conf << 'EOF'
 # Enable the imap_sieve plugin
 protocol imap {
@@ -443,7 +443,7 @@ the `/etc/dovecot/sieve/learn-ham.sieve` Sieve script is called.
 
 Let's create both Sieve scripts:
 
-```sh
+```sh title="Run this on your server"
 # Create spam learning script
 cat > /etc/dovecot/sieve/learn-spam.sieve << 'EOF'
 require ["vnd.dovecot.pipe", "copy", "imapsieve"];
@@ -472,7 +472,7 @@ errors. So if your changes do not seem to work it might be worth compiling them 
 
 And the last step is to create the simple shell scripts that do the actual spam/ham training:
 
-```sh
+```sh title="Run this on your server"
 # Create the shell script for learning spam
 cat > /etc/dovecot/sieve/rspamd-learn-spam.sh << 'EOF'
 #!/bin/sh
@@ -552,7 +552,7 @@ Andi Olsen pointed out that Dovecot has introduced an
 delete emails in a folder that reach a certain age. This is especially useful for the "Trash" and "Junk" folders. To
 enable this feature, create yet another configuration file:
 
-```sh
+```sh title="Run this on your server"
 cat > /etc/dovecot/conf.d/99-ispmail-autoexpunge.conf << 'EOF'
 # Remove mails from the Junk and Trash folders after 30 days
 mailbox Junk {
@@ -599,7 +599,7 @@ RewriteRule ^/rspamd/(.*) http://localhost:11334/$1 [P,L]
 
 You also need to enable Apache’s modules for HTTP proxying and rewriting:
 
-```sh
+```sh title="Run this on your server"
 # Enable the required Apache modules
 a2enmod proxy_http
 a2enmod rewrite
@@ -614,7 +614,7 @@ thus give you access to the rspamd web interface.
 The web interface is password protected. Let’s generate a new access password, hash it and add it to rspamd's
 configuration:
 
-```sh
+```sh title="Run this on your server"
 # Generate a random password that is 15 characters long
 PW=$(pwgen 15 1)
 

@@ -1,6 +1,6 @@
 ---
 title: Virtual domains
-lastUpdated: 2025-08-14
+lastUpdated: 2025-11-01
 slug: ispmail-trixie/virtual-domains
 sidebar:
   order: 150

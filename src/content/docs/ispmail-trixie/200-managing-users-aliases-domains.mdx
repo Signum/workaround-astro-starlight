@@ -1,6 +1,6 @@
 ---
 title: Managing users, aliases and domains
-lastUpdated: 2025-09-17
+lastUpdated: 2025-11-01
 slug: ispmail-trixie/managing-users-aliases-and-domains
 sidebar:
   order: 200
@@ -114,3 +114,22 @@ Christian G. has created a text-based program to help you manage your mail accou
 little help adding accounts and setting passwords but not provide a full blown web interface.
 
 You can find his [Python script at Github](https://github.com/cgzones/ispmail-userctl).
+
+### Adminer
+
+You can also use a basic tool like [Adminer](https://www.adminer.org/) to manage the tables if you don't want to type
+out SQL. To set it up:
+
+```sh title="Run this on your server"
+apt install -y adminer
+a2enconf adminer
+systemctl reload apache2
+```
+
+Now Adminer is available as `https://mailserver.example.org/adminer` and allows you to login:
+
+![Adminer login screen](images/adminer-login.png)
+
+After login this is how the interface looks like:
+
+![Adminer main screen](images/adminer-main.png)
