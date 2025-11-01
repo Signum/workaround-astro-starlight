@@ -38,20 +38,23 @@ DELETE FROM virtual_domains where name='example.org';
 
 Find out the `id` of the right domain from the virtual_domains table. The insert a new row into the virtual_users table.
 Set the domain_id to the value you just looked up in the virtual_domains table. Set the `email` field to the complete
-email address of the new user. Create a new password in a shell using the `dovecot pw -s BLF-CRYPT` command and insert
-the result into the `password` field.
+email address of the new user. Create a new password in a shell using the `dovecot pw` command and insert the result
+into the `password` field.
 
 ```sql
-INSERT INTO virtual_users (domain_id, email, password) VALUES (SELECT id FROM virtual_domains WHERE name='example.org'), 'john@example.org','{BLF-CRYPT}$2y$05$.We…';
+INSERT INTO virtual_users
+  (domain_id, email, password)
+VALUES
+  ((SELECT id FROM virtual_domains WHERE name='example.org'), 'john@example.org','{CRYPT}$2y$05$.We…');
 ```
 
 ### Change the password of a user
 
 Find the row in the virtual_users table by looking for the right `email` field. Create a new password in a shell using
-the `dovecot pw -s BLF-CRYPT` command and insert the result into the `password` field.
+the `dovecot pw` command and insert the result into the `password` field.
 
 ```sql
-UPDATE virtual_users SET password='{BLF-CRYPT}$2y$05$.We…' WHERE email='email@address';
+UPDATE virtual_users SET password='{CRYPT}$2y$05$.We…' WHERE email='email@address';
 ```
 
 ### Delete a mail user
@@ -72,7 +75,14 @@ destination addresses). Set the `source` field to the complete source email addr
 the respective complete destination email address.
 
 ```sql
-INSERT INTO virtual_aliases (domain_id, source, destination) VALUES ( (SELECT id FROM virtual_domains WHERE name='example.org'), 'melissa@example.org', 'juila@example.net');
+INSERT INTO virtual_aliases
+  (domain_id, source, destination)
+VALUES
+  (
+    (SELECT id FROM virtual_domains WHERE name='example.org'),
+    'melissa@example.org',
+    'juila@example.net'
+  );
 ```
 
 ### Delete a mail forwarding

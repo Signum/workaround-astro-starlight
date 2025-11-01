@@ -68,7 +68,7 @@ mail_home = /var/vmail/%{user | domain}/%{user | username}
 mail_path = ~/Maildir
 mail_uid = vmail
 mail_gid = vmail
-mail_inbox_path =
+mail_inbox_path = ~/Maildir/
 EOF
 ```
 
@@ -83,7 +83,9 @@ This looks more sophisticated than with versions of Dovecot before 2.4. What it 
   is that we will store other data in the user's _home_ directory as well that should not conflict with the mailbox
   directory.
 - **mail_uid**/**mail_gid**: All mailboxes will be owned be the user and group `vmail`.
-- **mail_inbox_path**: We just un-set this because it would conflict with the _mail_path_ that is set in `10-mail.conf`
+- **mail_inbox_path**: A user's main inbox consists of the directories `cur` and `new` inside the Maildir directory. We
+  used that schema in previous guides and make sure you can migrate your mailboxes from other mail servers. This
+  overrides the setting in in `10-mail.conf`.
 
 ### 10-master.conf / 99-ispmail-master.conf
 

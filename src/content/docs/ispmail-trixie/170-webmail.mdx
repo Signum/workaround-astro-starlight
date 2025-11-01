@@ -137,7 +137,7 @@ plugins change it to:
 ```
 $config['plugins'] = array(
      'password',
- );
+);
 ```
 
 Plugins are configured through files located in the `/etc/roundcube/plugins` directory. Let's quickly set up the
@@ -183,6 +183,8 @@ Let’s briefly cover the meaning of those lines:
 For a complete reference please see `/usr/share/roundcube/plugins/password/config.inc.php.dist`.
 
 The last two lines make sure that this config file is only accessible to everyone.
+
+![Roundcube password dialog](images/roundcube-password.png)
 
 Try it. Log into Roundcube as `john@example.org` with password ‘summersun’. Go to the _Settings_. Choose _Password_.
 Enter a new password twice. You should get a success message at the bottom right. Now logout and login with the new

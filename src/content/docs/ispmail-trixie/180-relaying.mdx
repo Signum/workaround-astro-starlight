@@ -15,18 +15,18 @@ Let's begin with the difference of how **users** send emails versus how **mail s
 
 - A **mail server** fetches the _MX_ record for the destination domain of the recipient’s email address from DNS. That
   tells it which mail server to talk to. Then it opens an SMTP connection (TCP port 25) and sends the email. A mail
-  server will not relay an email. It will only accept it for its own users.
+  server will not relay an email meant for someone else. It will only accept emails for its own users.
 - An **end user** with a mail client such as Thunderbird or Roundcube cannot do that. Mail clients do not include any
   functionality for fetching MX records. In addition, the user is usually on a dynamic IP address that other mail
   servers will not trust and will likely reject. Instead, end users are expected to send their emails through their
-  provider’s (your) mail server: they authenticate with their login credentials and then send the message. This process
+  provider’s (=your) mail server: they authenticate with their login credentials and then send the message. This process
   is called relaying, because your mail server acts as an intermediary between the user and other mail servers on the
   internet. For security reasons, authentication is required before the user is allowed to send emails. Users are also
   expected to use the TCP port 587 which is called the _submission_ port. More on that later.
 
-Postfix must only accept an email from a user, if…
+Postfix must only accept an email **from a user**, if…
 
-- The user uses the **submission** port (and not the standard **SMTP** port)
+- The user uses the **submission** port (and not the standard SMTP port)
 - The user **authenticates** with the username (in our setup: the email address) and the password
 - The connection is **encrypted** so that the password can be safely transmitted
 - The **sender address** of the email matches the user's account
@@ -69,7 +69,7 @@ postconf -P "submission/inet/syslog_name=postfix/submission"
 postconf -P "submission/inet/smtpd_tls_security_level=encrypt"
 postconf -P "submission/inet/smtpd_sasl_auth_enable=yes"
 postconf -P "submission/inet/smtpd_sasl_type=dovecot"
-postconf -P "submission/inet/smtpd_sasl_path=private/auth"
+postconf -P "submission/inet/smtpd_sasl_path=private/dovecot-auth"
 postconf -P "submission/inet/smtpd_recipient_restrictions=permit_sasl_authenticated,reject"
 postconf -P "submission/inet/smtpd_sender_restrictions=reject_sender_login_mismatch,permit_sasl_authenticated,reject"
 
@@ -80,7 +80,7 @@ These commands added a `submission` service to the `/etc/postfix/master.cf` file
 by editing that file and adding the following section, but I wanted to make it simpler for you to just copy/paste the
 commands into your shell.
 
-```
+```text title="What it did…"
 submission inet  n       -       y       -       -       smtpd
   -o syslog_name=postfix/submission
   -o smtpd_tls_security_level=encrypt
@@ -104,7 +104,8 @@ Some notes on that:
   Layer_. That way only our own users can use this service.
 - **smtpd_sasl_type** tells Postfix to use Dovecot's service to authentication a uaser.
 - **smtpd_sasl_path** tells Postfix that it should talk to Dovecot through the socket file
-  `/var/spool/postfix/private/auth`. Earlier in this guide you told Dovecot to create that socket at that location.
+  `/var/spool/postfix/private/dovecot-auth`. Earlier in this guide you told Dovecot to create that socket at that
+  location.
 - **smtpd_recipient_restrictions** define that only authenticated connections are permitted. Without a username and a
   password your connection will be rejected. The **recipient** keyword tells us that this restricts who the recipient
   can be.
@@ -119,7 +120,7 @@ postconf -P "submissions/inet/syslog_name=postfix/submissions"
 postconf -P "submissions/inet/smtpd_tls_wrappermode=yes"
 postconf -P "submissions/inet/smtpd_sasl_auth_enable=yes"
 postconf -P "submissions/inet/smtpd_sasl_type=dovecot"
-postconf -P "submissions/inet/smtpd_sasl_path=private/auth"
+postconf -P "submissions/inet/smtpd_sasl_path=private/dovecot-auth"
 postconf -P "submissions/inet/smtpd_recipient_restrictions=permit_sasl_authenticated,reject"
 postconf -P "submissions/inet/smtpd_sender_restrictions=reject_sender_login_mismatch,permit_sasl_authenticated,reject"
 postfix reload
@@ -189,6 +190,7 @@ As we use the email address also as a user name we simply need a mapping where t
 sides. Let's create it:
 
 ```sh title="Run this on your server"
+# Create a mapping configuration from the user to themself
 cat > /etc/postfix/mariadb-email2email.cf << EOF
 user = mailserver
 password = MAILSERVER-PASSWORD-HERE
@@ -197,9 +199,11 @@ dbname = mailserver
 query = SELECT email FROM virtual_users WHERE email='%s'
 EOF
 
+# Fix permissions
 chown root:postfix /etc/postfix/mariadb-email2email.cf
 chmod u=rw,g=r,o= /etc/postfix/mariadb-email2email.cf
 
+# Tell Postfix to use thi smapping
 postconf smtpd_sender_login_maps=mysql:/etc/postfix/mariadb-email2email.cf
 ```
 
@@ -293,7 +297,7 @@ Postfix will still reject the email because we refused to authenticate:
  ~> MAIL FROM:<john@example.org>
 <~  250 2.1.0 Ok
  ~> RCPT TO:<lisa@example.com>
-<~* 554 5.7.1 <john@example.org>: Sender address rejected: Access denied
+<~* 553 5.7.1 <john@example.org>: Sender address rejected: not logged in
 ```
 
 ### With encryption and authentication
@@ -318,8 +322,8 @@ swaks --server localhost:465 \
     --auth-password summersun
 ```
 
-Did you notice the difference? This time we used port **465** and instead of the `-tls` option (which uses STARTTLS to
-switch to encryption) we use `--tls-on-connect` that uses TLS right from from the start.
+Did you notice the difference? The second time we used port **465** and instead of the `-tls` option (which uses
+STARTTLS to switch to encryption) we use `--tls-on-connect` that uses TLS right from from the start.
 
 Put simply, a mail server will accept an email if…
 
@@ -348,7 +352,7 @@ The server will let you in:
 Trying 127.0.0.1…
 Connected to localhost.
 Escape character is '^]'.
-220 webmail ESMTP Postfix (Debian/GNU)
+220 webmail ESMTP Postfix (Debian)
 ```
 
 Say hello:
@@ -376,42 +380,44 @@ Postfix will present a list of features that are available for you:
 Let me briefly explain what these lines mean:
 
 - PIPELINING  
-   This is a feature to speed up SMTP communication. Usually the remote system has to wait for a response to every command
-  it sends. Pipelining allows the remote server to send several commands in a batch without waiting for a response. Postfix
-  will just store these commands and execute them one by one. If you told Postfix to forbid pipelining it would disconnect
-  the remote server when it tries to send bulks of commands without waiting for the proper reply. It is mainly a feature
-  against rogue senders.
+   This is a feature to speed up SMTP communication. Usually the remote system has to wait for a response to every
+  command it sends. Pipelining allows the remote server to send several commands in a batch without waiting for a
+  response. Postfix will just store these commands and execute them one by one. If you told Postfix to forbid pipelining
+  it would disconnect the remote server when it tries to send bulks of commands without waiting for the proper reply. It
+  is mainly a feature against rogue senders.
 - SIZE 10240000  
-   The remote server is allowed to send emails up to 10 MB large. This has long been a common maximum size for emails. However
-  nowadays 40 MB or even more are more common sizes because emails have grown larger. Some mail servers even allow 100 MB.
+   The remote server is allowed to send emails up to 10 MB large. This has long been a common maximum size for emails.
+  However nowadays 40 MB or even more are more common sizes because emails have grown larger. Some mail servers even
+  allow 100 MB.
 - VRFY  
-   Allows remote servers to verify a given name or email address. For example the remote server could send "VRFY john" and
-  your server might respond `250 Jo You can skip it for now.hn Doe <john@example.org>`. It can be used to verify that a certain
-  recipient email address is deliverable
+   Allows remote servers to verify a given name or email address. For example the remote server could send "VRFY john"
+  and your server might respond `250 Jo You can skip it for now.hn Doe <john@example.org>`. It can be used to verify
+  that a certain recipient email address is deliverable
 - ETRN  
-   A command that a remote system can send to flush the Postfix queue of mails for a certain domain. It can be used if the
-  remote system had technical problems and failed to receive email for a while. Then it could send an ETRN command to make
-  your server start sending outstanding emails for that domain. It is rarely used.
+   A command that a remote system can send to flush the Postfix queue of mails for a certain domain. It can be used if
+  the remote system had technical problems and failed to receive email for a while. Then it could send an ETRN command
+  to make your server start sending outstanding emails for that domain. It is rarely used.
 - STARTTLS  
-   This tells the remote system that it might start switching from this unencrypted to an encrypted connection by sending
-  the "STARTTLS" command. It will then start negotiating a TLS-encrypted connection. You could compare it to an HTTP connection
-  that suddenly switches over to an encrypted HTTPS connection. The advantage is that you can start talking SMTP on TCP port
-  25 and don’t have to open up a second TCP port like 465 which is the "SSMTP" (secure SMTP) port and only accepts encrypted
-  connections.
+   This tells the remote system that it might start switching from this unencrypted to an encrypted connection by
+  sending the "STARTTLS" command. It will then start negotiating a TLS-encrypted connection. You could compare it to an
+  HTTP connection that suddenly switches over to an encrypted HTTPS connection. The advantage is that you can start
+  talking SMTP on TCP port 25 and don’t have to open up a second TCP port like 465 which is the "SSMTP" (secure SMTP)
+  port and only accepts encrypted connections.
 - ENHANCEDSTATUSCODES  
-   This enables more three-digit return codes for various conditions. See the [RFC2034](http://tools.ietf.org/html/rfc2034)
-  if you are curious.
+   This enables more three-digit return codes for various conditions. See the
+  [RFC2034](http://tools.ietf.org/html/rfc2034) if you are curious.
 - 8BITMIME  
-   In ancient times SMTP only processed 7-bit characters. You couldn’t transfer special characters like "Ä" or "ß" without
-  special encoding. 8BITMIME allows a transmission of emails using 8-bit characters. Still many emails are specially encoded
-  using ISO8859-1 or UTF-8.
+   In ancient times SMTP only processed 7-bit characters. You couldn’t transfer special characters like "Ä" or "ß"
+  without special encoding. 8BITMIME allows a transmission of emails using 8-bit characters. Still many emails are
+  specially encoded using ISO8859-1 or UTF-8.
 - DSN  
-   It enables DSNs (delivery status notofications) that allows the sender to control the messages that Postfix creates when
-  an email could not be delivered as intended.
+   It enables DSNs (delivery status notofications) that allows the sender to control the messages that Postfix creates
+  when an email could not be delivered as intended.
 - SMTPUTF8  
    In addition to 8BITMIME you can use UTF8 encoded characters in header fields.
 - CHUNKING  
-   This feature (described in [RFC 3030](https://tools.ietf.org/html/rfc3030)) makes sending of large emails more efficient.
+   This feature (described in [RFC 3030](https://tools.ietf.org/html/rfc3030)) makes sending of large emails more
+  efficient.
 
 However one important line is missing here that would allow us to send our username and password:
 
@@ -445,7 +451,7 @@ QUIT
 We can use OpenSSL to help us with the decryption. Run:
 
 ```
-openssl s_client -connect localhost:25 -starttls smtp
+openssl s_client -connect localhost:submission -starttls smtp
 ```
 
 You will see a lot of output. OpenSSL has connected to TCP port 25 and issued a STARTTLS command to switch to an
